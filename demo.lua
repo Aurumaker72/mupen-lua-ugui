@@ -9,17 +9,18 @@ end
 
 dofile(folder('demo.lua') .. 'mupen-lua-ugui.lua')
 
-text = "Sample text"
-is_checked = true
-position = {
-    x = 0,
-    y = 0,
-}
+local text = "Sample text"
+local is_checked = true
+local value = 0
+
+
+local input_state = {}
 
 emu.atvi(function()
     local keys = input.get()
 
-    Mupen_lua_ugui.begin_frame({
+
+    input_state = {
         pointer = {
             position = {
                 x = keys.xmouse,
@@ -30,7 +31,9 @@ emu.atvi(function()
         keyboard = {
             held_keys = keys
         }
-    })
+    }
+
+    Mupen_lua_ugui.begin_frame(input_state)
 
     local is_pressed = Mupen_lua_ugui.button({
         uid = 0,
@@ -43,6 +46,7 @@ emu.atvi(function()
         },
         text = "Hello World!"
     });
+
 
     text = Mupen_lua_ugui.textbox({
         uid = 1,
@@ -79,8 +83,20 @@ emu.atvi(function()
             height = 118,
         },
         position = {
-            x = joypad.get().X,
-            y = -joypad.get().Y,
+            x = 0,
+            y = 0,
         },
+    });
+
+    value = Mupen_lua_ugui.trackbar({
+        uid = 4,
+        is_enabled = true,
+        rectangle = {
+            x = 200,
+            y = 100,
+            width = 20,
+            height = 200,
+        },
+        value = value
     });
 end)

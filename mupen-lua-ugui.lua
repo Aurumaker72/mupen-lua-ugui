@@ -88,6 +88,12 @@ local function is_pointer_inside(rectangle)
         Mupen_lua_ugui.input_state.pointer.position.x < rectangle.x + rectangle.width and
         Mupen_lua_ugui.input_state.pointer.position.y < rectangle.y + rectangle.height;
 end
+local function is_previous_primary_down_pointer_inside(rectangle)
+    return Mupen_lua_ugui.previous_pointer_primary_down_position.x > rectangle.x and
+        Mupen_lua_ugui.previous_pointer_primary_down_position.y > rectangle.y and
+        Mupen_lua_ugui.previous_pointer_primary_down_position.x < rectangle.x + rectangle.width and
+        Mupen_lua_ugui.previous_pointer_primary_down_position.y < rectangle.y + rectangle.height;
+end
 local function is_pointer_just_inside(rectangle)
     return (Mupen_lua_ugui.input_state.pointer.position.x > rectangle.x and
             Mupen_lua_ugui.input_state.pointer.position.y > rectangle.y and
@@ -137,16 +143,17 @@ local ACTIVE = 2
 
 local function get_basic_visual_state(control)
     if is_pointer_inside(control.rectangle) then
-        if is_pointer_down() then
+        if is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
             return ACTIVE
-        else
-            return HOVER
         end
+
+        return HOVER
     end
     return NORMAL
 end
 
 Mupen_lua_ugui = {
+    -- TODO: find better way of protecting these
     -- Dictionary of additional control data by id
     -- Library-side state, don't mutate
     control_data = {},
@@ -156,6 +163,8 @@ Mupen_lua_ugui = {
     previous_input_state = {},
     -- Library-side state, don't mutate
     active_control_uid = nil,
+    -- Library-side state, don't mutate
+    previous_pointer_primary_down_position = { x = 0, y = 0 },
 
     stylers = {
         windows_10 = {
@@ -338,6 +347,85 @@ Mupen_lua_ugui = {
                     g = 0,
                     b = 0
                 })
+            end,
+            draw_trackbar = function(control)
+                local visual_state = get_basic_visual_state(control)
+
+                local track_color = {
+                    r = 231,
+                    g = 234,
+                    b = 234
+                }
+                local track_border_color = {
+                    r = 214,
+                    g = 214,
+                    b = 214
+                }
+                local head_color = {
+                    r = 0,
+                    g = 122,
+                    b = 217
+                }
+
+                if Mupen_lua_ugui.active_control_uid == control.uid then
+                    visual_state = ACTIVE
+                end
+
+                if visual_state == HOVER then
+                    head_color = {
+                        r = 23,
+                        g = 23,
+                        b = 23,
+                    }
+                elseif visual_state == ACTIVE then
+                    head_color = {
+                        r = 204,
+                        g = 204,
+                        b = 204,
+                    }
+                end
+
+
+
+                local is_horizontal = control.rectangle.width > control.rectangle.height
+                local HEAD_WIDTH = 6
+                local TRACK_THICKNESS = 2
+                local HEAD_HEIGHT = (TRACK_THICKNESS + 2 * 2) * 3
+                local track_rectangle = {}
+                local head_rectangle = {}
+
+                if not is_horizontal then
+                    track_rectangle = {
+                        x = control.rectangle.x + control.rectangle.width / 2 - TRACK_THICKNESS / 2,
+                        y = control.rectangle.y,
+                        width = TRACK_THICKNESS,
+                        height = control.rectangle.height
+                    }
+                    head_rectangle = {
+                        x = control.rectangle.x + control.rectangle.width / 2 - HEAD_HEIGHT / 2,
+                        y = control.rectangle.y + (control.value * control.rectangle.height) - HEAD_WIDTH / 2,
+                        width = HEAD_HEIGHT,
+                        height = HEAD_WIDTH
+                    }
+                else
+                    track_rectangle = {
+                        x = control.rectangle.x,
+                        y = control.rectangle.y + control.rectangle.height / 2 - TRACK_THICKNESS / 2,
+                        width = control.rectangle.width,
+                        height = TRACK_THICKNESS
+                    }
+                    head_rectangle = {
+                        x = control.rectangle.x + (control.value * control.rectangle.width) - HEAD_WIDTH / 2,
+                        y = control.rectangle.y + control.rectangle.height / 2 - HEAD_HEIGHT / 2,
+                        width = HEAD_WIDTH,
+                        height = HEAD_HEIGHT
+                    }
+                end
+
+                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(track_rectangle, 1),
+                    track_border_color)
+                BreitbandGraphics.gdi_fill_rectangle(track_rectangle, track_color)
+                BreitbandGraphics.gdi_fill_rectangle(head_rectangle, head_color)
             end
         },
     },
@@ -345,6 +433,10 @@ Mupen_lua_ugui = {
     begin_frame = function(input_state)
         Mupen_lua_ugui.previous_input_state = clone(Mupen_lua_ugui.input_state)
         Mupen_lua_ugui.input_state = clone(input_state)
+
+        if is_pointer_just_down() then
+            Mupen_lua_ugui.previous_pointer_primary_down_position = Mupen_lua_ugui.input_state.pointer.position
+        end
     end,
 
     button = function(control)
@@ -359,7 +451,7 @@ Mupen_lua_ugui = {
     end,
 
     toggle_button = function(control)
-        local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle)
+        local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle)
         local is_checked = control.is_checked
         if pushed then
             Mupen_lua_ugui.active_control_uid = control.uid
@@ -378,7 +470,7 @@ Mupen_lua_ugui = {
             }
         end
 
-        if is_pointer_just_down() and is_pointer_inside(control.rectangle) then
+        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
@@ -400,7 +492,7 @@ Mupen_lua_ugui = {
         local text = control.text
 
         if Mupen_lua_ugui.active_control_uid == control.uid then
-            if is_pointer_inside(control.rectangle) and is_pointer_down() then
+            if is_pointer_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
                 Mupen_lua_ugui.control_data[control.uid].caret_index = get_caret_index_at_relative_position(
                     Mupen_lua_ugui.input_state.pointer.position)
             end
@@ -448,4 +540,35 @@ Mupen_lua_ugui = {
 
         return control.position
     end,
+
+    trackbar = function(control)
+        local value = control.value
+
+        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
+            Mupen_lua_ugui.active_control_uid = control.uid
+        end
+
+        -- we instantly deactivate this control after releasing our mouse to emulate windows behaviour
+        if Mupen_lua_ugui.active_control_uid == control.uid and not is_pointer_down() then
+            Mupen_lua_ugui.active_control_uid = nil
+        end
+
+        if Mupen_lua_ugui.active_control_uid == control.uid and is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
+            if control.rectangle.width > control.rectangle.height then
+                value = clamp(
+                    (Mupen_lua_ugui.input_state.pointer.position.x - control.rectangle.x) /
+                    control.rectangle.width,
+                    0, 1)
+            else
+                value = clamp(
+                    (Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y) /
+                    control.rectangle.height,
+                    0, 1)
+            end
+        end
+
+        Mupen_lua_ugui.stylers.windows_10.draw_trackbar(control)
+
+        return value
+    end
 }
