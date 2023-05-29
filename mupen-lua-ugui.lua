@@ -172,32 +172,3 @@ Mupen_lua_ugui = {
         return is_pointer_inside(control.rectangle) and is_pointer_just_down()
     end
 }
-
-emu.atvi(function()
-    local keys = input.get()
-    Mupen_lua_ugui.prepare_frame({
-        pointer = {
-            position = {
-                x = keys.xmouse,
-                y = keys.ymouse,
-            },
-            is_primary_down = keys.leftclick
-        }
-    })
-
-    local is_pressed = Mupen_lua_ugui.button({
-        uid = 0,
-        is_enabled = true,
-        rectangle = {
-            x = 40,
-            y = 90,
-            width = 120,
-            height = 40,
-        },
-        text = "Hello World!"
-    });
-
-    if is_pressed then
-        print(math.random())
-    end
-end)
