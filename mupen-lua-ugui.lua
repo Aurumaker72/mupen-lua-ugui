@@ -1,4 +1,4 @@
-Bandbreitegfx = {
+BreitbandGraphics = {
     color_to_hex = function(color)
         return string.format("#%06X", (color.r * 0x10000) + (color.g * 0x100) + color.b)
     end,
@@ -12,38 +12,46 @@ Bandbreitegfx = {
     end,
     gdi_draw_rectangle = function(rectangle, color)
         wgui.setbrush("null") -- https://github.com/mkdasher/mupen64-rr-lua-/blob/master/lua/LuaConsole.cpp#L2004
-        wgui.setpen(Bandbreitegfx.color_to_hex(color))
+        wgui.setpen(BreitbandGraphics.color_to_hex(color))
         wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end,
     gdi_fill_rectangle = function(rectangle, color)
-        wgui.setbrush(Bandbreitegfx.color_to_hex(color))
-        wgui.setpen(Bandbreitegfx.color_to_hex(color))
+        wgui.setbrush(BreitbandGraphics.color_to_hex(color))
+        wgui.setpen(BreitbandGraphics.color_to_hex(color))
         wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end,
     gdi_draw_ellipse = function(rectangle, color)
         wgui.setbrush("null")
-        wgui.setpen(Bandbreitegfx.color_to_hex(color))
+        wgui.setpen(BreitbandGraphics.color_to_hex(color))
         wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end,
     gdi_fill_ellipse = function(rectangle, color)
-        wgui.setbrush(Bandbreitegfx.color_to_hex(color))
-        wgui.setpen(bandbreitegfx.color_to_hex(color))
-        wgui.ellipse(Bandbreitegfx.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+        wgui.setbrush(BreitbandGraphics.color_to_hex(color))
+        wgui.setpen(BreitbandGraphics.color_to_hex(color))
+        wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end,
-    gdi_draw_text = function(rectangle, alignment, color, font_size, font_name, text)
-        wgui.setcolor(Bandbreitegfx.color_to_hex(color))
+    gdi_draw_text = function(rectangle, alignment, respect_bounds, color, font_size, font_name, text)
+        wgui.setcolor(BreitbandGraphics.color_to_hex(color))
         wgui.setfont(font_size,
             font_name, "")
         local flags = ""
         if alignment == "center-center" then
             flags = "cv"
         end
+        if alignment == "left-center" then
+            flags = "v"
+        end
         wgui.drawtext(text, {
             l = rectangle.x,
             t = rectangle.y,
-            w = rectangle.width,
-            h = rectangle.height,
+            w = respect_bounds and rectangle.width or 99999,
+            h = respect_bounds and rectangle.height or 99999,
         }, flags)
+    end,
+    gdi_draw_line = function(from, to, color, thickness)
+        wgui.setbrush("null")
+        wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
+        wgui.line(from.x, from.y, to.x, to.y)
     end
 }
 
@@ -62,6 +70,16 @@ local function clone(obj)
         return setmetatable(NewTable, getmetatable(obj)) --Assignment metatable
     end
     return Func(obj)                                     --If there is a table in the table, the embedded table is also copied
+end
+
+local function clamp(value, min, max)
+    if value < min then
+        return min
+    end
+    if value > max then
+        return max
+    end
+    return value
 end
 
 local function is_pointer_inside(rectangle)
@@ -89,6 +107,30 @@ local function is_pointer_just_down()
         not Mupen_lua_ugui.previous_input_state.pointer.is_primary_down;
 end
 
+local function get_just_pressed_keys()
+    local keys = {}
+    for key, value in pairs(Mupen_lua_ugui.input_state.keyboard.held_keys) do
+        if not Mupen_lua_ugui.previous_input_state.keyboard.held_keys[key] then
+            keys[key] = 1
+        end
+    end
+    return keys
+end
+
+local function remove_at(string, index)
+    if index == 0 then
+        return string
+    end
+    return string:sub(1, index - 1) .. string:sub(index + 1, string:len())
+end
+local function insert_at(string, string2, index)
+    return string:sub(1, index) .. string2 .. string:sub(index + string2:len(), string:len())
+end
+
+local function remap(value, from1, to1, from2, to2)
+    return (value - from1) / (to1 - from1) * (to2 - from2) + from2
+end
+
 local NORMAL = 0
 local HOVER = 1
 local ACTIVE = 2
@@ -105,26 +147,40 @@ local function get_basic_visual_state(control)
 end
 
 Mupen_lua_ugui = {
+    -- Dictionary of additional control data by id
+    -- Library-side state, don't mutate
+    control_data = {},
+    -- Library-side state, don't mutate
     input_state = {},
+    -- Library-side state, don't mutate
     previous_input_state = {},
+    -- Library-side state, don't mutate
+    active_control_uid = nil,
 
     stylers = {
         windows_10 = {
-            draw_button = function(control)
-                local visual_state = get_basic_visual_state(control)
-                local back_color = nil
-                local border_color = nil
+            draw_raised_frame = function(control, visual_state)
+                local back_color = {
+                    r = 225,
+                    g = 225,
+                    b = 225
+                }
+                local border_color = {
+                    r = 173,
+                    g = 173,
+                    b = 173
+                }
 
-                if visual_state == NORMAL then
+                if visual_state == ACTIVE then
                     back_color = {
-                        r = 225,
-                        g = 225,
-                        b = 225
+                        r = 204,
+                        g = 228,
+                        b = 247
                     }
                     border_color = {
-                        r = 173,
-                        g = 173,
-                        b = 173
+                        r = 0,
+                        g = 84,
+                        b = 153
                     }
                 elseif visual_state == HOVER then
                     back_color = {
@@ -137,12 +193,53 @@ Mupen_lua_ugui = {
                         g = 120,
                         b = 215
                     }
-                elseif visual_state == ACTIVE then
-                    back_color = {
-                        r = 204,
-                        g = 228,
-                        b = 247
+                end
+                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
+                    border_color)
+                BreitbandGraphics.gdi_fill_rectangle(control.rectangle, back_color)
+            end,
+            draw_button = function(control, override_active)
+                local visual_state = get_basic_visual_state(control)
+                if override_active then
+                    visual_state = ACTIVE
+                end
+
+                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
+
+                BreitbandGraphics.gdi_draw_text(control.rectangle, 'center-center', true, {
+                    r = 0,
+                    g = 0,
+                    b = 0
+                }, 11, "Microsoft Sans Serif", control.text)
+            end,
+            draw_togglebutton = function(control)
+                Mupen_lua_ugui.stylers.windows_10.draw_button(control, control.is_checked)
+            end,
+            draw_textbox = function(control)
+                local visual_state = get_basic_visual_state(control)
+
+                local back_color = {
+                    r = 255,
+                    g = 255,
+                    b = 255
+                }
+                local border_color = {
+                    r = 122,
+                    g = 122,
+                    b = 122
+                }
+
+                if Mupen_lua_ugui.active_control_uid == control.uid then
+                    visual_state = ACTIVE
+                end
+
+                if visual_state == HOVER then
+                    border_color = {
+                        r = 23,
+                        g = 23,
+                        b = 23,
                     }
+                elseif visual_state == ACTIVE then
                     border_color = {
                         r = 0,
                         g = 84,
@@ -150,25 +247,205 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Bandbreitegfx.gdi_fill_rectangle(Bandbreitegfx.inflate_rectangle(control.rectangle, 1), border_color)
-                Bandbreitegfx.gdi_fill_rectangle(control.rectangle, back_color)
-                Bandbreitegfx.gdi_draw_text(control.rectangle, 'center-center', {
+                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
+                    border_color)
+                BreitbandGraphics.gdi_fill_rectangle(control.rectangle, back_color)
+                BreitbandGraphics.gdi_draw_text(control.rectangle, 'left-top', false, {
                     r = 0,
                     g = 0,
                     b = 0
                 }, 11, "Microsoft Sans Serif", control.text)
+
+                local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                local caret_x = wgui.gettextextent(string_to_caret).width
+
+                if visual_state == ACTIVE then
+                    BreitbandGraphics.gdi_draw_line({
+                        x = control.rectangle.x + caret_x,
+                        y = control.rectangle.y + 2
+                    }, {
+                        x = control.rectangle.x + caret_x,
+                        y = control.rectangle.y + math.max(15, wgui.gettextextent(control.text).height)
+                    }, {
+                        r = 0,
+                        g = 0,
+                        b = 0
+                    }, 1)
+                end
+            end,
+            draw_joystick = function(control)
+                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, NORMAL)
+
+                local stick_position = {}
+
+                stick_position.x = remap(control.position.x, -128, 127, control.rectangle.x,
+                    control.rectangle.x + control.rectangle.width)
+                stick_position.y = remap(control.position.y, -127, 128, control.rectangle.y,
+                    control.rectangle.y + control.rectangle.height)
+
+                BreitbandGraphics.gdi_fill_ellipse(control.rectangle, {
+                    r = 0,
+                    g = 0,
+                    b = 0
+                })
+                BreitbandGraphics.gdi_fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1), {
+                    r = 255,
+                    g = 255,
+                    b = 255
+                })
+                BreitbandGraphics.gdi_draw_line({
+                    x = control.rectangle.x + control.rectangle.width / 2,
+                    y = control.rectangle.y,
+                }, {
+                    x = control.rectangle.x + control.rectangle.width / 2,
+                    y = control.rectangle.y + control.rectangle.height
+                }, {
+                    r = 0,
+                    g = 0,
+                    b = 0
+                }, 1)
+                BreitbandGraphics.gdi_draw_line({
+                    x = control.rectangle.x,
+                    y = control.rectangle.y + control.rectangle.height / 2,
+                }, {
+                    x = control.rectangle.x + control.rectangle.width,
+                    y = control.rectangle.y + control.rectangle.height / 2,
+                }, {
+                    r = 0,
+                    g = 0,
+                    b = 0
+                }, 1)
+
+                BreitbandGraphics.gdi_draw_line({
+                    x = control.rectangle.x + control.rectangle.width / 2,
+                    y = control.rectangle.y + control.rectangle.height / 2,
+                }, {
+                    x = stick_position.x,
+                    y = stick_position.y,
+                }, {
+                    r = 0,
+                    g = 0,
+                    b = 255
+                }, 3)
+                local tip_size = 5
+                BreitbandGraphics.gdi_fill_ellipse({
+                    x = stick_position.x - tip_size / 2,
+                    y = stick_position.y - tip_size / 2,
+                    width = tip_size + 2,
+                    height = tip_size + 2,
+                }, {
+                    r = 255,
+                    g = 0,
+                    b = 0
+                })
             end
         },
     },
 
-    prepare_frame = function(input_state)
+    begin_frame = function(input_state)
         Mupen_lua_ugui.previous_input_state = clone(Mupen_lua_ugui.input_state)
         Mupen_lua_ugui.input_state = clone(input_state)
     end,
 
     button = function(control)
-        Mupen_lua_ugui.stylers.windows_10.draw_button(control)
+        local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle)
+        if pushed then
+            Mupen_lua_ugui.active_control_uid = control.uid
+        end
 
-        return is_pointer_inside(control.rectangle) and is_pointer_just_down()
-    end
+        Mupen_lua_ugui.stylers.windows_10.draw_button(control, false)
+
+        return pushed
+    end,
+
+    toggle_button = function(control)
+        local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle)
+        local is_checked = control.is_checked
+        if pushed then
+            Mupen_lua_ugui.active_control_uid = control.uid
+            is_checked = not is_checked
+        end
+
+        Mupen_lua_ugui.stylers.windows_10.draw_togglebutton(control)
+
+        return is_checked
+    end,
+
+    textbox = function(control)
+        if not Mupen_lua_ugui.control_data[control.uid] then
+            Mupen_lua_ugui.control_data[control.uid] = {
+                caret_index = 1
+            }
+        end
+
+        if is_pointer_just_down() and is_pointer_inside(control.rectangle) then
+            Mupen_lua_ugui.active_control_uid = control.uid
+        end
+
+        local function get_caret_index_at_relative_position(position)
+            -- TODO: optimize
+            local x = position.x - control.rectangle.x
+            local lowest_distance = 9999999999
+            local lowest_distance_index = -1
+            for i = 1, #control.text + 2, 1 do
+                local dist = math.abs(wgui.gettextextent(control.text:sub(1, i - 1)).width - x)
+                if dist < lowest_distance then
+                    lowest_distance = dist
+                    lowest_distance_index = i
+                end
+            end
+            return lowest_distance_index
+        end
+
+        local text = control.text
+
+        if Mupen_lua_ugui.active_control_uid == control.uid then
+            if is_pointer_inside(control.rectangle) and is_pointer_down() then
+                Mupen_lua_ugui.control_data[control.uid].caret_index = get_caret_index_at_relative_position(
+                    Mupen_lua_ugui.input_state.pointer.position)
+            end
+
+            local just_pressed_keys = get_just_pressed_keys();
+
+            if just_pressed_keys.left then
+                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                    .caret_index - 1
+            elseif just_pressed_keys.right then
+                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                    .caret_index + 1
+            elseif just_pressed_keys.space then
+                text = insert_at(text, " ", Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                    .caret_index + 1
+            elseif just_pressed_keys.backspace then
+                text = remove_at(text, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                    .caret_index - 1
+            else
+                for key, _ in pairs(just_pressed_keys) do
+                    if not (#key == 1) then
+                        goto continue
+                    end
+                    text = insert_at(text, key, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                        .caret_index + 1
+                    ::continue::
+                end
+            end
+
+            Mupen_lua_ugui.control_data[control.uid].caret_index = clamp(
+                Mupen_lua_ugui.control_data[control.uid].caret_index, 1, #text + 1)
+        end
+
+
+        Mupen_lua_ugui.stylers.windows_10.draw_textbox(control)
+
+        return text
+    end,
+
+    joystick = function(control)
+        Mupen_lua_ugui.stylers.windows_10.draw_joystick(control)
+
+        return control.position
+    end,
 }
