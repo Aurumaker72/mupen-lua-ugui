@@ -12,8 +12,7 @@ dofile(folder('demo.lua') .. 'mupen-lua-ugui.lua')
 local text = "Sample text"
 local is_checked = true
 local value = 0
-
-
+local selected_index = 0
 local input_state = {}
 
 emu.atvi(function()
@@ -39,14 +38,17 @@ emu.atvi(function()
         uid = 0,
         is_enabled = true,
         rectangle = {
-            x = 40,
-            y = 90,
+            x = 300,
+            y = 60,
             width = 120,
             height = 40,
         },
         text = "Hello World!"
     });
 
+    if is_pressed then
+        print("Hello")
+    end
 
     text = Mupen_lua_ugui.textbox({
         uid = 1,
@@ -69,7 +71,7 @@ emu.atvi(function()
             width = 120,
             height = 40,
         },
-        text = "Test",
+        text = selected_index,
         is_checked = is_checked,
     });
 
@@ -98,5 +100,23 @@ emu.atvi(function()
             height = 200,
         },
         value = value
+    });
+
+
+    selected_index = Mupen_lua_ugui.combobox({
+        uid = 5,
+        is_enabled = true,
+        rectangle = {
+            x = 300,
+            y = 20,
+            width = 120,
+            height = 30,
+        },
+        items = {
+            "Item A",
+            "Test",
+            "Hey"
+        },
+        selected_index = selected_index,
     });
 end)

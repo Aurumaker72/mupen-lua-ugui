@@ -39,7 +39,10 @@ BreitbandGraphics = {
             flags = "cv"
         end
         if alignment == "left-center" then
-            flags = "v"
+            flags = "lv"
+        end
+        if alignment == "right-center" then
+            flags = "rv"
         end
         wgui.drawtext(text, {
             l = rectangle.x,
@@ -165,6 +168,8 @@ Mupen_lua_ugui = {
     active_control_uid = nil,
     -- Library-side state, don't mutate
     previous_pointer_primary_down_position = { x = 0, y = 0 },
+    -- Library-side state, don't mutate
+    modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 },
 
     stylers = {
         windows_10 = {
@@ -426,6 +431,90 @@ Mupen_lua_ugui = {
                     track_border_color)
                 BreitbandGraphics.gdi_fill_rectangle(track_rectangle, track_color)
                 BreitbandGraphics.gdi_fill_rectangle(head_rectangle, head_color)
+            end,
+            draw_combobox = function(control)
+                local visual_state = get_basic_visual_state(control)
+
+                if Mupen_lua_ugui.control_data[control.uid].is_open then
+                    visual_state = ACTIVE
+                end
+
+                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
+
+                BreitbandGraphics.gdi_draw_text({
+                        x = control.rectangle.x + 2,
+                        y = control.rectangle.y,
+                        width = control.rectangle.width,
+                        height = control.rectangle.height,
+                    }, "left-center", true, {
+                        r = 0,
+                        g = 0,
+                        b = 0
+                    }, 11, "Microsoft Sans Serif",
+                    control.items[control.selected_index])
+
+                BreitbandGraphics.gdi_draw_text({
+                        x = control.rectangle.x,
+                        y = control.rectangle.y,
+                        width = control.rectangle.width - 8,
+                        height = control.rectangle.height,
+                    }, "right-center", true, {
+                        r = 0,
+                        g = 0,
+                        b = 0
+                    }, 11, "Segoe UI Mono",
+                    Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
+
+                if Mupen_lua_ugui.control_data[control.uid].is_open then
+                    BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle({
+                        x = control.rectangle.x,
+                        y = control.rectangle.y + control.rectangle.height,
+                        width = control.rectangle.width,
+                        height = #control.items * 20
+                    }, 1), {
+                        r = 0,
+                        g = 120,
+                        b = 215
+                    })
+
+                    for i = 1, #control.items, 1 do
+                        local rect = {
+                            x = control.rectangle.x,
+                            y = control.rectangle.y + control.rectangle.height + (20 * (i - 1)),
+                            width = control.rectangle.width,
+                            height = 20
+                        }
+
+                        local back_color = {
+                            r = 255,
+                            g = 255,
+                            b = 255
+                        }
+                        local text_color = {
+                            r = 0,
+                            g = 0,
+                            b = 0
+                        }
+
+                        if Mupen_lua_ugui.control_data[control.uid].hovered_index == i then
+                            back_color = {
+                                r = 0,
+                                g = 120,
+                                b = 215
+                            }
+                            text_color = {
+                                r = 255,
+                                g = 255,
+                                b = 255
+                            }
+                        end
+
+                        BreitbandGraphics.gdi_fill_rectangle(rect, back_color)
+                        rect.x = rect.x + 2
+                        BreitbandGraphics.gdi_draw_text(rect, "left-center", true, text_color, 11, "Microsoft Sans Serif",
+                            control.items[i])
+                    end
+                end
             end
         },
     },
@@ -440,7 +529,9 @@ Mupen_lua_ugui = {
     end,
 
     button = function(control)
-        local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle)
+        local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle) and
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+
         if pushed then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
@@ -451,7 +542,8 @@ Mupen_lua_ugui = {
     end,
 
     toggle_button = function(control)
-        local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle)
+        local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
         local is_checked = control.is_checked
         if pushed then
             Mupen_lua_ugui.active_control_uid = control.uid
@@ -470,7 +562,8 @@ Mupen_lua_ugui = {
             }
         end
 
-        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
+        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
@@ -544,7 +637,8 @@ Mupen_lua_ugui = {
     trackbar = function(control)
         local value = control.value
 
-        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
+        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
@@ -570,5 +664,65 @@ Mupen_lua_ugui = {
         Mupen_lua_ugui.stylers.windows_10.draw_trackbar(control)
 
         return value
+    end,
+
+    combobox = function(control)
+        if not Mupen_lua_ugui.control_data[control.uid] then
+            Mupen_lua_ugui.control_data[control.uid] = {
+                is_open = false,
+                hovered_index = 0,
+            }
+        end
+
+        if is_pointer_just_down() then
+            if is_pointer_inside(control.rectangle) then
+                Mupen_lua_ugui.control_data[control.uid].is_open = not Mupen_lua_ugui.control_data[control.uid].is_open
+            else
+                if not is_pointer_inside({
+                        x = control.rectangle.x,
+                        y = control.rectangle.y + control.rectangle.height,
+                        width = control.rectangle.width,
+                        height = 20 * #control.items
+                    }) then
+                    Mupen_lua_ugui.control_data[control.uid].is_open = false
+                end
+            end
+        end
+
+        local selected_index = control.selected_index
+        Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
+
+
+
+        if Mupen_lua_ugui.control_data[control.uid].is_open then
+            for i = 1, #control.items, 1 do
+                if is_pointer_inside({
+                        x = control.rectangle.x,
+                        y = control.rectangle.y + control.rectangle.height + (20 * (i - 1)),
+                        width = control.rectangle.width,
+                        height = 20
+                    }) then
+                    if is_pointer_just_down() then
+                        selected_index = i
+                        Mupen_lua_ugui.control_data[control.uid].is_open = false
+                    end
+                    Mupen_lua_ugui.control_data[control.uid].hovered_index = i
+                    break
+                end
+            end
+
+            Mupen_lua_ugui.modal_hittest_ignore_rectangle = {
+                x = control.rectangle.x,
+                y = control.rectangle.y + control.rectangle.height,
+                width = control.rectangle.width,
+                height = 20 * #control.items
+            }
+        end
+
+        selected_index = clamp(selected_index, 1, #control.items)
+
+        Mupen_lua_ugui.stylers.windows_10.draw_combobox(control)
+
+        return selected_index
     end
 }
