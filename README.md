@@ -16,6 +16,7 @@
 - Easy setup
   - Include only one file
 - Flexible
+  - Display controls whenever you want, with any data you want
   - Easily add new controls and stylers
 - Host-authoritative
   - The host script coordinates everything: no library lock-in
