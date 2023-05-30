@@ -19,6 +19,7 @@
   - Easily add new controls and stylers
 - Host-authoritative
   - The host script coordinates everything: no library lock-in
+  - No global pollution - only necessary components are exposed as tables
   
   
 # Why would I use this?
