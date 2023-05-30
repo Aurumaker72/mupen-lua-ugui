@@ -515,6 +515,92 @@ Mupen_lua_ugui = {
                             control.items[i])
                     end
                 end
+            end,
+
+            draw_listbox = function(control)
+                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1), {
+                    r = 130,
+                    g = 135,
+                    b = 144
+                })
+                BreitbandGraphics.gdi_fill_rectangle(control.rectangle, {
+                    r = 255,
+                    g = 255,
+                    b = 255
+                })
+
+                BreitbandGraphics.gdi_fill_rectangle({
+                    x = control.rectangle.x + control.rectangle.width - 10,
+                    y = control.rectangle.y,
+                    width = 10,
+                    height = control.rectangle.height
+                }, {
+                    r = 240,
+                    g = 240,
+                    b = 240
+                })
+
+                local scrollbar_y = Mupen_lua_ugui.control_data[control.uid].y_translation * control.rectangle.height
+                local scrollbar_height = 2 * 20 * (control.rectangle.height / (20 * #control.items))
+                -- we center the scrollbar around the translation value
+
+                scrollbar_y = scrollbar_y - scrollbar_height / 2
+                scrollbar_y = clamp(scrollbar_y, 0, control.rectangle.height - scrollbar_height)
+
+                BreitbandGraphics.gdi_fill_rectangle({
+                    x = control.rectangle.x + control.rectangle.width - 10,
+                    y = control.rectangle.y + scrollbar_y,
+                    width = 10,
+                    height = scrollbar_height
+                }, {
+                    r = 204,
+                    g = 204,
+                    b = 204
+                })
+
+                -- item y position:
+                -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
+
+                local index_begin = (Mupen_lua_ugui.control_data[control.uid].y_translation *
+                    ((20 * #control.items) - control.rectangle.height)) / 20
+
+                local index_end = (control.rectangle.height + (Mupen_lua_ugui.control_data[control.uid].y_translation *
+                    ((20 * #control.items) - control.rectangle.height))) / 20
+
+                index_begin = math.max(index_begin, 0)
+                index_end = math.min(index_end, #control.items)
+
+                -- print("From i = " .. math.floor(index_begin) .. " to i = " .. math.ceil(index_end))
+                for i = math.floor(index_begin), math.ceil(index_end), 1 do
+                    local y = (20 * (i - 1)) -
+                        (Mupen_lua_ugui.control_data[control.uid].y_translation * ((20 * #control.items) - control.rectangle.height))
+                    -- text drawing will explode when sending fractional coordinates
+                    -- TODO: add subpixel support to BreitbandGraphics
+                    y = math.floor(y)
+
+                    -- TODO: add clipping support, as proper smooth scrolling is not achievable without clipping
+                    -- BreitbandGraphics.gdi_draw_rectangle({
+                    --     x = control.rectangle.x,
+                    --     y = control.rectangle.y + y,
+                    --     width = control.rectangle.width,
+                    --     height = 20
+                    -- }, {
+                    --     r = 0,
+                    --     g = 0,
+                    --     b = 255
+                    -- })
+                    BreitbandGraphics.gdi_draw_text({
+                            x = control.rectangle.x,
+                            y = control.rectangle.y + y,
+                            width = control.rectangle.width,
+                            height = 20
+                        }, "left-center", true, {
+                            r = 0,
+                            g = 0,
+                            b = 0
+                        }, 11, "Microsoft Sans Serif",
+                        control.items[i])
+                end
             end
         },
     },
@@ -722,6 +808,47 @@ Mupen_lua_ugui = {
         selected_index = clamp(selected_index, 1, #control.items)
 
         Mupen_lua_ugui.stylers.windows_10.draw_combobox(control)
+
+        return selected_index
+    end,
+
+    listbox = function(control)
+        if not Mupen_lua_ugui.control_data[control.uid] then
+            Mupen_lua_ugui.control_data[control.uid] = {
+                y_translation = 0,
+            }
+        end
+
+        local scrollbar_rect = {
+            x = control.rectangle.x + control.rectangle.width - 10,
+            y = control.rectangle.y,
+            width = 10,
+            height = control.rectangle.height,
+        }
+
+        -- we instantly deactivate this control after releasing our mouse to emulate windows behaviour
+        if Mupen_lua_ugui.active_control_uid == control.uid and not is_pointer_down() then
+            Mupen_lua_ugui.active_control_uid = nil
+        end
+
+        if is_pointer_just_down() and is_pointer_inside(scrollbar_rect) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
+            Mupen_lua_ugui.active_control_uid = control.uid
+        end
+
+
+        if Mupen_lua_ugui.active_control_uid == control.uid then
+            local v = (Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y) /
+                control.rectangle.height
+            Mupen_lua_ugui.control_data[control.uid].y_translation = v
+        end
+
+        Mupen_lua_ugui.control_data[control.uid].y_translation = clamp(
+            Mupen_lua_ugui.control_data[control.uid].y_translation, 0, 1)
+
+
+        local selected_index = control.selected_index
+
+        Mupen_lua_ugui.stylers.windows_10.draw_listbox(control)
 
         return selected_index
     end

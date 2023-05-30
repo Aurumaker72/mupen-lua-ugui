@@ -14,6 +14,12 @@ local is_checked = true
 local value = 0
 local selected_index = 0
 local input_state = {}
+local many_values = {}
+local other_selected_index = 0
+
+for i = 1, 500000, 1 do
+    many_values[#many_values + 1] = "Item " .. i
+end
 
 emu.atvi(function()
     local keys = input.get()
@@ -44,7 +50,7 @@ emu.atvi(function()
             height = 40,
         },
         text = "Hello World!"
-    });
+    })
 
     if is_pressed then
         print("Hello")
@@ -60,7 +66,7 @@ emu.atvi(function()
             height = 40,
         },
         text = text,
-    });
+    })
 
     is_checked = Mupen_lua_ugui.toggle_button({
         uid = 2,
@@ -73,7 +79,7 @@ emu.atvi(function()
         },
         text = selected_index,
         is_checked = is_checked,
-    });
+    })
 
     Mupen_lua_ugui.joystick({
         uid = 3,
@@ -88,7 +94,7 @@ emu.atvi(function()
             x = 0,
             y = 0,
         },
-    });
+    })
 
     value = Mupen_lua_ugui.trackbar({
         uid = 4,
@@ -100,7 +106,7 @@ emu.atvi(function()
             height = 200,
         },
         value = value
-    });
+    })
 
 
     selected_index = Mupen_lua_ugui.combobox({
@@ -118,5 +124,19 @@ emu.atvi(function()
             "Hey"
         },
         selected_index = selected_index,
-    });
+    })
+
+
+    other_selected_index = Mupen_lua_ugui.listbox({
+        uid = 6,
+        is_enabled = true,
+        rectangle = {
+            x = 500,
+            y = 20,
+            width = 120,
+            height = 340,
+        },
+        items = many_values,
+        selected_index = selected_index,
+    })
 end)
