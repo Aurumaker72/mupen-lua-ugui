@@ -7,7 +7,7 @@
   mupen-lua-ugui
 </h1>
 <p align="center">
-  A truly lightweight and tunable immediate-mode GUI library for Mupen Lua
+  Lightweight and flexible immediate-mode GUI library for Mupen Lua
 </p>
 
 
