@@ -30,6 +30,23 @@ This library provides more control and extensibility than the monolithic Mupen-L
 It's also more efficient than rolling your own solution, as you don't need to write control or rendering logic.
 Any extensions, such as custom styling or new controls, are easy to create by writing to the global `Mupen_lua_ugui` table.
 
+# Features
+
+- Stylers
+  - Windows 10 (built-in, `windows_10`)
+- Fully mockable
+  - Swap out any subsystem with your own by writing to tables 
+- Button (`button`)
+- TextBox (`textbox`)
+  - Caret (controllable by keyboard and mouse)
+- ToggleButton (`toggle_button`)
+- Joystick (`joystick`)
+- TrackBar (`trackbar`)
+  - Automatically layout adjustement based on size ratio 
+- ComboBox (`combobox`) 
+- ListBox (`listbox`)
+  - Virtualization
+
 # BreitbandGraphics
 
 <details>
