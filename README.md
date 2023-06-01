@@ -7,7 +7,7 @@
   mupen-lua-ugui
 </h1>
 <p align="center">
-  A truly lightweight and tunable immediate-mode GUI library for Mupen Lua
+  Lightweight and flexible immediate-mode GUI library for Mupen Lua
 </p>
 
 
@@ -30,11 +30,25 @@ This library provides more control and extensibility than the monolithic Mupen-L
 It's also more efficient than rolling your own solution, as you don't need to write control or rendering logic.
 Any extensions, such as custom styling or new controls, are easy to create by writing to the global `Mupen_lua_ugui` table.
 
-# BreitbandGraphics
+# Features
 
-<details>
+- Stylers
+  - Windows 10 (built-in, `windows_10`)
+- Fully mockable
+  - Swap out any subsystem with your own by writing to tables 
+- Button (`button`)
+- TextBox (`textbox`)
+  - Caret (controllable by keyboard and mouse)
+- ToggleButton (`toggle_button`)
+- Joystick (`joystick`)
+- TrackBar (`trackbar`)
+  - Automatically layout adjustement based on size ratio 
+- ComboBox (`combobox`) 
+- ListBox (`listbox`)
+  - Virtualization
 
-<summary>BreitbandGraphics</summary>
+# Graphics
+
 <p align="center">
     <img width="128" align="center" src="https://user-images.githubusercontent.com/48759429/211370337-f5ce87e7-75de-4339-8ebd-401585a5f9f3.png">
 </p>
@@ -42,9 +56,7 @@ Any extensions, such as custom styling or new controls, are easy to create by wr
   BreitbandGraphics
 </h1>
 <p align="center">
-  A wrapper and utility function provider for the Mupen Lua Graphics APIs
+  Mupen Lua Graphics API abstraction layer
 </p>
 
-`BreitbandGraphics` is a part of `mupen-lua-ugui`, but can also be used directly by the host.
-  
-</details>
+`BreitbandGraphics` is a part of `mupen-lua-ugui`, but can also be invoked directly by the host.
