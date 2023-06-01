@@ -47,11 +47,8 @@ Any extensions, such as custom styling or new controls, are easy to create by wr
 - ListBox (`listbox`)
   - Virtualization
 
-# BreitbandGraphics
+# Graphics
 
-<details>
-
-<summary>BreitbandGraphics</summary>
 <p align="center">
     <img width="128" align="center" src="https://user-images.githubusercontent.com/48759429/211370337-f5ce87e7-75de-4339-8ebd-401585a5f9f3.png">
 </p>
@@ -59,9 +56,7 @@ Any extensions, such as custom styling or new controls, are easy to create by wr
   BreitbandGraphics
 </h1>
 <p align="center">
-  A wrapper and utility function provider for the Mupen Lua Graphics APIs
+  Mupen Lua Graphics API abstraction layer
 </p>
 
-`BreitbandGraphics` is a part of `mupen-lua-ugui`, but can also be used directly by the host.
-  
-</details>
+`BreitbandGraphics` is a part of `mupen-lua-ugui`, but can also be invoked directly by the host.
