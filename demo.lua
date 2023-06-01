@@ -17,7 +17,7 @@ local input_state = {}
 local many_values = {}
 local other_selected_index = 0
 
-for i = 1, 500000, 1 do
+for i = 1, 1000, 1 do
     many_values[#many_values + 1] = "Item " .. i
 end
 
@@ -49,11 +49,11 @@ emu.atvi(function()
             width = 120,
             height = 40,
         },
-        text = "Hello World!"
+        text = "add"
     })
 
     if is_pressed then
-        print("Hello")
+        many_values[#many_values + 1] = "new item"
     end
 
     text = Mupen_lua_ugui.textbox({

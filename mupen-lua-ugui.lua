@@ -529,34 +529,39 @@ Mupen_lua_ugui = {
                     b = 255
                 })
 
-                BreitbandGraphics.gdi_fill_rectangle({
-                    x = control.rectangle.x + control.rectangle.width - 10,
-                    y = control.rectangle.y,
-                    width = 10,
-                    height = control.rectangle.height
-                }, {
-                    r = 240,
-                    g = 240,
-                    b = 240
-                })
 
-                local scrollbar_y = Mupen_lua_ugui.control_data[control.uid].y_translation * control.rectangle.height
-                local scrollbar_height = 2 * 20 * (control.rectangle.height / (20 * #control.items))
-                -- we center the scrollbar around the translation value
 
-                scrollbar_y = scrollbar_y - scrollbar_height / 2
-                scrollbar_y = clamp(scrollbar_y, 0, control.rectangle.height - scrollbar_height)
+                if #control.items * 20 > control.rectangle.height then
+                    local scrollbar_y = Mupen_lua_ugui.control_data[control.uid].y_translation * control.rectangle
+                        .height
+                    local scrollbar_height = 2 * 20 * (control.rectangle.height / (20 * #control.items))
+                    -- we center the scrollbar around the translation value
 
-                BreitbandGraphics.gdi_fill_rectangle({
-                    x = control.rectangle.x + control.rectangle.width - 10,
-                    y = control.rectangle.y + scrollbar_y,
-                    width = 10,
-                    height = scrollbar_height
-                }, {
-                    r = 204,
-                    g = 204,
-                    b = 204
-                })
+                    scrollbar_y = scrollbar_y - scrollbar_height / 2
+                    scrollbar_y = clamp(scrollbar_y, 0, control.rectangle.height - scrollbar_height)
+
+                    BreitbandGraphics.gdi_fill_rectangle({
+                        x = control.rectangle.x + control.rectangle.width - 10,
+                        y = control.rectangle.y,
+                        width = 10,
+                        height = control.rectangle.height
+                    }, {
+                        r = 240,
+                        g = 240,
+                        b = 240
+                    })
+
+                    BreitbandGraphics.gdi_fill_rectangle({
+                        x = control.rectangle.x + control.rectangle.width - 10,
+                        y = control.rectangle.y + scrollbar_y,
+                        width = 10,
+                        height = scrollbar_height
+                    }, {
+                        r = 204,
+                        g = 204,
+                        b = 204
+                    })
+                end
 
                 -- item y position:
                 -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
@@ -837,14 +842,17 @@ Mupen_lua_ugui = {
 
 
         if Mupen_lua_ugui.active_control_uid == control.uid then
-            local v = (Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y) /
-                control.rectangle.height
-            Mupen_lua_ugui.control_data[control.uid].y_translation = v
+            -- only allow translation if content overflows
+
+            if #control.items * 20 > control.rectangle.height then
+                local v = (Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y) /
+                    control.rectangle.height
+                Mupen_lua_ugui.control_data[control.uid].y_translation = v
+            end
         end
 
         Mupen_lua_ugui.control_data[control.uid].y_translation = clamp(
             Mupen_lua_ugui.control_data[control.uid].y_translation, 0, 1)
-
 
         local selected_index = control.selected_index
 
