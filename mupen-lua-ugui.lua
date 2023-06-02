@@ -10,64 +10,69 @@ BreitbandGraphics = {
             height = rectangle.height + amount * 2,
         }
     end,
-    gdi_draw_rectangle = function(rectangle, color)
-        wgui.setbrush("null") -- https://github.com/mkdasher/mupen64-rr-lua-/blob/master/lua/LuaConsole.cpp#L2004
-        wgui.setpen(BreitbandGraphics.color_to_hex(color))
-        wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end,
-    gdi_fill_rectangle = function(rectangle, color)
-        wgui.setbrush(BreitbandGraphics.color_to_hex(color))
-        wgui.setpen(BreitbandGraphics.color_to_hex(color))
-        wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end,
-    gdi_draw_ellipse = function(rectangle, color)
-        wgui.setbrush("null")
-        wgui.setpen(BreitbandGraphics.color_to_hex(color))
-        wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end,
-    gdi_fill_ellipse = function(rectangle, color)
-        wgui.setbrush(BreitbandGraphics.color_to_hex(color))
-        wgui.setpen(BreitbandGraphics.color_to_hex(color))
-        wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end,
-    gdi_draw_text = function(rectangle, alignment, allow_wrap, color, font_size, font_name, text)
-        wgui.setcolor(BreitbandGraphics.color_to_hex(color))
-        wgui.setfont(font_size,
-            font_name, "")
-        local flags = ""
-        if alignment == "center-center" then
-            flags = "cv"
-        end
-        if alignment == "left-center" then
-            flags = "lv"
-        end
-        if alignment == "right-center" then
-            flags = "rv"
-        end
-        flags = flags .. "se"
-        -- FIXME: respect allow_wrap
-        -- if not allow_wrap then
-        --     flags = flags .. "n"
-        -- end
 
-        wgui.drawtext(text, {
-            l = rectangle.x,
-            t = rectangle.y,
-            w = rectangle.width,
-            h = rectangle.height,
-        }, flags)
-    end,
-    gdi_draw_line = function(from, to, color, thickness)
-        wgui.setbrush("null")
-        wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.line(from.x, from.y, to.x, to.y)
-    end,
-    gdi_setclip = function(rectangle)
-        wgui.setclip(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
-    end,
-    gdi_resetclip = function()
-        wgui.resetclip()
-    end
+    renderers = {
+        gdi = {
+            draw_rectangle = function(rectangle, color)
+                wgui.setbrush("null") -- https://github.com/mkdasher/mupen64-rr-lua-/blob/master/lua/LuaConsole.cpp#L2004
+                wgui.setpen(BreitbandGraphics.color_to_hex(color))
+                wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+            end,
+            fill_rectangle = function(rectangle, color)
+                wgui.setbrush(BreitbandGraphics.color_to_hex(color))
+                wgui.setpen(BreitbandGraphics.color_to_hex(color))
+                wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+            end,
+            draw_ellipse = function(rectangle, color)
+                wgui.setbrush("null")
+                wgui.setpen(BreitbandGraphics.color_to_hex(color))
+                wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+            end,
+            fill_ellipse = function(rectangle, color)
+                wgui.setbrush(BreitbandGraphics.color_to_hex(color))
+                wgui.setpen(BreitbandGraphics.color_to_hex(color))
+                wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+            end,
+            draw_text = function(rectangle, alignment, allow_wrap, color, font_size, font_name, text)
+                wgui.setcolor(BreitbandGraphics.color_to_hex(color))
+                wgui.setfont(font_size,
+                    font_name, "")
+                local flags = ""
+                if alignment == "center-center" then
+                    flags = "cv"
+                end
+                if alignment == "left-center" then
+                    flags = "lv"
+                end
+                if alignment == "right-center" then
+                    flags = "rv"
+                end
+                flags = flags .. "se"
+                -- FIXME: respect allow_wrap
+                -- if not allow_wrap then
+                --     flags = flags .. "n"
+                -- end
+
+                wgui.drawtext(text, {
+                    l = rectangle.x,
+                    t = rectangle.y,
+                    w = rectangle.width,
+                    h = rectangle.height,
+                }, flags)
+            end,
+            draw_line = function(from, to, color, thickness)
+                wgui.setbrush("null")
+                wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
+                wgui.line(from.x, from.y, to.x, to.y)
+            end,
+            setclip = function(rectangle)
+                wgui.setclip(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
+            end,
+            resetclip = function()
+                wgui.resetclip()
+            end
+        }
+    }
 }
 
 -- https://www.programmerall.com/article/6862983111/
@@ -176,6 +181,10 @@ Mupen_lua_ugui = {
     previous_pointer_primary_down_position = { x = 0, y = 0 },
     -- Library-side state, don't mutate
     modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 },
+    -- Library-side state, don't mutate
+    renderer = nil,
+    -- Library-side state, don't mutate
+    styler = nil,
 
     stylers = {
         windows_10 = {
@@ -226,9 +235,9 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
                     border_color)
-                BreitbandGraphics.gdi_fill_rectangle(control.rectangle, back_color)
+                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, back_color)
             end,
             draw_button = function(control, override_active)
                 local visual_state = get_basic_visual_state(control)
@@ -252,7 +261,7 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                BreitbandGraphics.gdi_draw_text(control.rectangle, 'center-center', true, text_color, 11,
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center-center', true, text_color, 11,
                     "Microsoft Sans Serif", control.text)
             end,
             draw_togglebutton = function(control)
@@ -311,22 +320,23 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
                     border_color)
-                BreitbandGraphics.gdi_fill_rectangle(control.rectangle, back_color)
-                BreitbandGraphics.gdi_draw_text(control.rectangle, 'left-top', false, text_color, 11,
+                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, back_color)
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'left-top', false, text_color, 11,
                     "Microsoft Sans Serif", control.text)
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
                 local caret_x = wgui.gettextextent(string_to_caret).width
 
                 if visual_state == ACTIVE then
-                    BreitbandGraphics.gdi_draw_line({
+                    Mupen_lua_ugui.renderer.draw_line({
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y + 2
                     }, {
                         x = control.rectangle.x + caret_x,
-                        y = control.rectangle.y + math.max(15, wgui.gettextextent(control.text).height)
+                        y = control.rectangle.y +
+                            math.max(15, wgui.gettextextent(control.text).height) -- TODO: move text measurement into BreitbandGraphics
                     }, {
                         r = 0,
                         g = 0,
@@ -386,16 +396,17 @@ Mupen_lua_ugui = {
                         control.rectangle.y + control.rectangle.height)
                 }
 
-                BreitbandGraphics.gdi_fill_ellipse(control.rectangle, outline_color)
-                BreitbandGraphics.gdi_fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1), back_color)
-                BreitbandGraphics.gdi_draw_line({
+                Mupen_lua_ugui.renderer.fill_ellipse(control.rectangle, outline_color)
+                Mupen_lua_ugui.renderer.fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    back_color)
+                Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y,
                 }, {
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y + control.rectangle.height
                 }, outline_color, 1)
-                BreitbandGraphics.gdi_draw_line({
+                Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x,
                     y = control.rectangle.y + control.rectangle.height / 2,
                 }, {
@@ -403,7 +414,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y + control.rectangle.height / 2,
                 }, outline_color, 1)
 
-                BreitbandGraphics.gdi_draw_line({
+                Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y + control.rectangle.height / 2,
                 }, {
@@ -411,7 +422,7 @@ Mupen_lua_ugui = {
                     y = stick_position.y,
                 }, line_color, 3)
                 local tip_size = 5
-                BreitbandGraphics.gdi_fill_ellipse({
+                Mupen_lua_ugui.renderer.fill_ellipse({
                     x = stick_position.x - tip_size / 2,
                     y = stick_position.y - tip_size / 2,
                     width = tip_size + 2,
@@ -498,10 +509,10 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(track_rectangle, 1),
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(track_rectangle, 1),
                     track_border_color)
-                BreitbandGraphics.gdi_fill_rectangle(track_rectangle, track_color)
-                BreitbandGraphics.gdi_fill_rectangle(head_rectangle, head_color)
+                Mupen_lua_ugui.renderer.fill_rectangle(track_rectangle, track_color)
+                Mupen_lua_ugui.renderer.fill_rectangle(head_rectangle, head_color)
             end,
             draw_combobox = function(control)
                 local visual_state = get_basic_visual_state(control)
@@ -525,7 +536,7 @@ Mupen_lua_ugui = {
                         b = 109,
                     }
                 end
-                BreitbandGraphics.gdi_draw_text({
+                Mupen_lua_ugui.renderer.draw_text({
                         x = control.rectangle.x + 2,
                         y = control.rectangle.y,
                         width = control.rectangle.width,
@@ -533,7 +544,7 @@ Mupen_lua_ugui = {
                     }, "left-center", false, text_color, 11, "Microsoft Sans Serif",
                     control.items[control.selected_index])
 
-                BreitbandGraphics.gdi_draw_text({
+                Mupen_lua_ugui.renderer.draw_text({
                         x = control.rectangle.x,
                         y = control.rectangle.y,
                         width = control.rectangle.width - 8,
@@ -542,7 +553,7 @@ Mupen_lua_ugui = {
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
-                    BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle({
+                    Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle({
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
                         width = control.rectangle.width,
@@ -585,9 +596,9 @@ Mupen_lua_ugui = {
                             }
                         end
 
-                        BreitbandGraphics.gdi_fill_rectangle(rect, back_color)
+                        Mupen_lua_ugui.renderer.fill_rectangle(rect, back_color)
                         rect.x = rect.x + 2
-                        BreitbandGraphics.gdi_draw_text(rect, "left-center", false, text_color, 11,
+                        Mupen_lua_ugui.renderer.draw_text(rect, "left-center", false, text_color, 11,
                             "Microsoft Sans Serif",
                             control.items[i])
                     end
@@ -595,12 +606,12 @@ Mupen_lua_ugui = {
             end,
 
             draw_listbox = function(control)
-                BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1), {
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1), {
                     r = 130,
                     g = 135,
                     b = 144
                 })
-                BreitbandGraphics.gdi_fill_rectangle(control.rectangle, {
+                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, {
                     r = 255,
                     g = 255,
                     b = 255
@@ -620,7 +631,7 @@ Mupen_lua_ugui = {
                 index_begin = math.max(index_begin, 0)
                 index_end = math.min(index_end, #control.items)
 
-                BreitbandGraphics.gdi_setclip(control.rectangle)
+                Mupen_lua_ugui.renderer.setclip(control.rectangle)
 
                 for i = math.floor(index_begin), math.ceil(index_end), 1 do
                     local y = (20 * (i - 1)) -
@@ -653,7 +664,7 @@ Mupen_lua_ugui = {
                         end
 
 
-                        BreitbandGraphics.gdi_fill_rectangle({
+                        Mupen_lua_ugui.renderer.fill_rectangle({
                             x = control.rectangle.x,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
@@ -676,7 +687,7 @@ Mupen_lua_ugui = {
                     end
 
 
-                    BreitbandGraphics.gdi_draw_text({
+                    Mupen_lua_ugui.renderer.draw_text({
                             x = control.rectangle.x + 2,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
@@ -695,7 +706,7 @@ Mupen_lua_ugui = {
                     scrollbar_y = scrollbar_y - scrollbar_height / 2
                     scrollbar_y = clamp(scrollbar_y, 0, control.rectangle.height - scrollbar_height)
 
-                    BreitbandGraphics.gdi_fill_rectangle({
+                    Mupen_lua_ugui.renderer.fill_rectangle({
                         x = control.rectangle.x + control.rectangle.width - 10,
                         y = control.rectangle.y,
                         width = 10,
@@ -706,7 +717,7 @@ Mupen_lua_ugui = {
                         b = 240
                     })
 
-                    BreitbandGraphics.gdi_fill_rectangle({
+                    Mupen_lua_ugui.renderer.fill_rectangle({
                         x = control.rectangle.x + control.rectangle.width - 10,
                         y = control.rectangle.y + scrollbar_y,
                         width = 10,
@@ -718,14 +729,16 @@ Mupen_lua_ugui = {
                     })
                 end
 
-                BreitbandGraphics.gdi_resetclip()
+                Mupen_lua_ugui.renderer.resetclip()
             end
         },
     },
 
-    begin_frame = function(input_state)
+    begin_frame = function(renderer, styler, input_state)
         Mupen_lua_ugui.previous_input_state = clone(Mupen_lua_ugui.input_state)
         Mupen_lua_ugui.input_state = clone(input_state)
+        Mupen_lua_ugui.renderer = renderer
+        Mupen_lua_ugui.styler = styler
 
         if is_pointer_just_down() then
             Mupen_lua_ugui.previous_pointer_primary_down_position = Mupen_lua_ugui.input_state.pointer.position
@@ -740,7 +753,7 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
-        Mupen_lua_ugui.stylers.windows_10.draw_button(control, false)
+        Mupen_lua_ugui.styler.draw_button(control, false)
 
         return pushed
     end,
@@ -756,7 +769,7 @@ Mupen_lua_ugui = {
             is_checked = not is_checked
         end
 
-        Mupen_lua_ugui.stylers.windows_10.draw_togglebutton(control)
+        Mupen_lua_ugui.styler.draw_togglebutton(control)
 
         return is_checked
     end,
@@ -831,13 +844,13 @@ Mupen_lua_ugui = {
         end
 
 
-        Mupen_lua_ugui.stylers.windows_10.draw_textbox(control)
+        Mupen_lua_ugui.styler.draw_textbox(control)
 
         return text
     end,
 
     joystick = function(control)
-        Mupen_lua_ugui.stylers.windows_10.draw_joystick(control)
+        Mupen_lua_ugui.styler.draw_joystick(control)
 
         return control.position
     end,
@@ -870,7 +883,7 @@ Mupen_lua_ugui = {
             end
         end
 
-        Mupen_lua_ugui.stylers.windows_10.draw_trackbar(control)
+        Mupen_lua_ugui.styler.draw_trackbar(control)
 
         return value
     end,
@@ -930,7 +943,7 @@ Mupen_lua_ugui = {
 
         selected_index = clamp(selected_index, 1, #control.items)
 
-        Mupen_lua_ugui.stylers.windows_10.draw_combobox(control)
+        Mupen_lua_ugui.styler.draw_combobox(control)
 
         return selected_index
     end,
@@ -981,7 +994,7 @@ Mupen_lua_ugui = {
         Mupen_lua_ugui.control_data[control.uid].y_translation = clamp(
             Mupen_lua_ugui.control_data[control.uid].y_translation, 0, 1)
 
-        Mupen_lua_ugui.stylers.windows_10.draw_listbox(control)
+        Mupen_lua_ugui.styler.draw_listbox(control)
 
         return selected_index
     end
