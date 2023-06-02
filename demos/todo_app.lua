@@ -19,7 +19,7 @@ local selected_index = nil
 
 emu.atupdatescreen(function()
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame({
+    Mupen_lua_ugui.begin_frame(BreitbandGraphics.renderers.gdi, Mupen_lua_ugui.stylers.windows_10, {
         pointer = {
             position = {
                 x = keys.xmouse,
@@ -47,7 +47,7 @@ emu.atupdatescreen(function()
 
     if (Mupen_lua_ugui.button({
             uid = 2,
-            is_enabled = true,
+            is_enabled = text:len() > 0,
             rectangle = {
                 x = initial_size.width + 170,
                 y = 10,
@@ -56,10 +56,8 @@ emu.atupdatescreen(function()
             },
             text = "+",
         })) then
-        if text:len() > 0 then
-            items[#items + 1] = text
-            text = ""
-        end
+        items[#items + 1] = text
+        text = ""
     end
 
     selected_index = Mupen_lua_ugui.listbox({
@@ -74,18 +72,18 @@ emu.atupdatescreen(function()
         selected_index = selected_index,
         items = items,
     })
-
+    local has_selection = (selected_index and selected_index > 0 and selected_index <= #items)
     if (Mupen_lua_ugui.button({
             uid = 3,
-            is_enabled = true,
+            is_enabled = has_selection,
             rectangle = {
                 x = initial_size.width + 10,
                 y = 250,
                 width = 180,
                 height = 20,
             },
-            text = (selected_index and selected_index > 0 and selected_index <= #items) and
-            ("Delete \"" .. items[selected_index] .. "\"") or "Delete",
+            text = has_selection and
+                ("Delete \"" .. items[selected_index] .. "\"") or "No selection",
         })) then
         if selected_index and selected_index > 0 and selected_index <= #items then
             table.remove(items, selected_index)

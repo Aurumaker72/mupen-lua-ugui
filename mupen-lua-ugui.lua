@@ -747,9 +747,9 @@ Mupen_lua_ugui = {
 
     button = function(control)
         local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) and control.is_enabled
 
-        if pushed and control.is_enabled then
+        if pushed then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
@@ -969,14 +969,19 @@ Mupen_lua_ugui = {
 
         local selected_index = control.selected_index
 
-        if control.is_enabled and is_pointer_just_down() and is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
-            if is_pointer_inside(scrollbar_rect) then
+        if control.is_enabled and is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
+            if is_pointer_just_down() and is_pointer_inside(scrollbar_rect) then
                 Mupen_lua_ugui.active_control_uid = control.uid
-            else
-                local rel = Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y;
-                local a = math.ceil((rel + (Mupen_lua_ugui.control_data[control.uid].y_translation *
+            end
+            if is_pointer_down() and not is_pointer_inside(scrollbar_rect) then
+                local relative_y = Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y;
+                local new_index = math.ceil((relative_y + (Mupen_lua_ugui.control_data[control.uid].y_translation *
                     ((20 * #control.items) - control.rectangle.height))) / 20)
-                selected_index = a
+                -- we only assign the new index if it's within bounds, as
+                -- this emulates windows commctl behaviour
+                if new_index <= #control.items then
+                    selected_index = new_index
+                end
             end
         end
 
