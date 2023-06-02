@@ -49,7 +49,7 @@ emu.atvi(function()
             width = 120,
             height = 40,
         },
-        text = "add"
+        text = "This text is long and will overflow"
     })
 
     if is_pressed then
@@ -137,6 +137,18 @@ emu.atvi(function()
             height = 340,
         },
         items = many_values,
-        selected_index = selected_index,
+        selected_index = other_selected_index,
+    })
+
+    Mupen_lua_ugui.button({
+        uid = 7,
+        is_enabled = true,
+        rectangle = {
+            x = 500,
+            y = 380,
+            width = 120,
+            height = 40,
+        },
+        text = other_selected_index
     })
 end)
