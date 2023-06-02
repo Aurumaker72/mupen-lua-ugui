@@ -379,11 +379,12 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                local stick_position = {}
-                stick_position.x = remap(control.position.x, -128, 127, control.rectangle.x,
-                    control.rectangle.x + control.rectangle.width)
-                stick_position.y = remap(control.position.y, -127, 128, control.rectangle.y,
-                    control.rectangle.y + control.rectangle.height)
+                local stick_position = {
+                    x = remap(control.position.x, 0, 1, control.rectangle.x,
+                        control.rectangle.x + control.rectangle.width),
+                    y = remap(control.position.y, 0, 1, control.rectangle.y,
+                        control.rectangle.y + control.rectangle.height)
+                }
 
                 BreitbandGraphics.gdi_fill_ellipse(control.rectangle, outline_color)
                 BreitbandGraphics.gdi_fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1), back_color)

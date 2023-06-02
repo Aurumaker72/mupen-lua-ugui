@@ -187,7 +187,7 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0,
-            y = -127,
+            y = 0.5,
         }
     })
 
@@ -201,8 +201,8 @@ emu.atupdatescreen(function()
             height = 90,
         },
         position = {
-            x = 0,
-            y = -127,
+            x = 1,
+            y = 0.5,
         }
     })
 end)
