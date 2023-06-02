@@ -61,6 +61,12 @@ BreitbandGraphics = {
         wgui.setbrush("null")
         wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
         wgui.line(from.x, from.y, to.x, to.y)
+    end,
+    gdi_setclip = function(rectangle)
+        wgui.setclip(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
+    end,
+    gdi_resetclip = function()
+        wgui.resetclip()
     end
 }
 
@@ -135,11 +141,16 @@ local function remap(value, from1, to1, from2, to2)
     return (value - from1) / (to1 - from1) * (to2 - from2) + from2
 end
 
+local DISABLED = -1
 local NORMAL = 0
 local HOVER = 1
 local ACTIVE = 2
 
 local function get_basic_visual_state(control)
+    if not control.is_enabled then
+        return DISABLED
+    end
+
     if is_pointer_inside(control.rectangle) then
         if is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
             return ACTIVE
@@ -202,24 +213,47 @@ Mupen_lua_ugui = {
                         g = 120,
                         b = 215
                     }
+                elseif visual_state == DISABLED then
+                    back_color = {
+                        r = 204,
+                        g = 204,
+                        b = 204
+                    }
+                    border_color = {
+                        r = 191,
+                        g = 191,
+                        b = 191
+                    }
                 end
+
                 BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
                     border_color)
                 BreitbandGraphics.gdi_fill_rectangle(control.rectangle, back_color)
             end,
             draw_button = function(control, override_active)
                 local visual_state = get_basic_visual_state(control)
-                if override_active then
+                if override_active and control.is_enabled then
                     visual_state = ACTIVE
                 end
 
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
 
-                BreitbandGraphics.gdi_draw_text(control.rectangle, 'center-center', true, {
+                local text_color = {
                     r = 0,
                     g = 0,
                     b = 0
-                }, 11, "Microsoft Sans Serif", control.text)
+                }
+
+                if visual_state == DISABLED then
+                    text_color = {
+                        r = 160,
+                        g = 160,
+                        b = 160,
+                    }
+                end
+
+                BreitbandGraphics.gdi_draw_text(control.rectangle, 'center-center', true, text_color, 11,
+                    "Microsoft Sans Serif", control.text)
             end,
             draw_togglebutton = function(control)
                 Mupen_lua_ugui.stylers.windows_10.draw_button(control, control.is_checked)
@@ -237,8 +271,13 @@ Mupen_lua_ugui = {
                     g = 122,
                     b = 122
                 }
+                local text_color = {
+                    r = 0,
+                    g = 0,
+                    b = 0,
+                }
 
-                if Mupen_lua_ugui.active_control_uid == control.uid then
+                if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
                     visual_state = ACTIVE
                 end
 
@@ -254,16 +293,29 @@ Mupen_lua_ugui = {
                         g = 84,
                         b = 153
                     }
+                elseif visual_state == DISABLED then
+                    back_color = {
+                        r = 240,
+                        g = 240,
+                        b = 240,
+                    }
+                    border_color = {
+                        r = 204,
+                        g = 204,
+                        b = 204,
+                    }
+                    text_color = {
+                        r = 109,
+                        g = 109,
+                        b = 109,
+                    }
                 end
 
                 BreitbandGraphics.gdi_fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
                     border_color)
                 BreitbandGraphics.gdi_fill_rectangle(control.rectangle, back_color)
-                BreitbandGraphics.gdi_draw_text(control.rectangle, 'left-top', false, {
-                    r = 0,
-                    g = 0,
-                    b = 0
-                }, 11, "Microsoft Sans Serif", control.text)
+                BreitbandGraphics.gdi_draw_text(control.rectangle, 'left-top', false, text_color, 11,
+                    "Microsoft Sans Serif", control.text)
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
                 local caret_x = wgui.gettextextent(string_to_caret).width
@@ -283,47 +335,72 @@ Mupen_lua_ugui = {
                 end
             end,
             draw_joystick = function(control)
+                -- TODO: utilize normalized coordinates, to logically decouple joystick from n64
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, NORMAL)
 
-                local stick_position = {}
+                local visual_state = get_basic_visual_state(control)
 
+                local back_color = {
+                    r = 255,
+                    g = 255,
+                    b = 255
+                }
+                local outline_color = {
+                    r = 0,
+                    g = 0,
+                    b = 0
+                }
+                local tip_color = {
+                    r = 255,
+                    g = 0,
+                    b = 0
+                }
+                local line_color = {
+                    r = 0,
+                    g = 0,
+                    b = 255
+                }
+
+                if visual_state == DISABLED then
+                    outline_color = {
+                        r = 191,
+                        g = 191,
+                        b = 191
+                    }
+                    tip_color = {
+                        r = 255,
+                        g = 128,
+                        b = 128
+                    }
+                    line_color = {
+                        r = 128,
+                        g = 128,
+                        b = 255
+                    }
+                end
+
+                local stick_position = {}
                 stick_position.x = remap(control.position.x, -128, 127, control.rectangle.x,
                     control.rectangle.x + control.rectangle.width)
                 stick_position.y = remap(control.position.y, -127, 128, control.rectangle.y,
                     control.rectangle.y + control.rectangle.height)
 
-                BreitbandGraphics.gdi_fill_ellipse(control.rectangle, {
-                    r = 0,
-                    g = 0,
-                    b = 0
-                })
-                BreitbandGraphics.gdi_fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1), {
-                    r = 255,
-                    g = 255,
-                    b = 255
-                })
+                BreitbandGraphics.gdi_fill_ellipse(control.rectangle, outline_color)
+                BreitbandGraphics.gdi_fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1), back_color)
                 BreitbandGraphics.gdi_draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y,
                 }, {
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y + control.rectangle.height
-                }, {
-                    r = 0,
-                    g = 0,
-                    b = 0
-                }, 1)
+                }, outline_color, 1)
                 BreitbandGraphics.gdi_draw_line({
                     x = control.rectangle.x,
                     y = control.rectangle.y + control.rectangle.height / 2,
                 }, {
                     x = control.rectangle.x + control.rectangle.width,
                     y = control.rectangle.y + control.rectangle.height / 2,
-                }, {
-                    r = 0,
-                    g = 0,
-                    b = 0
-                }, 1)
+                }, outline_color, 1)
 
                 BreitbandGraphics.gdi_draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
@@ -331,22 +408,14 @@ Mupen_lua_ugui = {
                 }, {
                     x = stick_position.x,
                     y = stick_position.y,
-                }, {
-                    r = 0,
-                    g = 0,
-                    b = 255
-                }, 3)
+                }, line_color, 3)
                 local tip_size = 5
                 BreitbandGraphics.gdi_fill_ellipse({
                     x = stick_position.x - tip_size / 2,
                     y = stick_position.y - tip_size / 2,
                     width = tip_size + 2,
                     height = tip_size + 2,
-                }, {
-                    r = 255,
-                    g = 0,
-                    b = 0
-                })
+                }, tip_color)
             end,
             draw_trackbar = function(control)
                 local visual_state = get_basic_visual_state(control)
@@ -367,7 +436,7 @@ Mupen_lua_ugui = {
                     b = 217
                 }
 
-                if Mupen_lua_ugui.active_control_uid == control.uid then
+                if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
                     visual_state = ACTIVE
                 end
 
@@ -378,6 +447,12 @@ Mupen_lua_ugui = {
                         b = 23,
                     }
                 elseif visual_state == ACTIVE then
+                    head_color = {
+                        r = 204,
+                        g = 204,
+                        b = 204,
+                    }
+                elseif visual_state == DISABLED then
                     head_color = {
                         r = 204,
                         g = 204,
@@ -430,22 +505,31 @@ Mupen_lua_ugui = {
             draw_combobox = function(control)
                 local visual_state = get_basic_visual_state(control)
 
-                if Mupen_lua_ugui.control_data[control.uid].is_open then
+                local text_color = {
+                    r = 0,
+                    g = 0,
+                    b = 0,
+                }
+
+                if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
                     visual_state = ACTIVE
                 end
 
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
 
+                if visual_state == DISABLED then
+                    text_color = {
+                        r = 109,
+                        g = 109,
+                        b = 109,
+                    }
+                end
                 BreitbandGraphics.gdi_draw_text({
                         x = control.rectangle.x + 2,
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, "left-center", false, {
-                        r = 0,
-                        g = 0,
-                        b = 0
-                    }, 11, "Microsoft Sans Serif",
+                    }, "left-center", false, text_color, 11, "Microsoft Sans Serif",
                     control.items[control.selected_index])
 
                 BreitbandGraphics.gdi_draw_text({
@@ -453,11 +537,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - 8,
                         height = control.rectangle.height,
-                    }, "right-center", false, {
-                        r = 0,
-                        g = 0,
-                        b = 0
-                    }, 11, "Segoe UI Mono",
+                    }, "right-center", false, text_color, 11, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
@@ -525,9 +605,7 @@ Mupen_lua_ugui = {
                     b = 255
                 })
 
-
-
-
+                local visual_state = get_basic_visual_state(control)
 
                 -- item y position:
                 -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
@@ -540,6 +618,8 @@ Mupen_lua_ugui = {
 
                 index_begin = math.max(index_begin, 0)
                 index_end = math.min(index_end, #control.items)
+
+                BreitbandGraphics.gdi_setclip(control.rectangle)
 
                 for i = math.floor(index_begin), math.ceil(index_end), 1 do
                     local y = (20 * (i - 1)) -
@@ -557,22 +637,43 @@ Mupen_lua_ugui = {
                     -- TODO: add clipping support, as proper smooth scrolling is not achievable without clipping
 
                     if control.selected_index == i then
+                        local accent_color = {
+                            r = 0,
+                            g = 120,
+                            b = 215
+                        }
+
+                        if visual_state == DISABLED then
+                            accent_color = {
+                                r = 204,
+                                g = 204,
+                                b = 204,
+                            }
+                        end
+
+
                         BreitbandGraphics.gdi_fill_rectangle({
                             x = control.rectangle.x,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
                             height = 20
-                        }, {
-                            r = 0,
-                            g = 120,
-                            b = 215
-                        })
+                        }, accent_color)
+
                         text_color = {
                             r = 255,
                             g = 255,
                             b = 255
                         }
                     end
+
+                    if visual_state == DISABLED then
+                        text_color = {
+                            r = 160,
+                            g = 160,
+                            b = 160,
+                        }
+                    end
+
 
                     BreitbandGraphics.gdi_draw_text({
                             x = control.rectangle.x + 2,
@@ -615,6 +716,8 @@ Mupen_lua_ugui = {
                         b = 204
                     })
                 end
+
+                BreitbandGraphics.gdi_resetclip()
             end
         },
     },
@@ -632,7 +735,7 @@ Mupen_lua_ugui = {
         local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle) and
             not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
 
-        if pushed then
+        if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
@@ -644,8 +747,10 @@ Mupen_lua_ugui = {
     toggle_button = function(control)
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
             not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+
         local is_checked = control.is_checked
-        if pushed then
+
+        if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
             is_checked = not is_checked
         end
@@ -662,8 +767,10 @@ Mupen_lua_ugui = {
             }
         end
 
-        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
+        local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+
+        if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
@@ -684,7 +791,7 @@ Mupen_lua_ugui = {
 
         local text = control.text
 
-        if Mupen_lua_ugui.active_control_uid == control.uid then
+        if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
             if is_pointer_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
                 Mupen_lua_ugui.control_data[control.uid].caret_index = get_caret_index_at_relative_position(
                     Mupen_lua_ugui.input_state.pointer.position)
@@ -737,13 +844,14 @@ Mupen_lua_ugui = {
     trackbar = function(control)
         local value = control.value
 
-        if is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
+        local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
+            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+        if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
         -- we instantly deactivate this control after releasing our mouse to emulate windows behaviour
-        if Mupen_lua_ugui.active_control_uid == control.uid and not is_pointer_down() then
+        if Mupen_lua_ugui.active_control_uid == control.uid and not is_pointer_down() and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = nil
         end
 
@@ -774,7 +882,7 @@ Mupen_lua_ugui = {
             }
         end
 
-        if is_pointer_just_down() then
+        if is_pointer_just_down() and control.is_enabled then
             if is_pointer_inside(control.rectangle) then
                 Mupen_lua_ugui.control_data[control.uid].is_open = not Mupen_lua_ugui.control_data[control.uid].is_open
             else
@@ -794,7 +902,7 @@ Mupen_lua_ugui = {
 
 
 
-        if Mupen_lua_ugui.control_data[control.uid].is_open then
+        if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
             for i = 1, #control.items, 1 do
                 if is_pointer_inside({
                         x = control.rectangle.x,
@@ -847,7 +955,7 @@ Mupen_lua_ugui = {
 
         local selected_index = control.selected_index
 
-        if is_pointer_just_down() and is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
+        if control.is_enabled and is_pointer_just_down() and is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
             if is_pointer_inside(scrollbar_rect) then
                 Mupen_lua_ugui.active_control_uid = control.uid
             else
