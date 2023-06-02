@@ -7,7 +7,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demo.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 
 local text = "Sample text"
 local is_checked = true
@@ -15,17 +15,16 @@ local value = 0
 local selected_index = 0
 local input_state = {}
 local many_values = {}
-local other_selected_index = 0
+local other_selected_index = nil
 
 for i = 1, 1000, 1 do
     many_values[#many_values + 1] = "Item " .. i
 end
 
-emu.atvi(function()
+emu.atupdatescreen(function()
     local keys = input.get()
 
-
-    input_state = {
+    Mupen_lua_ugui.begin_frame({
         pointer = {
             position = {
                 x = keys.xmouse,
@@ -36,9 +35,7 @@ emu.atvi(function()
         keyboard = {
             held_keys = keys
         }
-    }
-
-    Mupen_lua_ugui.begin_frame(input_state)
+    })
 
     local is_pressed = Mupen_lua_ugui.button({
         uid = 0,
