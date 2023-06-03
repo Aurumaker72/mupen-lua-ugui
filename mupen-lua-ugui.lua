@@ -182,6 +182,8 @@ Mupen_lua_ugui = {
     -- Library-side state, don't mutate
     modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 },
     -- Library-side state, don't mutate
+    end_frame_callbacks = {},
+    -- Library-side state, don't mutate
     renderer = nil,
     -- Library-side state, don't mutate
     styler = nil,
@@ -745,6 +747,14 @@ Mupen_lua_ugui = {
         end
     end,
 
+    end_frame = function()
+        for i = 1, #Mupen_lua_ugui.end_frame_callbacks, 1 do
+            Mupen_lua_ugui.end_frame_callbacks[i]()
+        end
+
+        Mupen_lua_ugui.end_frame_callbacks = {}
+    end,
+
     button = function(control)
         local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle) and
             not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) and control.is_enabled
@@ -943,7 +953,10 @@ Mupen_lua_ugui = {
 
         selected_index = clamp(selected_index, 1, #control.items)
 
-        Mupen_lua_ugui.styler.draw_combobox(control)
+        Mupen_lua_ugui.end_frame_callbacks[#Mupen_lua_ugui.end_frame_callbacks + 1] = function()
+            Mupen_lua_ugui.styler.draw_combobox(control)
+        end
+
 
         return selected_index
     end,
@@ -973,7 +986,7 @@ Mupen_lua_ugui = {
             if is_pointer_just_down() and is_pointer_inside(scrollbar_rect) then
                 Mupen_lua_ugui.active_control_uid = control.uid
             end
-            if is_pointer_down() and not is_pointer_inside(scrollbar_rect) then
+            if is_pointer_down() and not is_pointer_inside(scrollbar_rect) and not is_previous_primary_down_pointer_inside(scrollbar_rect) then
                 local relative_y = Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y;
                 local new_index = math.ceil((relative_y + (Mupen_lua_ugui.control_data[control.uid].y_translation *
                     ((20 * #control.items) - control.rectangle.height))) / 20)
