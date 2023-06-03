@@ -13,37 +13,39 @@
 
 # Advantages
 
-- Easy setup
+- Easy Usage
   - Include only one file
 - Flexible
-  - Display controls whenever you want, with any data you want
-  - Easily add new controls and stylers
+  - Call library functions at any time
+  - Add or modify controls and stylers
 - Host-authoritative
   - The host script coordinates everything: no library lock-in
   - No global pollution - only necessary components are exposed as tables
+- Fast
+  - Shallow callstacks
+  - Virtualization support
   
   
 # Why would I use this?
 
-This library provides more control and extensibility than the monolithic Mupen-Lua-Universal-GUI.
-
-It's also more efficient than rolling your own solution, as you don't need to write control or rendering logic.
-Any extensions, such as custom styling or new controls, are easy to create by writing to the global `Mupen_lua_ugui` table.
+- Architecturally unopinionated
+- More efficient than a hand-rolled solution
+- Extensible and hackable
 
 # Features
 
 - Stylers
   - Windows 10 (built-in, `windows_10`)
 - Fully mockable
-  - Swap out any subsystem with your own by writing to tables 
+  - Provide subsystem references in `begin_frame`
 - Button (`button`)
 - TextBox (`textbox`)
-  - Caret (controllable by keyboard and mouse)
+  - Keyboard- and mouse-controllable caret
 - ToggleButton (`toggle_button`)
 - Joystick (`joystick`)
 - TrackBar (`trackbar`)
   - Automatically layout adjustement based on size ratio 
-- ComboBox (`combobox`) 
+- ComboBox (`combobox`)
 - ListBox (`listbox`)
   - Virtualization
 
@@ -59,4 +61,6 @@ Any extensions, such as custom styling or new controls, are easy to create by wr
   Mupen Lua Graphics API abstraction layer
 </p>
 
-`BreitbandGraphics` is a part of `mupen-lua-ugui`, but can also be invoked directly by the host.
+`mupen-lua-ugui` depends on `BreitbandGraphics` for backend-agnostic functionality. 
+
+While not necessary, it's recommended to provide `mupen-lua-ugui` with a `BreitbandGraphics` rendering backend instead of implementing your own.
