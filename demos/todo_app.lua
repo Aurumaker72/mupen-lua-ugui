@@ -15,9 +15,36 @@ wgui.resize(initial_size.width + 200, initial_size.height)
 
 local text = ""
 local items = {}
-local selected_index = nil
+local selected_list_index = 1
+local priorities = {
+    "Low",
+    "Medium",
+    "High"
+}
+
+local function is_selection_valid()
+    return (selected_list_index and selected_list_index > 0 and selected_list_index <= #items)
+end
+
+local function get_safe_selected_list_index()
+    local i = selected_list_index
+    i = math.min(selected_list_index, #items)
+    i = math.max(selected_list_index, 1)
+    return i
+end
 
 emu.atupdatescreen(function()
+    BreitbandGraphics.renderers.gdi.fill_rectangle({
+        x = initial_size.width,
+        y = 0,
+        width = 200,
+        height = initial_size.height
+    }, {
+        r = 253,
+        g = 253,
+        b = 253
+    })
+
     local keys = input.get()
     Mupen_lua_ugui.begin_frame(BreitbandGraphics.renderers.gdi, Mupen_lua_ugui.stylers.windows_10, {
         pointer = {
@@ -56,11 +83,21 @@ emu.atupdatescreen(function()
             },
             text = "+",
         })) then
-        items[#items + 1] = text
+        items[#items + 1] = {
+            text = text,
+            priority = 1,
+        }
+
         text = ""
     end
 
-    selected_index = Mupen_lua_ugui.listbox({
+
+    local list_items = {}
+    for i = 1, #items, 1 do
+        list_items[i] = priorities[items[i].priority] .. " - " .. items[i].text
+    end
+
+    selected_list_index = Mupen_lua_ugui.listbox({
         uid = 3,
         is_enabled = true,
         rectangle = {
@@ -69,26 +106,45 @@ emu.atupdatescreen(function()
             width = 180,
             height = 200,
         },
-        selected_index = selected_index,
-        items = items,
+        selected_index = selected_list_index,
+        items = list_items,
     })
-    local has_selection = (selected_index and selected_index > 0 and selected_index <= #items)
+
     if (Mupen_lua_ugui.button({
             uid = 3,
-            is_enabled = has_selection,
+            is_enabled = is_selection_valid(),
             rectangle = {
                 x = initial_size.width + 10,
                 y = 250,
                 width = 180,
                 height = 20,
             },
-            text = has_selection and
-                ("Delete \"" .. items[selected_index] .. "\"") or "No selection",
+            text = is_selection_valid() and
+                "Delete" or "No selection",
         })) then
-        if selected_index and selected_index > 0 and selected_index <= #items then
-            table.remove(items, selected_index)
-        end
+        table.remove(items, selected_list_index)
     end
+
+
+    local priority_selection_index = Mupen_lua_ugui.combobox({
+        uid = 4,
+        is_enabled = is_selection_valid(),
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 280,
+            width = 180,
+            height = 20,
+        },
+        selected_index = is_selection_valid() and items[get_safe_selected_list_index()].priority or 1,
+        items = priorities
+    })
+
+    if is_selection_valid() then
+        items[selected_list_index].priority = priority_selection_index
+    end
+
+
+    Mupen_lua_ugui.end_frame()
 end)
 
 

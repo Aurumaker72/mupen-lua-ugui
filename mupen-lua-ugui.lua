@@ -156,7 +156,7 @@ local function get_basic_visual_state(control)
         return DISABLED
     end
 
-    if is_pointer_inside(control.rectangle) then
+    if is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
         if is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
             return ACTIVE
         end
@@ -241,9 +241,11 @@ Mupen_lua_ugui = {
                     border_color)
                 Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, back_color)
             end,
-            draw_button = function(control, override_active)
+            draw_button = function(control)
                 local visual_state = get_basic_visual_state(control)
-                if override_active and control.is_enabled then
+
+                -- override for toggle_button
+                if control.is_checked and control.is_enabled then
                     visual_state = ACTIVE
                 end
 
@@ -267,7 +269,7 @@ Mupen_lua_ugui = {
                     "Microsoft Sans Serif", control.text)
             end,
             draw_togglebutton = function(control)
-                Mupen_lua_ugui.stylers.windows_10.draw_button(control, control.is_checked)
+                Mupen_lua_ugui.stylers.windows_10.draw_button(control)
             end,
             draw_textbox = function(control)
                 local visual_state = get_basic_visual_state(control)
@@ -763,7 +765,7 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.active_control_uid = control.uid
         end
 
-        Mupen_lua_ugui.styler.draw_button(control, false)
+        Mupen_lua_ugui.styler.draw_button(control)
 
         return pushed
     end,
@@ -906,9 +908,17 @@ Mupen_lua_ugui = {
             }
         end
 
+        if not control.is_enabled then
+            Mupen_lua_ugui.control_data[control.uid].is_open = false
+            Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
+        end
+
         if is_pointer_just_down() and control.is_enabled then
             if is_pointer_inside(control.rectangle) then
                 Mupen_lua_ugui.control_data[control.uid].is_open = not Mupen_lua_ugui.control_data[control.uid].is_open
+                if not Mupen_lua_ugui.control_data[control.uid].is_open then
+                    Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
+                end
             else
                 if not is_pointer_inside({
                         x = control.rectangle.x,
@@ -917,14 +927,12 @@ Mupen_lua_ugui = {
                         height = 20 * #control.items
                     }) then
                     Mupen_lua_ugui.control_data[control.uid].is_open = false
+                    Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
                 end
             end
         end
 
         local selected_index = control.selected_index
-        Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
-
-
 
         if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
             for i = 1, #control.items, 1 do
@@ -937,6 +945,7 @@ Mupen_lua_ugui = {
                     if is_pointer_just_down() then
                         selected_index = i
                         Mupen_lua_ugui.control_data[control.uid].is_open = false
+                        Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
                     end
                     Mupen_lua_ugui.control_data[control.uid].hovered_index = i
                     break
@@ -950,6 +959,8 @@ Mupen_lua_ugui = {
                 height = 20 * #control.items
             }
         end
+
+
 
         selected_index = clamp(selected_index, 1, #control.items)
 

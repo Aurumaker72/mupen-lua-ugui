@@ -205,6 +205,9 @@ emu.atupdatescreen(function()
             y = 0.5,
         }
     })
+
+
+    Mupen_lua_ugui.end_frame()
 end)
 
 emu.atstop(function()

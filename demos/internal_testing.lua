@@ -24,7 +24,7 @@ end
 emu.atupdatescreen(function()
     local keys = input.get()
 
-    Mupen_lua_ugui.begin_frame({
+    Mupen_lua_ugui.begin_frame(BreitbandGraphics.renderers.gdi, Mupen_lua_ugui.stylers.windows_10, {
         pointer = {
             position = {
                 x = keys.xmouse,
@@ -148,4 +148,6 @@ emu.atupdatescreen(function()
         },
         text = other_selected_index
     })
+
+    Mupen_lua_ugui.end_frame()
 end)
