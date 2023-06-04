@@ -7,7 +7,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\todo_app.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder('demos\\crud.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
@@ -21,6 +21,7 @@ local priorities = {
     "Medium",
     "High"
 }
+local is_editing = false
 
 local function is_selection_valid()
     return (selected_list_index and selected_list_index > 0 and selected_list_index <= #items)
@@ -116,19 +117,31 @@ emu.atupdatescreen(function()
             rectangle = {
                 x = initial_size.width + 10,
                 y = 250,
-                width = 180,
+                width = 85,
                 height = 20,
             },
-            text = is_selection_valid() and
-                "Delete" or "No selection",
+            text = "Delete",
         })) then
         table.remove(items, selected_list_index)
     end
 
-
-    local priority_selection_index = Mupen_lua_ugui.combobox({
+    is_editing = Mupen_lua_ugui.toggle_button({
         uid = 4,
         is_enabled = is_selection_valid(),
+        rectangle = {
+            x = initial_size.width + 105,
+            y = 250,
+            width = 85,
+            height = 20,
+        },
+        text = "Edit",
+        is_checked = is_editing
+    })
+
+
+    local priority_selection_index = Mupen_lua_ugui.combobox({
+        uid = 5,
+        is_enabled = is_selection_valid() and is_editing,
         rectangle = {
             x = initial_size.width + 10,
             y = 280,
@@ -142,6 +155,26 @@ emu.atupdatescreen(function()
     if is_selection_valid() then
         items[selected_list_index].priority = priority_selection_index
     end
+
+
+
+    local text = Mupen_lua_ugui.textbox({
+        uid = 6,
+        is_enabled = is_selection_valid() and is_editing,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 310,
+            width = 180,
+            height = 20,
+        },
+        text = is_selection_valid() and items[selected_list_index].text or ""
+    })
+
+    if is_selection_valid() then
+        items[selected_list_index].text = text
+    end
+
+
 
 
     Mupen_lua_ugui.end_frame()

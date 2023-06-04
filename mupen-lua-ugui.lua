@@ -935,6 +935,13 @@ Mupen_lua_ugui = {
         local selected_index = control.selected_index
 
         if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
+            Mupen_lua_ugui.modal_hittest_ignore_rectangle = {
+                x = control.rectangle.x,
+                y = control.rectangle.y + control.rectangle.height,
+                width = control.rectangle.width,
+                height = 20 * #control.items
+            }
+
             for i = 1, #control.items, 1 do
                 if is_pointer_inside({
                         x = control.rectangle.x,
@@ -951,13 +958,6 @@ Mupen_lua_ugui = {
                     break
                 end
             end
-
-            Mupen_lua_ugui.modal_hittest_ignore_rectangle = {
-                x = control.rectangle.x,
-                y = control.rectangle.y + control.rectangle.height,
-                width = control.rectangle.width,
-                height = 20 * #control.items
-            }
         end
 
 
