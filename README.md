@@ -26,7 +26,7 @@
   - Virtualization support
   
   
-# Why would I use this?
+# Key points
 
 - Architecturally unopinionated
 - More efficient than a hand-rolled solution
