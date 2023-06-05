@@ -1,7 +1,20 @@
 BreitbandGraphics = {
-    color_to_hex = function(color)
-        return string.format("#%06X", (color.r * 0x10000) + (color.g * 0x100) + color.b)
+    -- LUT for raw colors->hex representation
+    raw_color_lut = {},
+
+    color_to_raw = function(color)
+        return color.r * 65536 + color.g * 256 + color.b
     end,
+
+    color_to_hex = function(color)
+        local raw = BreitbandGraphics.color_to_raw(color)
+        if not BreitbandGraphics.raw_color_lut[raw] then
+            BreitbandGraphics.raw_color_lut[raw] = string.format("#%06X",
+                (color.r * 0x10000) + (color.g * 0x100) + color.b)
+        end
+        return BreitbandGraphics.raw_color_lut[raw]
+    end,
+
     inflate_rectangle = function(rectangle, amount)
         return {
             x = rectangle.x - amount,
@@ -19,9 +32,8 @@ BreitbandGraphics = {
                 wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
             end,
             fill_rectangle = function(rectangle, color)
-                wgui.setbrush(BreitbandGraphics.color_to_hex(color))
-                wgui.setpen(BreitbandGraphics.color_to_hex(color))
-                wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+                wgui.fillrect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height,
+                    color.r, color.g, color.b)
             end,
             draw_ellipse = function(rectangle, color)
                 wgui.setbrush("null")
@@ -29,36 +41,47 @@ BreitbandGraphics = {
                 wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
             end,
             fill_ellipse = function(rectangle, color)
-                wgui.setbrush(BreitbandGraphics.color_to_hex(color))
-                wgui.setpen(BreitbandGraphics.color_to_hex(color))
+                local hex_color = BreitbandGraphics.color_to_hex(color)
+                wgui.setbrush(hex_color)
+                wgui.setpen(hex_color)
                 wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
             end,
             draw_text = function(rectangle, alignment, allow_wrap, color, font_size, font_name, text)
+                local DT_TOP             = 0x00000000
+                local DT_LEFT            = 0x00000000
+                local DT_CENTER          = 0x00000001
+                local DT_RIGHT           = 0x00000002
+                local DT_VCENTER         = 0x00000004
+                local DT_BOTTOM          = 0x00000008
+                local DT_WORDBREAK       = 0x00000010
+                local DT_SINGLELINE      = 0x00000020
+                local DT_EXPANDTABS      = 0x00000040
+                local DT_TABSTOP         = 0x00000080
+                local DT_NOCLIP          = 0x00000100
+                local DT_EXTERNALLEADING = 0x00000200
+                local DT_CALCRECT        = 0x00000400
+                local DT_NOPREFIX        = 0x00000800
+                local DT_INTERNAL        = 0x00001000
+                local DT_WORD_ELLIPSIS   = 0x00040000
                 wgui.setcolor(BreitbandGraphics.color_to_hex(color))
                 wgui.setfont(font_size,
                     font_name, "")
-                local flags = ""
+
+                local flags = DT_NOPREFIX | DT_WORDBREAK
+
                 if alignment == "center-center" then
-                    flags = "cv"
+                    flags = DT_CENTER | DT_VCENTER
                 end
                 if alignment == "left-center" then
-                    flags = "lv"
+                    flags = DT_LEFT | DT_VCENTER
                 end
                 if alignment == "right-center" then
-                    flags = "rv"
+                    flags = DT_RIGHT | DT_VCENTER
                 end
-                flags = flags .. "se"
-                -- FIXME: respect allow_wrap
-                -- if not allow_wrap then
-                --     flags = flags .. "n"
-                -- end
+                flags = flags | DT_SINGLELINE | DT_WORD_ELLIPSIS
 
-                wgui.drawtext(text, {
-                    l = rectangle.x,
-                    t = rectangle.y,
-                    w = rectangle.width,
-                    h = rectangle.height,
-                }, flags)
+                wgui.drawtextalt(text, flags, rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height)
             end,
             draw_line = function(from, to, color, thickness)
                 wgui.setbrush("null")
@@ -166,6 +189,8 @@ local function get_basic_visual_state(control)
     return NORMAL
 end
 
+
+
 Mupen_lua_ugui = {
     -- TODO: find better way of protecting these
     -- Dictionary of additional control data by id
@@ -237,9 +262,10 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
+                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
                     border_color)
-                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, back_color)
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    back_color)
             end,
             draw_button = function(control)
                 local visual_state = get_basic_visual_state(control)
@@ -324,9 +350,10 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1),
+                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
                     border_color)
-                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, back_color)
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    back_color)
                 Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'left-top', false, text_color, 11,
                     "Microsoft Sans Serif", control.text)
 
