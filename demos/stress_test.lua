@@ -40,7 +40,7 @@ emu.atupdatescreen(function()
     })
 
     for x = 1, 10, 1 do
-        for y = 1, 20, 1 do
+        for y = 1, 30, 1 do
             Mupen_lua_ugui.button({
                 uid = x * y,
                 is_enabled = true,
@@ -50,7 +50,7 @@ emu.atupdatescreen(function()
                     width = 20,
                     height = 20,
                 },
-                text = "!"
+                text = ":)"
             })
         end
     end
