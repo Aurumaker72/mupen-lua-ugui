@@ -25,74 +25,80 @@ BreitbandGraphics = {
     end,
 
     renderers = {
-        gdi = {
-            draw_rectangle = function(rectangle, color)
-                wgui.setbrush("null") -- https://github.com/mkdasher/mupen64-rr-lua-/blob/master/lua/LuaConsole.cpp#L2004
-                wgui.setpen(BreitbandGraphics.color_to_hex(color))
-                wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+        d2d = {
+            color_to_float = function(color)
+                return {
+                    r = color.r / 255.0,
+                    g = color.g / 255.0,
+                    b = color.b / 255.0,
+                }
+            end,
+            get_text_size = function(text, font_size, font_name)
+                return wgui.d2d_get_text_size(text, font_name, font_size)
+            end,
+            draw_rectangle = function(rectangle, color, thickness)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_draw_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, thickness)
             end,
             fill_rectangle = function(rectangle, color)
-                wgui.fillrect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height,
-                    color.r, color.g, color.b)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_fill_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0)
             end,
-            draw_ellipse = function(rectangle, color)
-                wgui.setbrush("null")
-                wgui.setpen(BreitbandGraphics.color_to_hex(color))
-                wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+            draw_ellipse = function(rectangle, color, thickness)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_draw_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
+                    rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0,
+                    thickness)
             end,
             fill_ellipse = function(rectangle, color)
-                local hex_color = BreitbandGraphics.color_to_hex(color)
-                wgui.setbrush(hex_color)
-                wgui.setpen(hex_color)
-                wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_fill_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
+                    rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0)
             end,
-            draw_text = function(rectangle, alignment, allow_wrap, color, font_size, font_name, text)
-                local DT_TOP             = 0x00000000
-                local DT_LEFT            = 0x00000000
-                local DT_CENTER          = 0x00000001
-                local DT_RIGHT           = 0x00000002
-                local DT_VCENTER         = 0x00000004
-                local DT_BOTTOM          = 0x00000008
-                local DT_WORDBREAK       = 0x00000010
-                local DT_SINGLELINE      = 0x00000020
-                local DT_EXPANDTABS      = 0x00000040
-                local DT_TABSTOP         = 0x00000080
-                local DT_NOCLIP          = 0x00000100
-                local DT_EXTERNALLEADING = 0x00000200
-                local DT_CALCRECT        = 0x00000400
-                local DT_NOPREFIX        = 0x00000800
-                local DT_INTERNAL        = 0x00001000
-                local DT_WORD_ELLIPSIS   = 0x00040000
-                wgui.setcolor(BreitbandGraphics.color_to_hex(color))
-                wgui.setfont(font_size,
-                    font_name, "")
-
-                local flags = DT_NOPREFIX | DT_WORDBREAK
-
-                if alignment == "center-center" then
-                    flags = DT_CENTER | DT_VCENTER
+            draw_text = function(rectangle, horizontal_alignment, vertical_alignment, color, font_size, font_name, text)
+                if text == nil then
+                    text = ""
                 end
-                if alignment == "left-center" then
-                    flags = DT_LEFT | DT_VCENTER
-                end
-                if alignment == "right-center" then
-                    flags = DT_RIGHT | DT_VCENTER
-                end
-                flags = flags | DT_SINGLELINE | DT_WORD_ELLIPSIS
 
-                wgui.drawtextalt(text, flags, rectangle.x, rectangle.y, rectangle.x + rectangle.width,
-                    rectangle.y + rectangle.height)
+                local d_horizontal_alignment = 0
+                local d_vertical_alignment = 0
+
+                if horizontal_alignment == "center" then
+                    d_horizontal_alignment = 2
+                elseif horizontal_alignment == "start" then
+                    d_horizontal_alignment = 0
+                elseif horizontal_alignment == "end" then
+                    d_horizontal_alignment = 1
+                elseif horizontal_alignment == "stretch" then
+                    d_horizontal_alignment = 3
+                end
+
+                if vertical_alignment == "center" then
+                    d_vertical_alignment = 2
+                elseif vertical_alignment == "start" then
+                    d_vertical_alignment = 0
+                elseif vertical_alignment == "end" then
+                    d_vertical_alignment = 1
+                end
+
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_draw_text(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, text, font_name,
+                    font_size, d_horizontal_alignment, d_vertical_alignment)
             end,
             draw_line = function(from, to, color, thickness)
-                wgui.setbrush("null")
-                wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-                wgui.line(from.x, from.y, to.x, to.y)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_draw_line(from.x, from.y, to.x, to.y, float_color.r, float_color.g, float_color.b, 1.0,
+                    thickness)
             end,
-            setclip = function(rectangle)
-                wgui.setclip(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
+            push_clip = function(rectangle)
+                wgui.d2d_push_clip(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height)
             end,
-            resetclip = function()
-                wgui.resetclip()
+            pop_clip = function()
+                wgui.d2d_pop_clip()
             end
         }
     }
@@ -291,7 +297,7 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center-center', true, text_color, 11,
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center', text_color, 14,
                     "Microsoft Sans Serif", control.text)
             end,
             draw_togglebutton = function(control)
@@ -354,11 +360,11 @@ Mupen_lua_ugui = {
                     border_color)
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                     back_color)
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'left-top', false, text_color, 11,
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', text_color, 14,
                     "Microsoft Sans Serif", control.text)
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                local caret_x = wgui.gettextextent(string_to_caret).width
+                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 14, "Microsoft Sans Serif").width
 
                 if visual_state == ACTIVE then
                     Mupen_lua_ugui.renderer.draw_line({
@@ -367,7 +373,9 @@ Mupen_lua_ugui = {
                     }, {
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y +
-                            math.max(15, wgui.gettextextent(control.text).height) -- TODO: move text measurement into BreitbandGraphics
+                            math.max(15,
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 14, "Microsoft Sans Serif")
+                                .height) -- TODO: move text measurement into BreitbandGraphics
                     }, {
                         r = 0,
                         g = 0,
@@ -427,9 +435,8 @@ Mupen_lua_ugui = {
                         control.rectangle.y + control.rectangle.height)
                 }
 
-                Mupen_lua_ugui.renderer.fill_ellipse(control.rectangle, outline_color)
-                Mupen_lua_ugui.renderer.fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
-                    back_color)
+                Mupen_lua_ugui.renderer.fill_ellipse(control.rectangle, back_color)
+                Mupen_lua_ugui.renderer.draw_ellipse(control.rectangle, outline_color, 1)
                 Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y,
@@ -452,12 +459,12 @@ Mupen_lua_ugui = {
                     x = stick_position.x,
                     y = stick_position.y,
                 }, line_color, 3)
-                local tip_size = 5
+                local tip_size = 8
                 Mupen_lua_ugui.renderer.fill_ellipse({
                     x = stick_position.x - tip_size / 2,
                     y = stick_position.y - tip_size / 2,
-                    width = tip_size + 2,
-                    height = tip_size + 2,
+                    width = tip_size,
+                    height = tip_size,
                 }, tip_color)
             end,
             draw_trackbar = function(control)
@@ -572,7 +579,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, "left-center", false, text_color, 11, "Microsoft Sans Serif",
+                    }, 'start', 'center', text_color, 14, "Microsoft Sans Serif",
                     control.items[control.selected_index])
 
                 Mupen_lua_ugui.renderer.draw_text({
@@ -580,7 +587,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - 8,
                         height = control.rectangle.height,
-                    }, "right-center", false, text_color, 11, "Segoe UI Mono",
+                    }, 'end', 'center', text_color, 14, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
@@ -629,7 +636,7 @@ Mupen_lua_ugui = {
 
                         Mupen_lua_ugui.renderer.fill_rectangle(rect, back_color)
                         rect.x = rect.x + 2
-                        Mupen_lua_ugui.renderer.draw_text(rect, "left-center", false, text_color, 11,
+                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', text_color, 14,
                             "Microsoft Sans Serif",
                             control.items[i])
                     end
@@ -662,14 +669,12 @@ Mupen_lua_ugui = {
                 index_begin = math.max(index_begin, 0)
                 index_end = math.min(index_end, #control.items)
 
-                Mupen_lua_ugui.renderer.setclip(control.rectangle)
+                Mupen_lua_ugui.renderer.push_clip(control.rectangle)
 
                 for i = math.floor(index_begin), math.ceil(index_end), 1 do
                     local y = (20 * (i - 1)) -
                         (Mupen_lua_ugui.control_data[control.uid].y_translation * ((20 * #control.items) - control.rectangle.height))
-                    -- text drawing will explode when sending fractional coordinates
-                    -- TODO: add subpixel support to BreitbandGraphics
-                    y = math.floor(y)
+
                     local text_color = {
                         r = 0,
                         g = 0,
@@ -723,7 +728,7 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
                             height = 20
-                        }, "left-center", false, text_color, 11, "Microsoft Sans Serif",
+                        }, 'start', 'center', text_color, 14, "Microsoft Sans Serif",
                         control.items[i])
                 end
 
@@ -760,7 +765,7 @@ Mupen_lua_ugui = {
                     })
                 end
 
-                Mupen_lua_ugui.renderer.resetclip()
+                Mupen_lua_ugui.renderer.pop_clip()
             end
         },
     },
@@ -833,12 +838,14 @@ Mupen_lua_ugui = {
             local lowest_distance = 9999999999
             local lowest_distance_index = -1
             for i = 1, #control.text + 2, 1 do
-                local dist = math.abs(wgui.gettextextent(control.text:sub(1, i - 1)).width - x)
+                local dist = math.abs(Mupen_lua_ugui.renderer.get_text_size(control.text:sub(1, i - 1), 14,
+                    "Microsoft Sans Serif").width - x)
                 if dist < lowest_distance then
                     lowest_distance = dist
                     lowest_distance_index = i
                 end
             end
+
             return lowest_distance_index
         end
 
