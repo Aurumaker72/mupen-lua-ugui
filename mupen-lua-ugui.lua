@@ -34,7 +34,9 @@ BreitbandGraphics = {
                 }
             end,
             get_text_size = function(text, font_size, font_name)
-                return wgui.d2d_get_text_size(text, font_name, font_size)
+                local a = wgui.d2d_get_text_size(text, font_name, font_size, 99999999, 99999999)
+
+                return a;
             end,
             draw_rectangle = function(rectangle, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
