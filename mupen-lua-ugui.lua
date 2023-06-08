@@ -1,19 +1,58 @@
 BreitbandGraphics = {
-    -- LUT for raw colors->hex representation
-    raw_color_lut = {},
-
-    color_to_raw = function(color)
-        return color.r * 65536 + color.g * 256 + color.b
-    end,
-
     color_to_hex = function(color)
-        local raw = BreitbandGraphics.color_to_raw(color)
-        if not BreitbandGraphics.raw_color_lut[raw] then
-            BreitbandGraphics.raw_color_lut[raw] = string.format("#%06X",
-                (color.r * 0x10000) + (color.g * 0x100) + color.b)
-        end
-        return BreitbandGraphics.raw_color_lut[raw]
+        return string.format("#%06X",
+            (color.r * 0x10000) + (color.g * 0x100) + color.b)
     end,
+    hex_to_color = function(hex)
+        return
+        {
+            r = tonumber(hex:sub(2, 3), 16),
+            g = tonumber(hex:sub(4, 5), 16),
+            b = tonumber(hex:sub(6, 7), 16)
+        }
+    end,
+    colors = {
+        white = {
+            r = 255,
+            g = 255,
+            b = 255
+        },
+        black = {
+            r = 0,
+            g = 0,
+            b = 0
+        },
+        red = {
+            r = 255,
+            g = 0,
+            b = 0
+        },
+        green = {
+            r = 0,
+            g = 255,
+            b = 0
+        },
+        blue = {
+            r = 0,
+            g = 0,
+            b = 255
+        },
+        yellow = {
+            r = 255,
+            g = 255,
+            b = 0
+        },
+        orange = {
+            r = 255,
+            g = 128,
+            b = 0
+        },
+        magenta = {
+            r = 255,
+            g = 0,
+            b = 255
+        },
+    },
 
     inflate_rectangle = function(rectangle, amount)
         return {
