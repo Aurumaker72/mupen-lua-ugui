@@ -48,6 +48,17 @@ BreitbandGraphics = {
                 wgui.d2d_fill_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0)
             end,
+            draw_rounded_rectangle = function(rectangle, color, radii, thickness)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_draw_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0,
+                    thickness)
+            end,
+            fill_rounded_rectangle = function(rectangle, color, radii)
+                local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.d2d_fill_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                    rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0)
+            end,
             draw_ellipse = function(rectangle, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.d2d_draw_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
