@@ -16,6 +16,8 @@ wgui.resize(initial_size.width + 200, initial_size.height)
 local pages = {}
 local selected_page_index = 0
 
+local is_joystick_enabled = true
+
 pages[1] = function()
     Mupen_lua_ugui.button({
         uid = 0,
@@ -33,7 +35,7 @@ end
 pages[2] = function()
     Mupen_lua_ugui.joystick({
         uid = 1,
-        is_enabled = true,
+        is_enabled = is_joystick_enabled,
         rectangle = {
             x = initial_size.width + 5,
             y = 100,
@@ -41,9 +43,22 @@ pages[2] = function()
             height = 100,
         },
         position = {
-            x = 0.5,
-            y = 0.5
+            x = (math.sin(os.clock() * 2) + 1) / 2,
+            y = (math.cos(os.clock() * 2) + 1) / 2
         }
+    })
+
+    is_joystick_enabled = Mupen_lua_ugui.toggle_button({
+        uid = 2,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 5,
+            y = 230,
+            width = 100,
+            height = 30,
+        },
+        text = "Joystick",
+        is_checked = is_joystick_enabled
     })
 end
 
