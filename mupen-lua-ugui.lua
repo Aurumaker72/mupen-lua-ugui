@@ -1,3 +1,7 @@
+if not wgui.d2d_fill_rectangle then
+    print("mupen-lua-ugui requires a Mupen64-rr-lua version newer than 1.1.2")
+end
+
 BreitbandGraphics = {
     color_to_hex = function(color)
         return string.format("#%06X",
@@ -225,6 +229,13 @@ local function get_just_pressed_keys()
     return keys
 end
 
+local function remove_range(string, start_index, end_index)
+    if start_index > end_index then
+        start_index, end_index = end_index, start_index
+    end
+    return string.sub(string, 1, start_index - 1) .. string.sub(string, end_index)
+end
+
 local function remove_at(string, index)
     if index == 0 then
         return string
@@ -355,8 +366,8 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center', text_color, 14,
-                    "Microsoft Sans Serif", control.text)
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center', text_color, 12,
+                    "MS Sans Serif", control.text)
             end,
             draw_togglebutton = function(control)
                 Mupen_lua_ugui.stylers.windows_10.draw_button(control)
@@ -413,16 +424,41 @@ Mupen_lua_ugui = {
                         b = 109,
                     }
                 end
-
                 Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
                     border_color)
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                     back_color)
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', text_color, 14,
-                    "Microsoft Sans Serif", control.text)
+
+
+                if Mupen_lua_ugui.control_data[control.uid].selection_start and Mupen_lua_ugui.control_data[control.uid].selection_end then
+                    local string_to_selection_start = control.text:sub(1,
+                        Mupen_lua_ugui.control_data[control.uid].selection_start - 1)
+                    local string_to_selection_end = control.text:sub(1,
+                        Mupen_lua_ugui.control_data[control.uid].selection_end - 1)
+
+                    Mupen_lua_ugui.renderer.fill_rectangle({
+                            x = control.rectangle.x +
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
+                                    "MS Sans Serif")
+                                .width,
+                            y = control.rectangle.y,
+                            width = Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end, 12,
+                                    "MS Sans Serif")
+                                .width -
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
+                                    "MS Sans Serif")
+                                .width,
+                            height = control.rectangle.height
+                        },
+                        BreitbandGraphics.hex_to_color("#0078D7"))
+                end
+
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', text_color, 12,
+                    "MS Sans Serif", control.text)
+
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 14, "Microsoft Sans Serif").width
+                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif").width
 
                 if visual_state == Mupen_lua_ugui.visual_states.active then
                     Mupen_lua_ugui.renderer.draw_line({
@@ -432,7 +468,7 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y +
                             math.max(15,
-                                Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 14, "Microsoft Sans Serif")
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif")
                                 .height) -- TODO: move text measurement into BreitbandGraphics
                     }, {
                         r = 0,
@@ -637,7 +673,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, 'start', 'center', text_color, 14, "Microsoft Sans Serif",
+                    }, 'start', 'center', text_color, 12, "MS Sans Serif",
                     control.items[control.selected_index])
 
                 Mupen_lua_ugui.renderer.draw_text({
@@ -645,7 +681,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - 8,
                         height = control.rectangle.height,
-                    }, 'end', 'center', text_color, 14, "Segoe UI Mono",
+                    }, 'end', 'center', text_color, 12, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
@@ -694,8 +730,8 @@ Mupen_lua_ugui = {
 
                         Mupen_lua_ugui.renderer.fill_rectangle(rect, back_color)
                         rect.x = rect.x + 2
-                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', text_color, 14,
-                            "Microsoft Sans Serif",
+                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', text_color, 12,
+                            "MS Sans Serif",
                             control.items[i])
                     end
                 end
@@ -786,7 +822,7 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
                             height = 20
-                        }, 'start', 'center', text_color, 14, "Microsoft Sans Serif",
+                        }, 'start', 'center', text_color, 12, "MS Sans Serif",
                         control.items[i])
                 end
 
@@ -880,12 +916,15 @@ Mupen_lua_ugui = {
     textbox = function(control)
         if not Mupen_lua_ugui.control_data[control.uid] then
             Mupen_lua_ugui.control_data[control.uid] = {
-                caret_index = 1
+                caret_index = 1,
+                selection_start = 0,
+                selection_end = 0,
             }
         end
 
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
             not is_pointer_inside_ignored_rectangle()
+        local text = control.text
 
         if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
@@ -897,8 +936,8 @@ Mupen_lua_ugui = {
             local lowest_distance = 9999999999
             local lowest_distance_index = -1
             for i = 1, #control.text + 2, 1 do
-                local dist = math.abs(Mupen_lua_ugui.renderer.get_text_size(control.text:sub(1, i - 1), 14,
-                    "Microsoft Sans Serif").width - x)
+                local dist = math.abs(Mupen_lua_ugui.renderer.get_text_size(control.text:sub(1, i - 1), 12,
+                    "MS Sans Serif").width - x)
                 if dist < lowest_distance then
                     lowest_distance = dist
                     lowest_distance_index = i
@@ -908,38 +947,125 @@ Mupen_lua_ugui = {
             return lowest_distance_index
         end
 
-        local text = control.text
+        local function get_higher_selection()
+            if Mupen_lua_ugui.control_data[control.uid].selection_start > Mupen_lua_ugui.control_data[control.uid].selection_end then
+                return Mupen_lua_ugui.control_data[control.uid].selection_start
+            end
+            return Mupen_lua_ugui.control_data[control.uid].selection_end
+        end
+
+        local function get_lower_selection()
+            if Mupen_lua_ugui.control_data[control.uid].selection_start > Mupen_lua_ugui.control_data[control.uid].selection_end then
+                return Mupen_lua_ugui.control_data[control.uid].selection_end
+            end
+            return Mupen_lua_ugui.control_data[control.uid].selection_start
+        end
+
+        local function is_selection_flipped()
+            return Mupen_lua_ugui.control_data[control.uid].selection_start >
+                Mupen_lua_ugui.control_data[control.uid].selection_end
+        end
+
+        local function handle_special_keys(keys)
+            local has_selection = not (Mupen_lua_ugui.control_data[control.uid].selection_start == Mupen_lua_ugui.control_data[control.uid].selection_end)
+
+
+            if keys.left then
+                if has_selection then
+                    -- nuke the selection and set it to the caret index
+                    local lower_selection = get_lower_selection()
+                    Mupen_lua_ugui.control_data[control.uid].selection_start = lower_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_end = lower_selection
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = lower_selection
+                else
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                        .caret_index - 1
+                end
+            elseif keys.right then
+                if has_selection then
+                    -- move the caret to the selection end index and nuke the selection
+                    local higher_selection = get_higher_selection()
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = higher_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_start = higher_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_end = higher_selection
+                else
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                        .caret_index + 1
+                end
+            elseif keys.space then
+                if has_selection then
+                    local lower_selection = get_lower_selection()
+                    text = remove_range(text, get_lower_selection(), get_higher_selection())
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = lower_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_start = lower_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_end = lower_selection
+                    text = insert_at(text, " ", Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                        .caret_index + 1
+                else
+                    text = insert_at(text, " ", Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                        .caret_index + 1
+                end
+            elseif keys.backspace then
+                if has_selection then
+                    local lower_selection = get_lower_selection()
+                    text = remove_range(text, lower_selection, get_higher_selection())
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = lower_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_start = lower_selection
+                    Mupen_lua_ugui.control_data[control.uid].selection_end = lower_selection
+                else
+                    text = remove_at(text, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                        .caret_index - 1
+                end
+            else
+                return false
+            end
+            return true
+        end
+
 
         if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
-            if is_pointer_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
+            -- start the new selection
+            if is_pointer_just_down() and is_pointer_inside(control.rectangle) then
                 Mupen_lua_ugui.control_data[control.uid].caret_index = get_caret_index_at_relative_position(
+                    Mupen_lua_ugui.input_state.pointer.position)
+                Mupen_lua_ugui.control_data[control.uid].selection_start = get_caret_index_at_relative_position(
+                    Mupen_lua_ugui.input_state.pointer.position)
+            end
+
+            if is_pointer_down() and is_previous_primary_down_pointer_inside(control.rectangle) then
+                Mupen_lua_ugui.control_data[control.uid].selection_end = get_caret_index_at_relative_position(
                     Mupen_lua_ugui.input_state.pointer.position)
             end
 
             local just_pressed_keys = get_just_pressed_keys();
+            local has_selection = not (Mupen_lua_ugui.control_data[control.uid].selection_start == Mupen_lua_ugui.control_data[control.uid].selection_end)
 
-            if just_pressed_keys.left then
-                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
-                    .caret_index - 1
-            elseif just_pressed_keys.right then
-                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
-                    .caret_index + 1
-            elseif just_pressed_keys.space then
-                text = insert_at(text, " ", Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
-                    .caret_index + 1
-            elseif just_pressed_keys.backspace then
-                text = remove_at(text, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
-                    .caret_index - 1
-            else
+            if not handle_special_keys(just_pressed_keys) then
                 for key, _ in pairs(just_pressed_keys) do
                     if not (#key == 1) then
                         goto continue
                     end
-                    text = insert_at(text, key, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                    Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
-                        .caret_index + 1
+
+                    if has_selection then
+                        local lower_selection = get_lower_selection()
+                        text = remove_range(text, get_lower_selection(), get_higher_selection())
+                        Mupen_lua_ugui.control_data[control.uid].caret_index = lower_selection
+                        Mupen_lua_ugui.control_data[control.uid].selection_start = lower_selection
+                        Mupen_lua_ugui.control_data[control.uid].selection_end = lower_selection
+                        text = insert_at(text, key, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                        Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                            .caret_index + 1
+                    else
+                        text = insert_at(text, key, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
+                        Mupen_lua_ugui.control_data[control.uid].caret_index = Mupen_lua_ugui.control_data[control.uid]
+                            .caret_index + 1
+                    end
+
+
+
                     ::continue::
                 end
             end
