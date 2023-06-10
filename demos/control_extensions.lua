@@ -21,35 +21,70 @@ Mupen_lua_ugui.spinner = function(control)
         text = tostring(control.value)
     })
 
-    if (Mupen_lua_ugui.button({
-            uid = control.uid + 1,
-            is_enabled = true,
-            rectangle = {
-                x = control.rectangle.x + control.rectangle.width - 40,
-                y = control.rectangle.y,
-                width = 40,
-                height = control.rectangle.height / 2,
-            },
-            text = "^"
-        }))
-    then
-        value = value + 1
+    if control.is_horizontal then
+        if (Mupen_lua_ugui.button({
+                uid = control.uid + 1,
+                is_enabled = true,
+                rectangle = {
+                    x = control.rectangle.x + control.rectangle.width - 40,
+                    y = control.rectangle.y,
+                    width = 20,
+                    height = control.rectangle.height,
+                },
+                text = "-"
+            }))
+        then
+            value = value - 1
+        end
+
+        if (Mupen_lua_ugui.button({
+                uid = control.uid + 1,
+                is_enabled = true,
+                rectangle = {
+                    x = control.rectangle.x + control.rectangle.width - 20,
+                    y = control.rectangle.y,
+                    width = 20,
+                    height = control.rectangle.height,
+                },
+                text = "+"
+            }))
+        then
+            value = value + 1
+        end
+    else
+        if (Mupen_lua_ugui.button({
+                uid = control.uid + 1,
+                is_enabled = true,
+                rectangle = {
+                    x = control.rectangle.x + control.rectangle.width - 40,
+                    y = control.rectangle.y,
+                    width = 40,
+                    height = control.rectangle.height / 2,
+                },
+                text = "+"
+            }))
+        then
+            value = value + 1
+        end
+
+        if (Mupen_lua_ugui.button({
+                uid = control.uid + 1,
+                is_enabled = true,
+                rectangle = {
+                    x = control.rectangle.x + control.rectangle.width - 40,
+                    y = control.rectangle.y + control.rectangle.height / 2,
+                    width = 40,
+                    height = control.rectangle.height / 2,
+                },
+                text = "-"
+            }))
+        then
+            value = value - 1
+        end
     end
 
-    if (Mupen_lua_ugui.button({
-            uid = control.uid + 1,
-            is_enabled = true,
-            rectangle = {
-                x = control.rectangle.x + control.rectangle.width - 40,
-                y = control.rectangle.y + control.rectangle.height / 2,
-                width = 40,
-                height = control.rectangle.height / 2,
-            },
-            text = "v"
-        }))
-    then
-        value = value - 1
-    end
+
+
 
     return value
 end
@@ -57,7 +92,7 @@ end
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 local some_number = 0
-
+local is_toggled = false
 emu.atupdatescreen(function()
     BreitbandGraphics.renderers.d2d.fill_rectangle({
         x = initial_size.width,
@@ -94,7 +129,21 @@ emu.atupdatescreen(function()
             width = 80,
             height = 30,
         },
-        value = some_number
+        value = some_number,
+        is_horizontal = is_toggled
+    })
+
+    is_toggled = Mupen_lua_ugui.toggle_button({
+        uid = 5,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 90,
+            width = 80,
+            height = 30,
+        },
+        is_checked = is_toggled,
+        text = "horizontal"
     })
 
     Mupen_lua_ugui.end_frame()
