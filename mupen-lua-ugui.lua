@@ -189,6 +189,18 @@ local function is_pointer_inside(rectangle)
         Mupen_lua_ugui.input_state.pointer.position.x < rectangle.x + rectangle.width and
         Mupen_lua_ugui.input_state.pointer.position.y < rectangle.y + rectangle.height;
 end
+local function is_pointer_inside_ignored_rectangle()
+    for i = 1, #Mupen_lua_ugui.hittest_ignore_rectangles, 1 do
+        if (Mupen_lua_ugui.input_state.pointer.position.x > Mupen_lua_ugui.hittest_ignore_rectangles[i].x and
+                Mupen_lua_ugui.input_state.pointer.position.y > Mupen_lua_ugui.hittest_ignore_rectangles[i].y and
+                Mupen_lua_ugui.input_state.pointer.position.x < Mupen_lua_ugui.hittest_ignore_rectangles[i].x + Mupen_lua_ugui.hittest_ignore_rectangles[i].width and
+                Mupen_lua_ugui.input_state.pointer.position.y < Mupen_lua_ugui.hittest_ignore_rectangles[i].y + Mupen_lua_ugui.hittest_ignore_rectangles[i].height)
+        then
+            return true
+        end
+    end
+    return false
+end
 local function is_previous_primary_down_pointer_inside(rectangle)
     return Mupen_lua_ugui.previous_pointer_primary_down_position.x > rectangle.x and
         Mupen_lua_ugui.previous_pointer_primary_down_position.y > rectangle.y and
@@ -227,25 +239,7 @@ local function remap(value, from1, to1, from2, to2)
     return (value - from1) / (to1 - from1) * (to2 - from2) + from2
 end
 
-local DISABLED = -1
-local NORMAL = 0
-local HOVER = 1
-local ACTIVE = 2
 
-local function get_basic_visual_state(control)
-    if not control.is_enabled then
-        return DISABLED
-    end
-
-    if is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
-        if is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
-            return ACTIVE
-        end
-
-        return HOVER
-    end
-    return NORMAL
-end
 
 
 
@@ -254,22 +248,34 @@ Mupen_lua_ugui = {
     -- Dictionary of additional control data by id
     -- Library-side state, don't mutate
     control_data = {},
-    -- Library-side state, don't mutate
     input_state = {},
-    -- Library-side state, don't mutate
     previous_input_state = {},
-    -- Library-side state, don't mutate
     active_control_uid = nil,
-    -- Library-side state, don't mutate
     previous_pointer_primary_down_position = { x = 0, y = 0 },
-    -- Library-side state, don't mutate
-    modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 },
-    -- Library-side state, don't mutate
+    hittest_ignore_rectangles = {},
     end_frame_callbacks = {},
-    -- Library-side state, don't mutate
     renderer = nil,
-    -- Library-side state, don't mutate
     styler = nil,
+    visual_states = {
+        disabled = 0,
+        normal = 1,
+        hovered = 2,
+        active = 3,
+    },
+    get_visual_state = function(control)
+        if not control.is_enabled then
+            return Mupen_lua_ugui.visual_states.disabled
+        end
+
+        if is_pointer_inside(control.rectangle) and not is_pointer_inside_ignored_rectangle() then
+            if is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
+                return Mupen_lua_ugui.visual_states.active
+            end
+
+            return Mupen_lua_ugui.visual_states.hovered
+        end
+        return Mupen_lua_ugui.visual_states.normal
+    end,
 
     stylers = {
         windows_10 = {
@@ -285,7 +291,7 @@ Mupen_lua_ugui = {
                     b = 173
                 }
 
-                if visual_state == ACTIVE then
+                if visual_state == Mupen_lua_ugui.visual_states.active then
                     back_color = {
                         r = 204,
                         g = 228,
@@ -296,7 +302,7 @@ Mupen_lua_ugui = {
                         g = 84,
                         b = 153
                     }
-                elseif visual_state == HOVER then
+                elseif visual_state == Mupen_lua_ugui.visual_states.hovered then
                     back_color = {
                         r = 229,
                         g = 241,
@@ -307,7 +313,7 @@ Mupen_lua_ugui = {
                         g = 120,
                         b = 215
                     }
-                elseif visual_state == DISABLED then
+                elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
                     back_color = {
                         r = 204,
                         g = 204,
@@ -326,11 +332,11 @@ Mupen_lua_ugui = {
                     back_color)
             end,
             draw_button = function(control)
-                local visual_state = get_basic_visual_state(control)
+                local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 -- override for toggle_button
                 if control.is_checked and control.is_enabled then
-                    visual_state = ACTIVE
+                    visual_state = Mupen_lua_ugui.visual_states.active
                 end
 
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
@@ -341,7 +347,7 @@ Mupen_lua_ugui = {
                     b = 0
                 }
 
-                if visual_state == DISABLED then
+                if visual_state == Mupen_lua_ugui.visual_states.disabled then
                     text_color = {
                         r = 160,
                         g = 160,
@@ -356,7 +362,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.stylers.windows_10.draw_button(control)
             end,
             draw_textbox = function(control)
-                local visual_state = get_basic_visual_state(control)
+                local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 local back_color = {
                     r = 255,
@@ -375,22 +381,22 @@ Mupen_lua_ugui = {
                 }
 
                 if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
-                    visual_state = ACTIVE
+                    visual_state = Mupen_lua_ugui.visual_states.active
                 end
 
-                if visual_state == HOVER then
+                if visual_state == Mupen_lua_ugui.visual_states.hovered then
                     border_color = {
                         r = 23,
                         g = 23,
                         b = 23,
                     }
-                elseif visual_state == ACTIVE then
+                elseif visual_state == Mupen_lua_ugui.visual_states.active then
                     border_color = {
                         r = 0,
                         g = 84,
                         b = 153
                     }
-                elseif visual_state == DISABLED then
+                elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
                     back_color = {
                         r = 240,
                         g = 240,
@@ -418,7 +424,7 @@ Mupen_lua_ugui = {
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
                 local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 14, "Microsoft Sans Serif").width
 
-                if visual_state == ACTIVE then
+                if visual_state == Mupen_lua_ugui.visual_states.active then
                     Mupen_lua_ugui.renderer.draw_line({
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y + 2
@@ -437,9 +443,9 @@ Mupen_lua_ugui = {
             end,
             draw_joystick = function(control)
                 -- TODO: utilize normalized coordinates, to logically decouple joystick from n64
-                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, NORMAL)
+                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, Mupen_lua_ugui.visual_states.normal)
 
-                local visual_state = get_basic_visual_state(control)
+                local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 local back_color = {
                     r = 255,
@@ -462,7 +468,7 @@ Mupen_lua_ugui = {
                     b = 255
                 }
 
-                if visual_state == DISABLED then
+                if visual_state == Mupen_lua_ugui.visual_states.disabled then
                     outline_color = {
                         r = 191,
                         g = 191,
@@ -520,7 +526,7 @@ Mupen_lua_ugui = {
                 }, tip_color)
             end,
             draw_trackbar = function(control)
-                local visual_state = get_basic_visual_state(control)
+                local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 local track_color = {
                     r = 231,
@@ -539,22 +545,22 @@ Mupen_lua_ugui = {
                 }
 
                 if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
-                    visual_state = ACTIVE
+                    visual_state = Mupen_lua_ugui.visual_states.active
                 end
 
-                if visual_state == HOVER then
+                if visual_state == Mupen_lua_ugui.visual_states.hovered then
                     head_color = {
                         r = 23,
                         g = 23,
                         b = 23,
                     }
-                elseif visual_state == ACTIVE then
+                elseif visual_state == Mupen_lua_ugui.visual_states.active then
                     head_color = {
                         r = 204,
                         g = 204,
                         b = 204,
                     }
-                elseif visual_state == DISABLED then
+                elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
                     head_color = {
                         r = 204,
                         g = 204,
@@ -605,7 +611,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.fill_rectangle(head_rectangle, head_color)
             end,
             draw_combobox = function(control)
-                local visual_state = get_basic_visual_state(control)
+                local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 local text_color = {
                     r = 0,
@@ -614,12 +620,12 @@ Mupen_lua_ugui = {
                 }
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
-                    visual_state = ACTIVE
+                    visual_state = Mupen_lua_ugui.visual_states.active
                 end
 
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
 
-                if visual_state == DISABLED then
+                if visual_state == Mupen_lua_ugui.visual_states.disabled then
                     text_color = {
                         r = 109,
                         g = 109,
@@ -707,7 +713,7 @@ Mupen_lua_ugui = {
                     b = 255
                 })
 
-                local visual_state = get_basic_visual_state(control)
+                local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 -- item y position:
                 -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
@@ -743,7 +749,7 @@ Mupen_lua_ugui = {
                             b = 215
                         }
 
-                        if visual_state == DISABLED then
+                        if visual_state == Mupen_lua_ugui.visual_states.disabled then
                             accent_color = {
                                 r = 204,
                                 g = 204,
@@ -766,7 +772,7 @@ Mupen_lua_ugui = {
                         }
                     end
 
-                    if visual_state == DISABLED then
+                    if visual_state == Mupen_lua_ugui.visual_states.disabled then
                         text_color = {
                             r = 160,
                             g = 160,
@@ -839,11 +845,12 @@ Mupen_lua_ugui = {
         end
 
         Mupen_lua_ugui.end_frame_callbacks = {}
+        Mupen_lua_ugui.hittest_ignore_rectangles = {}
     end,
 
     button = function(control)
         local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) and control.is_enabled
+            not is_pointer_inside_ignored_rectangle() and control.is_enabled
 
         if pushed then
             Mupen_lua_ugui.active_control_uid = control.uid
@@ -856,7 +863,7 @@ Mupen_lua_ugui = {
 
     toggle_button = function(control)
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+            not is_pointer_inside_ignored_rectangle()
 
         local is_checked = control.is_checked
 
@@ -878,7 +885,7 @@ Mupen_lua_ugui = {
         end
 
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+            not is_pointer_inside_ignored_rectangle()
 
         if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
@@ -957,7 +964,7 @@ Mupen_lua_ugui = {
         local value = control.value
 
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle)
+            not is_pointer_inside_ignored_rectangle()
         if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
@@ -996,15 +1003,11 @@ Mupen_lua_ugui = {
 
         if not control.is_enabled then
             Mupen_lua_ugui.control_data[control.uid].is_open = false
-            Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
         end
 
         if is_pointer_just_down() and control.is_enabled then
             if is_pointer_inside(control.rectangle) then
                 Mupen_lua_ugui.control_data[control.uid].is_open = not Mupen_lua_ugui.control_data[control.uid].is_open
-                if not Mupen_lua_ugui.control_data[control.uid].is_open then
-                    Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
-                end
             else
                 if not is_pointer_inside({
                         x = control.rectangle.x,
@@ -1013,7 +1016,6 @@ Mupen_lua_ugui = {
                         height = 20 * #control.items
                     }) then
                     Mupen_lua_ugui.control_data[control.uid].is_open = false
-                    Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
                 end
             end
         end
@@ -1021,13 +1023,6 @@ Mupen_lua_ugui = {
         local selected_index = control.selected_index
 
         if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
-            Mupen_lua_ugui.modal_hittest_ignore_rectangle = {
-                x = control.rectangle.x,
-                y = control.rectangle.y + control.rectangle.height,
-                width = control.rectangle.width,
-                height = 20 * #control.items
-            }
-
             for i = 1, #control.items, 1 do
                 if is_pointer_inside({
                         x = control.rectangle.x,
@@ -1038,7 +1033,6 @@ Mupen_lua_ugui = {
                     if is_pointer_just_down() then
                         selected_index = i
                         Mupen_lua_ugui.control_data[control.uid].is_open = false
-                        Mupen_lua_ugui.modal_hittest_ignore_rectangle = { x = 0, y = 0, width = 0, height = 0 }
                     end
                     Mupen_lua_ugui.control_data[control.uid].hovered_index = i
                     break
@@ -1048,8 +1042,17 @@ Mupen_lua_ugui = {
 
 
 
+        if Mupen_lua_ugui.control_data[control.uid].is_open then
+            Mupen_lua_ugui.hittest_ignore_rectangles[#Mupen_lua_ugui.hittest_ignore_rectangles + 1] = {
+                x = control.rectangle.x,
+                y = control.rectangle.y + control.rectangle.height,
+                width = control.rectangle.width,
+                height = 20 * #control.items
+            }
+        end
         selected_index = clamp(selected_index, 1, #control.items)
 
+        -- we draw the modal over all other controls
         Mupen_lua_ugui.end_frame_callbacks[#Mupen_lua_ugui.end_frame_callbacks + 1] = function()
             Mupen_lua_ugui.styler.draw_combobox(control)
         end
@@ -1079,7 +1082,7 @@ Mupen_lua_ugui = {
 
         local selected_index = control.selected_index
 
-        if control.is_enabled and is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
+        if control.is_enabled and is_pointer_inside(control.rectangle) and not is_pointer_inside_ignored_rectangle() then
             if is_pointer_just_down() and is_pointer_inside(scrollbar_rect) then
                 Mupen_lua_ugui.active_control_uid = control.uid
             end

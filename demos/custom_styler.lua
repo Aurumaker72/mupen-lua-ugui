@@ -8,45 +8,8 @@ local function clamp(value, min, max)
     return value
 end
 
-local function is_pointer_inside(rectangle)
-    return Mupen_lua_ugui.input_state.pointer.position.x > rectangle.x and
-        Mupen_lua_ugui.input_state.pointer.position.y > rectangle.y and
-        Mupen_lua_ugui.input_state.pointer.position.x < rectangle.x + rectangle.width and
-        Mupen_lua_ugui.input_state.pointer.position.y < rectangle.y + rectangle.height;
-end
-local function is_previous_primary_down_pointer_inside(rectangle)
-    return Mupen_lua_ugui.previous_pointer_primary_down_position.x > rectangle.x and
-        Mupen_lua_ugui.previous_pointer_primary_down_position.y > rectangle.y and
-        Mupen_lua_ugui.previous_pointer_primary_down_position.x < rectangle.x + rectangle.width and
-        Mupen_lua_ugui.previous_pointer_primary_down_position.y < rectangle.y + rectangle.height;
-end
-local function is_pointer_down()
-    return Mupen_lua_ugui.input_state.pointer.is_primary_down;
-end
-
-
 local function remap(value, from1, to1, from2, to2)
     return (value - from1) / (to1 - from1) * (to2 - from2) + from2
-end
-
-local DISABLED = -1
-local NORMAL = 0
-local HOVER = 1
-local ACTIVE = 2
-
-local function get_basic_visual_state(control)
-    if not control.is_enabled then
-        return DISABLED
-    end
-
-    if is_pointer_inside(control.rectangle) and not is_pointer_inside(Mupen_lua_ugui.modal_hittest_ignore_rectangle) then
-        if is_previous_primary_down_pointer_inside(control.rectangle) and is_pointer_down() then
-            return ACTIVE
-        end
-
-        return HOVER
-    end
-    return NORMAL
 end
 
 local function draw_raised_frame(control, visual_state)
@@ -60,7 +23,7 @@ local function draw_raised_frame(control, visual_state)
         g = 208,
         b = 208
     }
-    if visual_state == ACTIVE then
+    if visual_state == Mupen_lua_ugui.visual_states.active then
         back_color = {
             r = 204,
             g = 228,
@@ -71,7 +34,7 @@ local function draw_raised_frame(control, visual_state)
             g = 84,
             b = 153
         }
-    elseif visual_state == HOVER then
+    elseif visual_state == Mupen_lua_ugui.visual_states.hovered then
         back_color = {
             r = 229,
             g = 241,
@@ -82,7 +45,7 @@ local function draw_raised_frame(control, visual_state)
             g = 84,
             b = 153
         }
-    elseif visual_state == DISABLED then
+    elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
         back_color = {
             r = 249,
             g = 249,
@@ -108,10 +71,10 @@ local function draw_raised_frame(control, visual_state)
 end
 
 function draw_button(control)
-    local visual_state = get_basic_visual_state(control)
+    local visual_state = Mupen_lua_ugui.get_visual_state(control)
     -- override for toggle_button
     if control.is_checked and control.is_enabled then
-        visual_state = ACTIVE
+        visual_state = Mupen_lua_ugui.visual_states.active
     end
 
     draw_raised_frame(control, visual_state)
@@ -120,7 +83,7 @@ function draw_button(control)
         g = 0,
         b = 0
     }
-    if visual_state == DISABLED then
+    if visual_state == Mupen_lua_ugui.visual_states.disabled then
         text_color = {
             r = 160,
             g = 160,
@@ -136,7 +99,7 @@ function draw_togglebutton(control)
 end
 
 function draw_textbox(control)
-    local visual_state = get_basic_visual_state(control)
+    local visual_state = Mupen_lua_ugui.get_visual_state(control)
     local back_color = {
         r = 255,
         g = 255,
@@ -159,9 +122,9 @@ function draw_textbox(control)
     }
 
     if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
-        visual_state = ACTIVE
+        visual_state = Mupen_lua_ugui.visual_states.active
     end
-    if visual_state == ACTIVE then
+    if visual_state == Mupen_lua_ugui.visual_states.active then
         border_color = {
             r = 0,
             g = 84,
@@ -172,7 +135,7 @@ function draw_textbox(control)
             g = 103,
             b = 192
         }
-    elseif visual_state == DISABLED then
+    elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
         back_color = {
             r = 240,
             g = 240,
@@ -212,13 +175,13 @@ function draw_textbox(control)
     }, {
         x = control.rectangle.x + control.rectangle.width,
         y = control.rectangle.y + control.rectangle.height,
-    }, highlight_color, visual_state == ACTIVE and 2 or 0.5)
+    }, highlight_color, visual_state == Mupen_lua_ugui.visual_states.active and 2 or 0.5)
 
     Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', text_color, 14,
         "Microsoft Sans Serif", control.text)
     local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
     local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 14, "Microsoft Sans Serif").width
-    if visual_state == ACTIVE then
+    if visual_state == Mupen_lua_ugui.visual_states.active then
         Mupen_lua_ugui.renderer.draw_line({
             x = control.rectangle.x + caret_x,
             y = control.rectangle.y + 2
@@ -237,9 +200,8 @@ function draw_textbox(control)
 end
 
 function draw_joystick(control)
-    -- TODO: utilize normalized coordinates, to logically decouple joystick from n64
-    draw_raised_frame(control, NORMAL)
-    local visual_state = get_basic_visual_state(control)
+    draw_raised_frame(control, Mupen_lua_ugui.visual_states.normal)
+    local visual_state = Mupen_lua_ugui.get_visual_state(control)
     local back_color = {
         r = 255,
         g = 255,
@@ -260,7 +222,7 @@ function draw_joystick(control)
         g = 0,
         b = 255
     }
-    if visual_state == DISABLED then
+    if visual_state == Mupen_lua_ugui.visual_states.disabled then
         outline_color = {
             r = 191,
             g = 191,
@@ -316,7 +278,7 @@ function draw_joystick(control)
 end
 
 function draw_trackbar(control)
-    local visual_state = get_basic_visual_state(control)
+    local visual_state = Mupen_lua_ugui.get_visual_state(control)
     local track_color = {
         r = 231,
         g = 234,
@@ -333,21 +295,21 @@ function draw_trackbar(control)
         b = 217
     }
     if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
-        visual_state = ACTIVE
+        visual_state = Mupen_lua_ugui.visual_states.active
     end
-    if visual_state == HOVER then
+    if visual_state == Mupen_lua_ugui.visual_states.hovered then
         head_color = {
             r = 23,
             g = 23,
             b = 23,
         }
-    elseif visual_state == ACTIVE then
+    elseif visual_state == Mupen_lua_ugui.visual_states.active then
         head_color = {
             r = 204,
             g = 204,
             b = 204,
         }
-    elseif visual_state == DISABLED then
+    elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
         head_color = {
             r = 204,
             g = 204,
@@ -394,17 +356,17 @@ function draw_trackbar(control)
 end
 
 function draw_combobox(control)
-    local visual_state = get_basic_visual_state(control)
+    local visual_state = Mupen_lua_ugui.get_visual_state(control)
     local text_color = {
         r = 0,
         g = 0,
         b = 0,
     }
     if Mupen_lua_ugui.control_data[control.uid].is_open and control.is_enabled then
-        visual_state = ACTIVE
+        visual_state = Mupen_lua_ugui.visual_states.active
     end
     draw_raised_frame(control, visual_state)
-    if visual_state == DISABLED then
+    if visual_state == Mupen_lua_ugui.visual_states.disabled then
         text_color = {
             r = 109,
             g = 109,
@@ -485,7 +447,7 @@ function draw_listbox(control)
         g = 255,
         b = 255
     })
-    local visual_state = get_basic_visual_state(control)
+    local visual_state = Mupen_lua_ugui.get_visual_state(control)
     -- item y position:
     -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
     local index_begin = (Mupen_lua_ugui.control_data[control.uid].y_translation *
@@ -510,7 +472,7 @@ function draw_listbox(control)
                 g = 120,
                 b = 215
             }
-            if visual_state == DISABLED then
+            if visual_state == Mupen_lua_ugui.visual_states.disabled then
                 accent_color = {
                     r = 204,
                     g = 204,
@@ -529,7 +491,7 @@ function draw_listbox(control)
                 b = 255
             }
         end
-        if visual_state == DISABLED then
+        if visual_state == Mupen_lua_ugui.visual_states.disabled then
             text_color = {
                 r = 160,
                 g = 160,
