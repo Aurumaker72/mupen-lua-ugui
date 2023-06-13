@@ -113,13 +113,15 @@ BreitbandGraphics = {
                 wgui.d2d_fill_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
                     rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0)
             end,
-            draw_text = function(rectangle, horizontal_alignment, vertical_alignment, color, font_size, font_name, text)
+            draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
+                                 text)
                 if text == nil then
                     text = ""
                 end
 
                 local d_horizontal_alignment = 0
                 local d_vertical_alignment = 0
+                local d_style = 0
 
                 if horizontal_alignment == "center" then
                     d_horizontal_alignment = 2
@@ -139,10 +141,17 @@ BreitbandGraphics = {
                     d_vertical_alignment = 1
                 end
 
+                if style.is_bold then
+                    d_style = d_style | (1 << 0);
+                end
+                if style.is_italic then
+                    d_style = d_style | (2 << 0);
+                end
+
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.d2d_draw_text(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, text, font_name,
-                    font_size, d_horizontal_alignment, d_vertical_alignment)
+                    font_size, d_style, d_horizontal_alignment, d_vertical_alignment)
             end,
             draw_line = function(from, to, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
@@ -366,7 +375,9 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center', text_color, 12,
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center',
+                    {}, text_color,
+                    12,
                     "MS Sans Serif", control.text)
             end,
             draw_togglebutton = function(control)
@@ -453,7 +464,7 @@ Mupen_lua_ugui = {
                         BreitbandGraphics.hex_to_color("#0078D7"))
                 end
 
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', text_color, 12,
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', {}, text_color, 12,
                     "MS Sans Serif", control.text)
 
 
@@ -673,7 +684,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, 'start', 'center', text_color, 12, "MS Sans Serif",
+                    }, 'start', 'center', {}, text_color, 12, "MS Sans Serif",
                     control.items[control.selected_index])
 
                 Mupen_lua_ugui.renderer.draw_text({
@@ -681,7 +692,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - 8,
                         height = control.rectangle.height,
-                    }, 'end', 'center', text_color, 12, "Segoe UI Mono",
+                    }, 'end', 'center', {}, text_color, 12, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
@@ -730,7 +741,7 @@ Mupen_lua_ugui = {
 
                         Mupen_lua_ugui.renderer.fill_rectangle(rect, back_color)
                         rect.x = rect.x + 2
-                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', text_color, 12,
+                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', {}, text_color, 12,
                             "MS Sans Serif",
                             control.items[i])
                     end
@@ -822,7 +833,7 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
                             height = 20
-                        }, 'start', 'center', text_color, 12, "MS Sans Serif",
+                        }, 'start', 'center', {}, text_color, 12, "MS Sans Serif",
                         control.items[i])
                 end
 
