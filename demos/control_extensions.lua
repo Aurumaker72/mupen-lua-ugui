@@ -9,6 +9,9 @@ dofile(folder('demos\\control_extensions.lua') .. 'mupen-lua-ugui.lua')
 Mupen_lua_ugui.spinner = function(control)
     local value = control.value
 
+    value = math.min(value, control.maximum_value)
+    value = math.max(value, control.minimum_value)
+
     Mupen_lua_ugui.textbox({
         uid = control.uid,
         is_enabled = true,
@@ -18,13 +21,13 @@ Mupen_lua_ugui.spinner = function(control)
             width = control.rectangle.width - 40,
             height = control.rectangle.height,
         },
-        text = tostring(control.value)
+        text = tostring(value)
     })
 
     if control.is_horizontal then
         if (Mupen_lua_ugui.button({
                 uid = control.uid + 1,
-                is_enabled = true,
+                is_enabled = not (value == control.minimum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width - 40,
                     y = control.rectangle.y,
@@ -39,7 +42,7 @@ Mupen_lua_ugui.spinner = function(control)
 
         if (Mupen_lua_ugui.button({
                 uid = control.uid + 1,
-                is_enabled = true,
+                is_enabled = not (value == control.maximum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width - 20,
                     y = control.rectangle.y,
@@ -54,7 +57,7 @@ Mupen_lua_ugui.spinner = function(control)
     else
         if (Mupen_lua_ugui.button({
                 uid = control.uid + 1,
-                is_enabled = true,
+                is_enabled = not (value == control.maximum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width - 40,
                     y = control.rectangle.y,
@@ -69,7 +72,7 @@ Mupen_lua_ugui.spinner = function(control)
 
         if (Mupen_lua_ugui.button({
                 uid = control.uid + 1,
-                is_enabled = true,
+                is_enabled = not (value == control.minimum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width - 40,
                     y = control.rectangle.y + control.rectangle.height / 2,
@@ -82,7 +85,6 @@ Mupen_lua_ugui.spinner = function(control)
             value = value - 1
         end
     end
-
 
 
 
@@ -130,7 +132,9 @@ emu.atupdatescreen(function()
             height = 30,
         },
         value = some_number,
-        is_horizontal = is_toggled
+        is_horizontal = is_toggled,
+        minimum_value = -2,
+        maximum_value = 3,
     })
 
     is_toggled = Mupen_lua_ugui.toggle_button({
