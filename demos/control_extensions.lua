@@ -12,7 +12,7 @@ Mupen_lua_ugui.spinner = function(control)
     value = math.min(value, control.maximum_value)
     value = math.max(value, control.minimum_value)
 
-    Mupen_lua_ugui.textbox({
+    local new_text = Mupen_lua_ugui.textbox({
         uid = control.uid,
         is_enabled = true,
         rectangle = {
@@ -23,6 +23,10 @@ Mupen_lua_ugui.spinner = function(control)
         },
         text = tostring(value)
     })
+
+    if tonumber(new_text) then
+        value = tonumber(new_text)
+    end
 
     if control.is_horizontal then
         if (Mupen_lua_ugui.button({
@@ -93,7 +97,7 @@ end
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
-local some_number = 0
+local some_number = 3
 local is_toggled = false
 emu.atupdatescreen(function()
     BreitbandGraphics.renderers.d2d.fill_rectangle({
@@ -133,8 +137,8 @@ emu.atupdatescreen(function()
         },
         value = some_number,
         is_horizontal = is_toggled,
-        minimum_value = -2,
-        maximum_value = 3,
+        minimum_value = 2,
+        maximum_value = 5,
     })
 
     is_toggled = Mupen_lua_ugui.toggle_button({
