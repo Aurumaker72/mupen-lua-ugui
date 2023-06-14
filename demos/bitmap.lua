@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\nineslice.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder('demos\\bitmap.lua') .. 'mupen-lua-ugui.lua')
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
@@ -45,7 +45,7 @@ emu.atupdatescreen(function()
         y = 0,
         width = 64,
         height = 64
-    }, folder('nineslice.lua') .. 'image.png', BreitbandGraphics.colors.white)
+    }, folder('bitmap.lua') .. 'image.png', BreitbandGraphics.colors.white)
 
     Mupen_lua_ugui.end_frame()
 end)
