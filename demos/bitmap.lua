@@ -45,7 +45,7 @@ emu.atupdatescreen(function()
         y = 0,
         width = 64,
         height = 64
-    }, folder('bitmap.lua') .. 'image.png', BreitbandGraphics.colors.white)
+    }, folder('bitmap.lua') .. 'img/image.png', BreitbandGraphics.colors.white)
 
     Mupen_lua_ugui.end_frame()
 end)
