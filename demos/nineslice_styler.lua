@@ -162,10 +162,10 @@ Mupen_lua_ugui.stylers.windows_10.draw_button = function(control)
         width = control.rectangle.width - 10,
         height = control.rectangle.height - 8
     }, {
-        x = 6,
-        y = 5 + offset,
-        width = 1,
-        height = 1
+        x = 5,
+        y = 4 + offset,
+        width = 3,
+        height = 3
     }, button_atlas_path, BreitbandGraphics.colors.white)
 
     Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center',
@@ -254,6 +254,21 @@ emu.atupdatescreen(function()
         }) then
         button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-95.png'
     end
+
+    if Mupen_lua_ugui.button({
+            uid = 3,
+            is_enabled = true,
+            rectangle = {
+                x = initial_size.width + 10,
+                y = 170,
+                width = 90,
+                height = 30,
+            },
+            text = "Windows 7"
+        }) then
+        button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-7.png'
+    end
+
 
 
     Mupen_lua_ugui.end_frame()
