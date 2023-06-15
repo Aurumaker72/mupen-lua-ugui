@@ -10,20 +10,6 @@ wgui.resize(initial_size.width + 200, initial_size.height)
 
 local button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-11.png'
 
-function draw_tiled_image(destination_rectangle, source_rectangle, path)
-    local destination_x, destination_y, destination_width, destination_height = destination_rectangle.x,
-        destination_rectangle.y, destination_rectangle.width, destination_rectangle.height
-    local source_x, source_y, source_width, source_height = source_rectangle.x, source_rectangle.y,
-        source_rectangle.width, source_rectangle.height
-
-    for y = destination_y, destination_y + destination_height - 1, source_height do
-        for x = destination_x, destination_x + destination_width - 1, source_width do
-            BreitbandGraphics.renderers.d2d.draw_image({ x = x, y = y, width = source_width, height = source_height },
-                source_rectangle, path, BreitbandGraphics.colors.white)
-        end
-    end
-end
-
 Mupen_lua_ugui.stylers.windows_10.draw_button = function(control)
     local visual_state = Mupen_lua_ugui.get_visual_state(control)
     local offset = 0
