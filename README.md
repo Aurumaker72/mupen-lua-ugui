@@ -64,4 +64,5 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 </p>
 
 `mupen-lua-ugui` depends on `BreitbandGraphics` for backend-agnostic rendering functionality.
+
 ⚠️ It is recommended to use `BreitbandGraphics` when drawing graphics instead of directly calling the Mupen Lua APIs, due to Intellisense and helpful utilities. 
