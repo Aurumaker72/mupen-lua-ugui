@@ -11,7 +11,7 @@
 </p>
 
 # Quickstart
-Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/tree/main/demos) to see how the library is used.
+Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md) to see how the library is used.
 
 # Advantages
 
