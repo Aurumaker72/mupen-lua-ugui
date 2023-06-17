@@ -1,8 +1,8 @@
-# [bitmap.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/bitmap.lua)
-Shows how to draw bitmaps using BreitbandGraphics
+# [control_extensions_iconbutton.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/control_extensions_iconbutton.lua)
+Shows how to derive from a built-in control to create an IconButton
 
-# [control_extensions.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/control_extensions.lua)
-Shows how to extend existing controls and utilize them
+# [control_extensions_spinner.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/control_extensions_spinner.lua)
+Shows how to derive from a built-in control to create a Spinner (NumericUpDown/SpinBox)
 
 # [control_gallery.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/control_gallery.lua)
 A non-interactive gallery of the built-in controls
