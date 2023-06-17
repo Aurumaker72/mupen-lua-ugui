@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\control_extensions.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder('demos\\control_extensions_spinner.lua') .. 'mupen-lua-ugui.lua')
 
 
 Mupen_lua_ugui.spinner = function(control)
@@ -89,8 +89,6 @@ Mupen_lua_ugui.spinner = function(control)
             value = value - 1
         end
     end
-
-
 
     return value
 end
