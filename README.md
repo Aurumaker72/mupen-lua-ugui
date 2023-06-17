@@ -37,18 +37,18 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 # Features
 
 - Stylers
-  - Windows 10 (built-in, `windows_10`)
-- Fully mockable
+  - Windows 10 (built-in)
+- Modularity
   - Provide subsystem references in `begin_frame`
-- Button (`button`)
-- TextBox (`textbox`)
+- Button
+- TextBox
   - Keyboard- and mouse-controllable caret
-- ToggleButton (`toggle_button`)
-- Joystick (`joystick`)
-- TrackBar (`trackbar`)
+- ToggleButton
+- Joystick
+- TrackBar
   - Automatically layout adjustement based on size ratio 
-- ComboBox (`combobox`)
-- ListBox (`listbox`)
+- ComboBox
+- ListBox
   - Virtualization
 
 # Graphics
