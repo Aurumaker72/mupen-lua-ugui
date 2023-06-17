@@ -7,6 +7,7 @@ dofile(folder('demos\\control_extensions_spinner.lua') .. 'mupen-lua-ugui.lua')
 
 
 Mupen_lua_ugui.spinner = function(control)
+    local width = 15
     local value = control.value
 
     value = math.min(value, control.maximum_value)
@@ -18,7 +19,7 @@ Mupen_lua_ugui.spinner = function(control)
         rectangle = {
             x = control.rectangle.x,
             y = control.rectangle.y,
-            width = control.rectangle.width - 40,
+            width = control.rectangle.width - width * 2,
             height = control.rectangle.height,
         },
         text = tostring(value)
@@ -33,9 +34,9 @@ Mupen_lua_ugui.spinner = function(control)
                 uid = control.uid + 1,
                 is_enabled = not (value == control.minimum_value),
                 rectangle = {
-                    x = control.rectangle.x + control.rectangle.width - 40,
+                    x = control.rectangle.x + control.rectangle.width - width * 2,
                     y = control.rectangle.y,
-                    width = 20,
+                    width = width,
                     height = control.rectangle.height,
                 },
                 text = "-"
@@ -48,9 +49,9 @@ Mupen_lua_ugui.spinner = function(control)
                 uid = control.uid + 1,
                 is_enabled = not (value == control.maximum_value),
                 rectangle = {
-                    x = control.rectangle.x + control.rectangle.width - 20,
+                    x = control.rectangle.x + control.rectangle.width - width,
                     y = control.rectangle.y,
-                    width = 20,
+                    width = width,
                     height = control.rectangle.height,
                 },
                 text = "+"
@@ -63,9 +64,9 @@ Mupen_lua_ugui.spinner = function(control)
                 uid = control.uid + 1,
                 is_enabled = not (value == control.maximum_value),
                 rectangle = {
-                    x = control.rectangle.x + control.rectangle.width - 40,
+                    x = control.rectangle.x + control.rectangle.width - width * 2,
                     y = control.rectangle.y,
-                    width = 40,
+                    width = width * 2,
                     height = control.rectangle.height / 2,
                 },
                 text = "+"
@@ -78,9 +79,9 @@ Mupen_lua_ugui.spinner = function(control)
                 uid = control.uid + 1,
                 is_enabled = not (value == control.minimum_value),
                 rectangle = {
-                    x = control.rectangle.x + control.rectangle.width - 40,
+                    x = control.rectangle.x + control.rectangle.width - width * 2,
                     y = control.rectangle.y + control.rectangle.height / 2,
-                    width = 40,
+                    width = width * 2,
                     height = control.rectangle.height / 2,
                 },
                 text = "-"
