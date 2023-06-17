@@ -21,3 +21,8 @@ Shows how to implement a custom styler with nineslice functionality
 
 # [styler_changes.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/styler_changes.lua)
 Shows how to implement a custom styler
+
+# Cool stuff
+
+### A nine-patch styler
+https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/a2e67982-7bee-40e8-9027-863fbda9f23e
