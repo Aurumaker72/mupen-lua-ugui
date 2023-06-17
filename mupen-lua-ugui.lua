@@ -283,6 +283,8 @@ Mupen_lua_ugui = {
     active_control_uid = nil,
     previous_pointer_primary_down_position = { x = 0, y = 0 },
     hittest_ignore_rectangles = {},
+    -- we can only interact with one control per frame
+    has_primary_input_been_handled = false,
     end_frame_callbacks = {},
     renderer = nil,
     styler = nil,
@@ -890,6 +892,7 @@ Mupen_lua_ugui = {
         Mupen_lua_ugui.input_state = clone(input_state)
         Mupen_lua_ugui.renderer = renderer
         Mupen_lua_ugui.styler = styler
+        Mupen_lua_ugui.has_primary_input_been_handled = false
 
         if is_pointer_just_down() then
             Mupen_lua_ugui.previous_pointer_primary_down_position = Mupen_lua_ugui.input_state.pointer.position
@@ -907,7 +910,8 @@ Mupen_lua_ugui = {
 
     button = function(control)
         local pushed = is_pointer_just_down() and is_pointer_inside(control.rectangle) and
-            not is_pointer_inside_ignored_rectangle() and control.is_enabled
+            not is_pointer_inside_ignored_rectangle() and control.is_enabled and
+            not Mupen_lua_ugui.has_primary_input_been_handled
 
         if pushed then
             Mupen_lua_ugui.active_control_uid = control.uid
@@ -920,7 +924,8 @@ Mupen_lua_ugui = {
 
     toggle_button = function(control)
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside_ignored_rectangle()
+            not is_pointer_inside_ignored_rectangle() and
+            not Mupen_lua_ugui.has_primary_input_been_handled
 
         local is_checked = control.is_checked
 
@@ -944,7 +949,8 @@ Mupen_lua_ugui = {
         end
 
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside_ignored_rectangle()
+            not is_pointer_inside_ignored_rectangle() and
+            not Mupen_lua_ugui.has_primary_input_been_handled
         local text = control.text
 
         if pushed and control.is_enabled then
@@ -980,11 +986,6 @@ Mupen_lua_ugui = {
                 return Mupen_lua_ugui.control_data[control.uid].selection_end
             end
             return Mupen_lua_ugui.control_data[control.uid].selection_start
-        end
-
-        local function is_selection_flipped()
-            return Mupen_lua_ugui.control_data[control.uid].selection_start >
-                Mupen_lua_ugui.control_data[control.uid].selection_end
         end
 
         local function handle_special_keys(keys)
@@ -1111,7 +1112,8 @@ Mupen_lua_ugui = {
         local value = control.value
 
         local pushed = is_pointer_just_down() and is_previous_primary_down_pointer_inside(control.rectangle) and
-            not is_pointer_inside_ignored_rectangle()
+            not is_pointer_inside_ignored_rectangle() and
+            not Mupen_lua_ugui.has_primary_input_been_handled
         if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
         end
@@ -1153,7 +1155,7 @@ Mupen_lua_ugui = {
         end
 
         if is_pointer_just_down() and control.is_enabled then
-            if is_pointer_inside(control.rectangle) then
+            if is_pointer_inside(control.rectangle) and (not Mupen_lua_ugui.has_primary_input_been_handled) then
                 Mupen_lua_ugui.control_data[control.uid].is_open = not Mupen_lua_ugui.control_data[control.uid].is_open
             else
                 if not is_pointer_inside({
@@ -1180,6 +1182,7 @@ Mupen_lua_ugui = {
                     if is_pointer_just_down() then
                         selected_index = i
                         Mupen_lua_ugui.control_data[control.uid].is_open = false
+                        Mupen_lua_ugui.has_primary_input_been_handled = true
                     end
                     Mupen_lua_ugui.control_data[control.uid].hovered_index = i
                     break

@@ -5,19 +5,21 @@ end
 
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 
-local text = "Sample text"
-local is_checked = true
-local value = 0
-local selected_index = 0
-local input_state = {}
-local many_values = {}
-local other_selected_index = nil
-
-for i = 1, 1000, 1 do
-    many_values[#many_values + 1] = "Item " .. i
-end
+local initial_size = wgui.info()
+wgui.resize(initial_size.width + 200, initial_size.height)
 
 emu.atupdatescreen(function()
+    BreitbandGraphics.renderers.d2d.fill_rectangle({
+        x = initial_size.width,
+        y = 0,
+        width = 200,
+        height = initial_size.height
+    }, {
+        r = 253,
+        g = 253,
+        b = 253
+    })
+
     local keys = input.get()
 
     Mupen_lua_ugui.begin_frame(BreitbandGraphics.renderers.d2d, Mupen_lua_ugui.stylers.windows_10, {
@@ -33,117 +35,74 @@ emu.atupdatescreen(function()
         }
     })
 
-    local is_pressed = Mupen_lua_ugui.button({
+
+
+    Mupen_lua_ugui.combobox({
         uid = 0,
         is_enabled = true,
         rectangle = {
-            x = 300,
-            y = 60,
-            width = 120,
-            height = 40,
-        },
-        text = "This text is long and will overflow"
-    })
-
-    if is_pressed then
-        many_values[#many_values + 1] = "new item"
-    end
-
-    text = Mupen_lua_ugui.textbox({
-        uid = 1,
-        is_enabled = true,
-        rectangle = {
-            x = 40,
-            y = 180,
-            width = 120,
-            height = 40,
-        },
-        text = text,
-    })
-
-    is_checked = Mupen_lua_ugui.toggle_button({
-        uid = 2,
-        is_enabled = true,
-        rectangle = {
-            x = 40,
-            y = 230,
-            width = 120,
-            height = 40,
-        },
-        text = selected_index,
-        is_checked = is_checked,
-    })
-
-    Mupen_lua_ugui.joystick({
-        uid = 3,
-        is_enabled = true,
-        rectangle = {
-            x = 40,
-            y = 340,
-            width = 118,
-            height = 118,
-        },
-        position = {
-            x = 0,
-            y = 0,
-        },
-    })
-
-    value = Mupen_lua_ugui.trackbar({
-        uid = 4,
-        is_enabled = true,
-        rectangle = {
-            x = 200,
-            y = 100,
-            width = 20,
-            height = 200,
-        },
-        value = value
-    })
-
-
-    selected_index = Mupen_lua_ugui.combobox({
-        uid = 5,
-        is_enabled = true,
-        rectangle = {
-            x = 300,
+            x = initial_size.width + 10,
             y = 20,
-            width = 120,
+            width = 90,
             height = 30,
         },
         items = {
             "Item A",
-            "Test",
-            "Hey"
+            "Item B",
+            "Item C",
         },
-        selected_index = selected_index,
+        selected_index = 0
     })
+    if Mupen_lua_ugui.button({
+            uid = 1,
+            is_enabled = true,
+            rectangle = {
+                x = initial_size.width + 10,
+                y = 90,
+                width = 90,
+                height = 30,
+            },
+            text = "Test"
+        }) then
+        print(math.random())
+    end
 
-
-    other_selected_index = Mupen_lua_ugui.listbox({
-        uid = 6,
+    Mupen_lua_ugui.combobox({
+        uid = 2,
         is_enabled = true,
         rectangle = {
-            x = 500,
+            x = initial_size.width + 100,
             y = 20,
-            width = 120,
-            height = 340,
+            width = 90,
+            height = 30,
         },
-        items = many_values,
-        selected_index = other_selected_index,
+        items = {
+            "Item A",
+            "Item B",
+            "Item C",
+        },
+        selected_index = 0
     })
-
-    Mupen_lua_ugui.button({
-        uid = 7,
+    Mupen_lua_ugui.combobox({
+        uid = 3,
         is_enabled = true,
         rectangle = {
-            x = 500,
-            y = 380,
-            width = 120,
-            height = 40,
+            x = initial_size.width + 100,
+            y = 90,
+            width = 90,
+            height = 30,
         },
-        text = other_selected_index
+        items = {
+            "Item A",
+            "Item B",
+            "Item C",
+        },
+        selected_index = 0
     })
 
     Mupen_lua_ugui.end_frame()
+end)
+
+emu.atstop(function()
+    wgui.resize(initial_size.width, initial_size.height)
 end)
