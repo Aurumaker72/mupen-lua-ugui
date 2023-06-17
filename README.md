@@ -11,7 +11,7 @@
 </p>
 
 # Quickstart
-Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/tree/main/demos) to see how the library is used.
+Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md) to see how the library is used.
 
 # Advantages
 
@@ -63,6 +63,6 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/tree/main/de
   Mupen Lua Graphics API abstraction layer
 </p>
 
-`mupen-lua-ugui` depends on `BreitbandGraphics` for backend-agnostic functionality. 
+`mupen-lua-ugui` depends on `BreitbandGraphics` for backend-agnostic rendering functionality.
 
-While not necessary, it's recommended to provide `mupen-lua-ugui` with a `BreitbandGraphics` rendering backend instead of implementing your own.
+⚠️ It is recommended to use `BreitbandGraphics` when drawing graphics instead of directly calling the Mupen Lua APIs, due to Intellisense and helpful utilities. 
