@@ -311,6 +311,7 @@ Mupen_lua_ugui = {
 
     stylers = {
         windows_10 = {
+            textbox_padding = 2,
             draw_raised_frame = function(control, visual_state)
                 local back_color = {
                     r = 225,
@@ -463,7 +464,7 @@ Mupen_lua_ugui = {
                             x = control.rectangle.x +
                                 Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
                                     "MS Sans Serif")
-                                .width,
+                                .width + Mupen_lua_ugui.stylers.windows_10.textbox_padding,
                             y = control.rectangle.y,
                             width = Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end, 12,
                                     "MS Sans Serif")
@@ -476,12 +477,18 @@ Mupen_lua_ugui = {
                         BreitbandGraphics.hex_to_color("#0078D7"))
                 end
 
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'start', 'start', {}, text_color, 12,
+                Mupen_lua_ugui.renderer.draw_text({
+                        x = control.rectangle.x + Mupen_lua_ugui.stylers.windows_10.textbox_padding,
+                        y = control.rectangle.y,
+                        width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
+                        height = control.rectangle.height,
+                    }, 'start', 'start', {}, text_color, 12,
                     "MS Sans Serif", control.text)
 
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif").width
+                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif").width +
+                    Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
                 if visual_state == Mupen_lua_ugui.visual_states.active then
                     Mupen_lua_ugui.renderer.draw_line({
@@ -501,9 +508,6 @@ Mupen_lua_ugui = {
                 end
             end,
             draw_joystick = function(control)
-                -- TODO: utilize normalized coordinates, to logically decouple joystick from n64
-                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, Mupen_lua_ugui.visual_states.normal)
-
                 local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
                 local back_color = {
@@ -551,7 +555,7 @@ Mupen_lua_ugui = {
                     y = remap(control.position.y, 0, 1, control.rectangle.y,
                         control.rectangle.y + control.rectangle.height)
                 }
-
+                Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
                 Mupen_lua_ugui.renderer.fill_ellipse(control.rectangle, back_color)
                 Mupen_lua_ugui.renderer.draw_ellipse(control.rectangle, outline_color, 1)
                 Mupen_lua_ugui.renderer.draw_line({
@@ -959,7 +963,7 @@ Mupen_lua_ugui = {
 
         local function get_caret_index_at_relative_position(position)
             -- TODO: optimize
-            local x = position.x - control.rectangle.x
+            local x = (position.x - control.rectangle.x) + Mupen_lua_ugui.styler.textbox_padding
             local lowest_distance = 9999999999
             local lowest_distance_index = -1
             for i = 1, #control.text + 2, 1 do

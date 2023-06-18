@@ -173,7 +173,7 @@ emu.atupdatescreen(function()
         }
     })
     Mupen_lua_ugui.joystick({
-        uid = 0,
+        uid = 1,
         is_enabled = false,
         rectangle = {
             x = initial_size.width + 10,
@@ -188,8 +188,8 @@ emu.atupdatescreen(function()
     })
 
     if Mupen_lua_ugui.button({
-            uid = 0,
-            is_enabled = true,
+            uid = 2,
+            is_enabled = false,
             rectangle = {
                 x = initial_size.width + 10,
                 y = 50,
@@ -202,7 +202,7 @@ emu.atupdatescreen(function()
     end
 
     if Mupen_lua_ugui.button({
-            uid = 1,
+            uid = 3,
             is_enabled = true,
             rectangle = {
                 x = initial_size.width + 10,
@@ -216,7 +216,7 @@ emu.atupdatescreen(function()
     end
 
     if Mupen_lua_ugui.button({
-            uid = 2,
+            uid = 4,
             is_enabled = true,
             rectangle = {
                 x = initial_size.width + 10,

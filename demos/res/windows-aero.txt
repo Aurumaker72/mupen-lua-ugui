@@ -34,7 +34,7 @@ active
 disabled
 1 70 3 3 top left
 9 70 3 3 top right
-1 8 3 3 bottom left
+1 88 3 3 bottom left
 9 88 3 3 bottom right
 4 73 5 15 center
 4 70 5 3 top
