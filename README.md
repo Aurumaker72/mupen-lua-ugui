@@ -22,17 +22,11 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
   - Add or modify controls and stylers
 - Host-authoritative
   - The host script coordinates everything: no library lock-in
+  - The library keeps no copies of application state
   - No global pollution - only necessary components are exposed as tables
 - Fast
   - Shallow callstacks
   - Virtualization support
-  
-  
-# Key points
-
-- Architecturally unopinionated
-- More efficient than a hand-rolled solution
-- Extensible and hackable
 
 # Features
 
@@ -40,9 +34,10 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
   - Windows 10 (built-in)
 - Modularity
   - Provide subsystem references in `begin_frame`
+  - Modify any parts of the framework to your liking
 - Button
 - TextBox
-  - Keyboard- and mouse-controllable caret
+  - Full-fledged selection and editing system
 - ToggleButton
 - Joystick
 - TrackBar
