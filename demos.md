@@ -15,7 +15,7 @@ A customizable memory watch list with CRUD functionality
 # [navigation.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/navigation.lua)
 Shows how to implement page-based navigation
 
-# [ninelisce_styler.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/ninelisce_styler.lua)
+# [nineslice_styler.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/nineslice_styler.lua)
 Shows how to implement an advanced custom styler with support for parameterized nineslicing
 
 # Cool stuff
