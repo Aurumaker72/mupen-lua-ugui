@@ -24,5 +24,6 @@ Shows how to implement a custom styler
 
 # Cool stuff
 
-### A nine-patch styler
-https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/a2e67982-7bee-40e8-9027-863fbda9f23e
+### The nine-slice styler demo
+https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/1c403e8a-4806-4b68-ac18-0e8cccbcb035
+
