@@ -10,10 +10,10 @@
   Lightweight and flexible immediate-mode GUI library for Mupen Lua
 </p>
 
-# Quickstart
+# 🚀 Quickstart
 Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md) to see how the library is used.
 
-# Advantages
+# 📈 Advantages
 
 - Easy Usage
   - Include only one file
@@ -28,7 +28,7 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
   - Shallow callstacks
   - Virtualization support
 
-# Features
+# ✨ Features
 
 - Stylers
   - Windows 10 (built-in)
@@ -46,7 +46,7 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 - ListBox
   - Virtualization
 
-# Graphics
+# 🎨 Graphics
 
 <p align="center">
     <img width="128" align="center" src="https://user-images.githubusercontent.com/48759429/211370337-f5ce87e7-75de-4339-8ebd-401585a5f9f3.png">
