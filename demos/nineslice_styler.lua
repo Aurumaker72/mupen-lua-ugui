@@ -8,156 +8,128 @@ dofile(folder('demos\\nineslice_styler.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
-local button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-11.png'
+local section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-10'
 
-Mupen_lua_ugui.stylers.windows_10.draw_button = function(control)
-    local visual_state = Mupen_lua_ugui.get_visual_state(control)
-    local offset = 0
+local slice_cache = {}
 
-    if visual_state == Mupen_lua_ugui.visual_states.hovered then
-        offset = 11
-    elseif visual_state == Mupen_lua_ugui.visual_states.active then
-        offset = 22
-    elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-        offset = 33
+function parse_slices(path)
+    local file = io.open(path, "rb")
+    local lines = {}
+    for line in io.lines(path) do
+        local words = {}
+        for word in line:gmatch("%w+") do
+            table.insert(words, word)
+        end
+        table.insert(lines, words)
     end
+    file:close()
 
-    local text_color = {
-        r = 0,
-        g = 0,
-        b = 0
-    }
 
-    if visual_state == Mupen_lua_ugui.visual_states.disabled then
-        text_color = {
-            r = 160,
-            g = 160,
-            b = 160,
+    function rectangle_from_line(line)
+        return {
+            x = tonumber(line[1]),
+            y = tonumber(line[2]),
+            width = tonumber(line[3]),
+            height = tonumber(line[4])
         }
     end
 
-    -- top-left corner
+    function fill_structure(structure, index)
+        structure.top_left = rectangle_from_line(lines[index])
+        structure.top_right = rectangle_from_line(lines[index + 1])
+        structure.bottom_left = rectangle_from_line(lines[index + 2])
+        structure.bottom_right = rectangle_from_line(lines[index + 3])
+        structure.center = rectangle_from_line(lines[index + 4])
+        structure.top = rectangle_from_line(lines[index + 5])
+        structure.left = rectangle_from_line(lines[index + 6])
+        structure.right = rectangle_from_line(lines[index + 7])
+        structure.bottom = rectangle_from_line(lines[index + 8])
+    end
+
+    local rectangles = {
+        [Mupen_lua_ugui.visual_states.normal] = {},
+        [Mupen_lua_ugui.visual_states.hovered] = {},
+        [Mupen_lua_ugui.visual_states.active] = {},
+        [Mupen_lua_ugui.visual_states.disabled] = {},
+    }
+
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 2)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 13)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 24)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 35)
+
+    return rectangles
+end
+
+Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
+    local atlas_path = section_name_path .. ".png"
+    local slices_path = section_name_path .. ".txt"
+
+    if not slice_cache[slices_path] then
+        print("Creating slice cache...")
+        slice_cache[slices_path] = parse_slices(slices_path)
+    end
+    local result = slice_cache[slices_path][visual_state]
+
     BreitbandGraphics.renderers.d2d.draw_image({
         x = control.rectangle.x,
         y = control.rectangle.y,
-        width = 5,
-        height = 4
-    }, {
-        x = 1,
-        y = 1 + offset,
-        width = 5,
-        height = 4
-    }, button_atlas_path, BreitbandGraphics.colors.white)
-
-
-    -- top-righ corner
+        width = result.top_left.width,
+        height = result.top_left.height
+    }, result.top_left, atlas_path, BreitbandGraphics.colors.white)
     BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + control.rectangle.width - 5,
+        x = control.rectangle.x + control.rectangle.width - result.top_right.width,
         y = control.rectangle.y,
-        width = 5,
-        height = 4
-    }, {
-        x = 7,
-        y = 1 + offset,
-        width = 5,
-        height = 4
-    }, button_atlas_path, BreitbandGraphics.colors.white)
-
-    -- bottom-left corner
+        width = result.top_right.width,
+        height = result.top_right.height
+    }, result.top_right, atlas_path, BreitbandGraphics.colors.white)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = control.rectangle.x,
-        y = control.rectangle.y + control.rectangle.height - 4,
-        width = 5,
-        height = 4
-    }, {
-        x = 1,
-        y = 6 + offset,
-        width = 5,
-        height = 4
-    }, button_atlas_path, BreitbandGraphics.colors.white)
-
-    -- bottom-right corner
+        y = control.rectangle.y + control.rectangle.height - result.bottom_left.height,
+        width = result.bottom_left.width,
+        height = result.bottom_left.height
+    }, result.bottom_left, atlas_path, BreitbandGraphics.colors.white)
     BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + control.rectangle.width - 5,
-        y = control.rectangle.y + control.rectangle.height - 4,
-        width = 5,
-        height = 4
-    }, {
-        x = 7,
-        y = 6 + offset,
-        width = 5,
-        height = 4
-    }, button_atlas_path, BreitbandGraphics.colors.white)
-
-    -- top side (if you know what i mean :o)
+        x = control.rectangle.x + control.rectangle.width - result.bottom_right.width,
+        y = control.rectangle.y + control.rectangle.height - result.bottom_right.height,
+        width = result.bottom_right.width,
+        height = result.bottom_right.height
+    }, result.bottom_right, atlas_path, BreitbandGraphics.colors.white)
     BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + 5,
-        y = control.rectangle.y,
-        width = control.rectangle.width - 10,
-        height = 4
-    }, {
-        x = 6,
-        y = 1 + offset,
-        width = 1,
-        height = 4
-    }, button_atlas_path, BreitbandGraphics.colors.white)
+        x = control.rectangle.x + result.top_left.width,
+        y = control.rectangle.y + result.top_left.height,
+        width = control.rectangle.width - result.bottom_right.width * 2,
+        height = control.rectangle.height - result.bottom_right.height * 2
+    }, result.center, atlas_path, BreitbandGraphics.colors.white)
 
-    -- bottom side
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + 5,
-        y = control.rectangle.y + control.rectangle.height - 4,
-        width = control.rectangle.width - 10,
-        height = 4
-    }, {
-        x = 6,
-        y = 6 + offset,
-        width = 1,
-        height = 4
-    }, button_atlas_path, BreitbandGraphics.colors.white)
-
-    -- left side
     BreitbandGraphics.renderers.d2d.draw_image({
         x = control.rectangle.x,
-        y = control.rectangle.y + 4,
-        width = 5,
-        height = control.rectangle.height - 8
-    }, {
-        x = 1,
-        y = 5 + offset,
-        width = 5,
-        height = 1
-    }, button_atlas_path, BreitbandGraphics.colors.white)
+        y = control.rectangle.y + result.top_left.height,
+        width = result.left.width,
+        height = control.rectangle.height - result.bottom_left.height * 2
+    }, result.left, atlas_path, BreitbandGraphics.colors.white)
 
-    -- right side
     BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + control.rectangle.width - 5,
-        y = control.rectangle.y + 4,
-        width = 5,
-        height = control.rectangle.height - 8
-    }, {
-        x = 7,
-        y = 5 + offset,
-        width = 5,
-        height = 1
-    }, button_atlas_path, BreitbandGraphics.colors.white)
+        x = control.rectangle.x + control.rectangle.width - result.top_right.width,
+        y = control.rectangle.y + result.top_right.height,
+        width = result.left.width,
+        height = control.rectangle.height - result.bottom_right.height * 2
+    }, result.right, atlas_path, BreitbandGraphics.colors.white)
 
-    -- fill
+
     BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + 5,
-        y = control.rectangle.y + 4,
-        width = control.rectangle.width - 10,
-        height = control.rectangle.height - 8
-    }, {
-        x = 5,
-        y = 4 + offset,
-        width = 3,
-        height = 3
-    }, button_atlas_path, BreitbandGraphics.colors.white)
+        x = control.rectangle.x + result.top_left.width,
+        y = control.rectangle.y,
+        width = control.rectangle.width - result.top_right.width * 2,
+        height = result.top.height
+    }, result.top, atlas_path, BreitbandGraphics.colors.white)
 
-    Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center',
-        {}, text_color,
-        12,
-        "MS Sans Serif", control.text)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = control.rectangle.x + result.top_left.width,
+        y = control.rectangle.y + control.rectangle.height - result.bottom.height,
+        width = control.rectangle.width - result.bottom_right.width * 2,
+        height = result.bottom.height
+    }, result.bottom, atlas_path, BreitbandGraphics.colors.white)
 end
 
 emu.atupdatescreen(function()
@@ -186,18 +158,34 @@ emu.atupdatescreen(function()
             held_keys = keys
         }
     })
-    Mupen_lua_ugui.button({
+    Mupen_lua_ugui.joystick({
         uid = 0,
         is_enabled = true,
         rectangle = {
             x = initial_size.width + 10,
-            y = 10,
+            y = 200,
             width = 90,
-            height = 30,
+            height = 90,
         },
-        text = "Test"
+        position = {
+            x = 0.5,
+            y = 0.5
+        }
     })
-
+    Mupen_lua_ugui.joystick({
+        uid = 0,
+        is_enabled = false,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 300,
+            width = 90,
+            height = 90,
+        },
+        position = {
+            x = 0.5,
+            y = 0.5
+        }
+    })
 
     if Mupen_lua_ugui.button({
             uid = 0,
@@ -210,7 +198,7 @@ emu.atupdatescreen(function()
             },
             text = "Windows 10"
         }) then
-        button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-10.png'
+        section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-10'
     end
 
     if Mupen_lua_ugui.button({
@@ -224,7 +212,7 @@ emu.atupdatescreen(function()
             },
             text = "Windows 11"
         }) then
-        button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-11.png'
+        section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-11'
     end
 
     if Mupen_lua_ugui.button({
@@ -236,23 +224,9 @@ emu.atupdatescreen(function()
                 width = 90,
                 height = 30,
             },
-            text = "Windows 95"
-        }) then
-        button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-95.png'
-    end
-
-    if Mupen_lua_ugui.button({
-            uid = 3,
-            is_enabled = true,
-            rectangle = {
-                x = initial_size.width + 10,
-                y = 170,
-                width = 90,
-                height = 30,
-            },
             text = "Windows 7"
         }) then
-        button_atlas_path = folder('nineslice_styler.lua') .. 'img/button-7.png'
+        section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-aero'
     end
 
 

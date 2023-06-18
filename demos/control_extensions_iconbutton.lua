@@ -63,7 +63,7 @@ emu.atupdatescreen(function()
                 width = 80,
                 height = 80,
             },
-            icon = folder('control_extensions_iconbutton.lua') .. 'img/image.png'
+            icon = folder('control_extensions_iconbutton.lua') .. 'res/image.png'
         }) then
         print("hi")
     end
