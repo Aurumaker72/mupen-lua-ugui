@@ -189,7 +189,7 @@ emu.atupdatescreen(function()
 
     if Mupen_lua_ugui.button({
             uid = 2,
-            is_enabled = false,
+            is_enabled = true,
             rectangle = {
                 x = initial_size.width + 10,
                 y = 50,
