@@ -11,6 +11,7 @@ wgui.resize(initial_size.width + 200, initial_size.height)
 local section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-10'
 
 local slice_cache = {}
+local control_transitions = {}
 
 function parse_slices(path)
     local file = io.open(path, "rb")
@@ -61,6 +62,20 @@ function parse_slices(path)
     return rectangles
 end
 
+local function move_color_towards(color, target)
+    -- if (math.abs(target.r - color.r) + math.abs(target.g - color.g) + math.abs(target.b - color.b)) / 3 < 5 then
+    --     return target
+    -- end
+
+    return {
+        r = math.floor(color.r + (target.r - color.r) * 0.25),
+        g = math.floor(color.g + (target.g - color.g) * 0.25),
+        b = math.floor(color.b + (target.b - color.b) * 0.25),
+        a = math.floor(color.a + (target.a - color.a) * 0.25),
+    }
+end
+
+
 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
     local atlas_path = section_name_path .. ".png"
     local slices_path = section_name_path .. ".txt"
@@ -69,68 +84,121 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
         print("Creating slice cache...")
         slice_cache[slices_path] = parse_slices(slices_path)
     end
-    local result = slice_cache[slices_path][visual_state]
 
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x,
-        y = control.rectangle.y,
-        width = result.top_left.width,
-        height = result.top_left.height
-    }, result.top_left, atlas_path, BreitbandGraphics.colors.white)
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + control.rectangle.width - result.top_right.width,
-        y = control.rectangle.y,
-        width = result.top_right.width,
-        height = result.top_right.height
-    }, result.top_right, atlas_path, BreitbandGraphics.colors.white)
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x,
-        y = control.rectangle.y + control.rectangle.height - result.bottom_left.height,
-        width = result.bottom_left.width,
-        height = result.bottom_left.height
-    }, result.bottom_left, atlas_path, BreitbandGraphics.colors.white)
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + control.rectangle.width - result.bottom_right.width,
-        y = control.rectangle.y + control.rectangle.height - result.bottom_right.height,
-        width = result.bottom_right.width,
-        height = result.bottom_right.height
-    }, result.bottom_right, atlas_path, BreitbandGraphics.colors.white)
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + result.top_left.width,
-        y = control.rectangle.y + result.top_left.height,
-        width = control.rectangle.width - result.bottom_right.width * 2,
-        height = control.rectangle.height - result.bottom_right.height * 2
-    }, result.center, atlas_path, BreitbandGraphics.colors.white)
+    function draw_nineslice(result, opacity)
+        if opacity == 0 then
+            return
+        end
+        local color = {
+            r = 255,
+            g = 255,
+            b = 255,
+            a = opacity
+        }
 
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x,
-        y = control.rectangle.y + result.top_left.height,
-        width = result.left.width,
-        height = control.rectangle.height - result.bottom_left.height * 2
-    }, result.left, atlas_path, BreitbandGraphics.colors.white)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x,
+            y = control.rectangle.y,
+            width = result.top_left.width,
+            height = result.top_left.height
+        }, result.top_left, atlas_path, color)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x + control.rectangle.width - result.top_right.width,
+            y = control.rectangle.y,
+            width = result.top_right.width,
+            height = result.top_right.height
+        }, result.top_right, atlas_path, color)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x,
+            y = control.rectangle.y + control.rectangle.height - result.bottom_left.height,
+            width = result.bottom_left.width,
+            height = result.bottom_left.height
+        }, result.bottom_left, atlas_path, color)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x + control.rectangle.width - result.bottom_right.width,
+            y = control.rectangle.y + control.rectangle.height - result.bottom_right.height,
+            width = result.bottom_right.width,
+            height = result.bottom_right.height
+        }, result.bottom_right, atlas_path, color)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x + result.top_left.width,
+            y = control.rectangle.y + result.top_left.height,
+            width = control.rectangle.width - result.bottom_right.width * 2,
+            height = control.rectangle.height - result.bottom_right.height * 2
+        }, result.center, atlas_path, color)
 
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + control.rectangle.width - result.top_right.width,
-        y = control.rectangle.y + result.top_right.height,
-        width = result.left.width,
-        height = control.rectangle.height - result.bottom_right.height * 2
-    }, result.right, atlas_path, BreitbandGraphics.colors.white)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x,
+            y = control.rectangle.y + result.top_left.height,
+            width = result.left.width,
+            height = control.rectangle.height - result.bottom_left.height * 2
+        }, result.left, atlas_path, color)
+
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x + control.rectangle.width - result.top_right.width,
+            y = control.rectangle.y + result.top_right.height,
+            width = result.left.width,
+            height = control.rectangle.height - result.bottom_right.height * 2
+        }, result.right, atlas_path, color)
 
 
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + result.top_left.width,
-        y = control.rectangle.y,
-        width = control.rectangle.width - result.top_right.width * 2,
-        height = result.top.height
-    }, result.top, atlas_path, BreitbandGraphics.colors.white)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x + result.top_left.width,
+            y = control.rectangle.y,
+            width = control.rectangle.width - result.top_right.width * 2,
+            height = result.top.height
+        }, result.top, atlas_path, color)
 
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x + result.top_left.width,
-        y = control.rectangle.y + control.rectangle.height - result.bottom.height,
-        width = control.rectangle.width - result.bottom_right.width * 2,
-        height = result.bottom.height
-    }, result.bottom, atlas_path, BreitbandGraphics.colors.white)
+        BreitbandGraphics.renderers.d2d.draw_image({
+            x = control.rectangle.x + result.top_left.width,
+            y = control.rectangle.y + control.rectangle.height - result.bottom.height,
+            width = control.rectangle.width - result.bottom_right.width * 2,
+            height = result.bottom.height
+        }, result.bottom, atlas_path, color)
+    end
+
+    local opaque = {
+        r = 255,
+        g = 255,
+        b = 255,
+        a = 255,
+    }
+    local transparent = {
+        r = 255,
+        g = 255,
+        b = 255,
+        a = 0,
+    }
+
+    if not control_transitions[control.uid] then
+        control_transitions[control.uid] = {
+            [Mupen_lua_ugui.visual_states.normal] = opaque,
+            [Mupen_lua_ugui.visual_states.hovered] = opaque,
+            [Mupen_lua_ugui.visual_states.active] = opaque,
+            [Mupen_lua_ugui.visual_states.disabled] = opaque,
+        }
+    end
+
+    -- gradually reset all inactive transition targets
+    for key, value in pairs(control_transitions[control.uid]) do
+        if key == visual_state then
+            goto continue
+        end
+        control_transitions[control.uid][key] = move_color_towards(
+            control_transitions[control.uid][key], transparent)
+        ::continue::
+    end
+
+    control_transitions[control.uid][visual_state] = move_color_towards(
+        control_transitions[control.uid][visual_state], opaque)
+
+
+    for key, value in pairs(control_transitions[control.uid]) do
+        draw_nineslice(slice_cache[slices_path][key],
+            control_transitions[control.uid][key].a)
+    end
 end
+
 
 emu.atupdatescreen(function()
     BreitbandGraphics.renderers.d2d.fill_rectangle({

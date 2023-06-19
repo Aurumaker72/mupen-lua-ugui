@@ -74,7 +74,7 @@ BreitbandGraphics = {
                     r = color.r / 255.0,
                     g = color.g / 255.0,
                     b = color.b / 255.0,
-                    a = (color.a and color.a or 1.0)
+                    a = (color.a and (color.a / 255.0) or 1.0)
                 }
             end,
             get_text_size = function(text, font_size, font_name)
@@ -168,7 +168,6 @@ BreitbandGraphics = {
             end,
             draw_image = function(destination_rectangle, source_rectangle, path, color)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-
                 wgui.d2d_draw_image(destination_rectangle.x, destination_rectangle.y,
                     destination_rectangle.x + destination_rectangle.width,
                     destination_rectangle.y + destination_rectangle.height,
