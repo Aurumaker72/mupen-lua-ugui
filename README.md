@@ -41,10 +41,11 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 - ToggleButton
 - Joystick
 - TrackBar
-  - Automatically layout adjustement based on size ratio 
+  - Automatic layout adjustement based on size ratio 
 - ComboBox
 - ListBox
-  - Virtualization
+  - Scrolling support
+  - Unlimited items with no performance degradation
 
 # 🎨 Graphics
 
