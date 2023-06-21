@@ -1,5 +1,5 @@
 if not wgui.d2d_fill_rectangle then
-    print("mupen-lua-ugui requires a Mupen64-rr-lua version newer than 1.1.2")
+    print("BreitbandGraphics requires a Mupen64-rr-lua version newer than 1.1.2")
 end
 
 BreitbandGraphics = {
@@ -259,32 +259,19 @@ wgui.text = BreitbandGraphics.renderers.compat.text
 wgui.line = BreitbandGraphics.renderers.compat.line
 wgui.ellipse = BreitbandGraphics.renderers.compat.ellipse
 
-
--- https://www.programmerall.com/article/6862983111/
-local function clone(obj)
-    local InTable = {};
-    local function Func(obj)
-        if type(obj) ~= "table" then --Determine whether there is a table in the table
-            return obj;
-        end
-        local NewTable = {};      --Define a new table
-        InTable[obj] = NewTable;  --If there is a table in the table, first give the table to InTable, and then use NewTable to receive the embedded table
-        for k, v in pairs(obj) do --Assign the key and value of the old table to the new table
-            NewTable[Func(k)] = Func(v);
-        end
-        return setmetatable(NewTable, getmetatable(obj)) --Assignment metatable
-    end
-    return Func(obj)                                     --If there is a table in the table, the embedded table is also copied
+-- https://stackoverflow.com/a/26367080/14472122
+local function deep_clone(obj, seen)
+    if type(obj) ~= 'table' then return obj end
+    if seen and seen[obj] then return seen[obj] end
+    local s = seen or {}
+    local res = setmetatable({}, getmetatable(obj))
+    s[obj] = res
+    for k, v in pairs(obj) do res[deep_clone(k, s)] = deep_clone(v, s) end
+    return res
 end
 
 local function clamp(value, min, max)
-    if value < min then
-        return min
-    end
-    if value > max then
-        return max
-    end
-    return value
+    return math.max(math.min(value, max), min)
 end
 
 local function is_pointer_inside(rectangle)
@@ -293,6 +280,7 @@ local function is_pointer_inside(rectangle)
         Mupen_lua_ugui.input_state.pointer.position.x < rectangle.x + rectangle.width and
         Mupen_lua_ugui.input_state.pointer.position.y < rectangle.y + rectangle.height;
 end
+
 local function is_pointer_inside_ignored_rectangle()
     for i = 1, #Mupen_lua_ugui.hittest_ignore_rectangles, 1 do
         if (Mupen_lua_ugui.input_state.pointer.position.x > Mupen_lua_ugui.hittest_ignore_rectangles[i].x and
@@ -533,9 +521,10 @@ Mupen_lua_ugui = {
                     border_color)
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                     back_color)
+                local should_visualize_selection = Mupen_lua_ugui.control_data[control.uid].selection_start and
+                    Mupen_lua_ugui.control_data[control.uid].selection_end and control.is_enabled
 
-
-                if Mupen_lua_ugui.control_data[control.uid].selection_start and Mupen_lua_ugui.control_data[control.uid].selection_end then
+                if should_visualize_selection then
                     local string_to_selection_start = control.text:sub(1,
                         Mupen_lua_ugui.control_data[control.uid].selection_start - 1)
                     local string_to_selection_end = control.text:sub(1,
@@ -565,6 +554,31 @@ Mupen_lua_ugui = {
                         height = control.rectangle.height,
                     }, 'start', 'start', {}, text_color, 12,
                     "MS Sans Serif", control.text)
+
+                if should_visualize_selection then
+                    local lower = Mupen_lua_ugui.control_data[control.uid].selection_start
+                    local higher = Mupen_lua_ugui.control_data[control.uid].selection_end
+                    if Mupen_lua_ugui.control_data[control.uid].selection_start > Mupen_lua_ugui.control_data[control.uid].selection_end then
+                        lower = Mupen_lua_ugui.control_data[control.uid].selection_end
+                        higher = Mupen_lua_ugui.control_data[control.uid].selection_start
+                    end
+
+                    local string_to_selection_start = control.text:sub(1,
+                        lower - 1)
+
+                    local selection_start_x = control.rectangle.x +
+                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
+                            "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
+
+                    Mupen_lua_ugui.renderer.draw_text({
+                            x = selection_start_x,
+                            y = control.rectangle.y,
+                            width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
+                            height = control.rectangle.height,
+                        }, 'start', 'start', {}, BreitbandGraphics.colors.white, 12,
+                        "MS Sans Serif", control.text:sub(lower,
+                            higher - 1))
+                end
 
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
@@ -973,8 +987,8 @@ Mupen_lua_ugui = {
     },
 
     begin_frame = function(renderer, styler, input_state)
-        Mupen_lua_ugui.previous_input_state = clone(Mupen_lua_ugui.input_state)
-        Mupen_lua_ugui.input_state = clone(input_state)
+        Mupen_lua_ugui.previous_input_state = deep_clone(Mupen_lua_ugui.input_state)
+        Mupen_lua_ugui.input_state = deep_clone(input_state)
         Mupen_lua_ugui.renderer = renderer
         Mupen_lua_ugui.styler = styler
         Mupen_lua_ugui.has_primary_input_been_handled = false
@@ -1040,6 +1054,11 @@ Mupen_lua_ugui = {
 
         if pushed and control.is_enabled then
             Mupen_lua_ugui.active_control_uid = control.uid
+        end
+
+        if not (Mupen_lua_ugui.active_control_uid == control.uid) then
+            Mupen_lua_ugui.control_data[control.uid].selection_start = nil
+            Mupen_lua_ugui.control_data[control.uid].selection_end = nil
         end
 
         local function get_caret_index_at_relative_position(position)
