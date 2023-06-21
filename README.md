@@ -25,8 +25,9 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 - Easy Usage
   - Include only one file
 - Flexible
-  - Call library functions at any time
-  - Add or modify controls and stylers
+  - Add or extend controls
+  - Add or extend stylers
+  - Mockable input
 - Host-authoritative
   - Invokable anytime and anywhere
   - No copies or mutation of application state
