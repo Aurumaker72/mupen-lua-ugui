@@ -28,12 +28,13 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
   - Call library functions at any time
   - Add or modify controls and stylers
 - Host-authoritative
-  - The host script coordinates everything: no library lock-in
-  - The library keeps no copies of application state
+  - Invokable anytime and anywhere
+  - No copies or mutation of application state
   - No global pollution - only necessary components are exposed as tables
 - Fast
   - Shallow callstacks
-  - Virtualization support
+  - Reduced indirection
+  - Controls optimized for large datasets
 
 # ✨ Features
 
