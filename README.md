@@ -79,4 +79,4 @@ Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Co
 
 Porting a script which utilizes the old Lua GDI API to `BreitbandGraphics` is trivial.
 
-By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically polyfill all legacy APIs with no changes to your code.
+By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically reverse-polyfill all legacy APIs with no changes to your code.
