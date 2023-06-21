@@ -174,9 +174,91 @@ BreitbandGraphics = {
                     source_rectangle.x, source_rectangle.y, source_rectangle.x + source_rectangle.width,
                     source_rectangle.y + source_rectangle.height, path, float_color.a, 1)
             end
+        },
+        compat = {
+            brush = "#FF0000",
+            pen = "#FF0000",
+            pen_thickness = 1,
+            font_size = 0,
+            font_name = "Fixedsys",
+            text_color = "#FF0000",
+
+            setbrush = function(color)
+                BreitbandGraphics.renderers.compat.brush = color
+            end,
+            setpen = function(color, thickness)
+                BreitbandGraphics.renderers.compat.pen = color
+                BreitbandGraphics.renderers.compat.pen_thickness = thickness and thickness or 1
+            end,
+            setcolor = function(color)
+                BreitbandGraphics.renderers.compat.text_color = color
+            end,
+            setfont = function(size, name, special)
+                BreitbandGraphics.renderers.compat.font_size = size
+                BreitbandGraphics.renderers.compat.font_name = name
+            end,
+            rect = function(x, y, right, bottom)
+                local rectangle = {
+                    x = x,
+                    y = y,
+                    width = right - x,
+                    height = bottom - y,
+                }
+                BreitbandGraphics.renderers.d2d.fill_rectangle(
+                    BreitbandGraphics.inflate_rectangle(rectangle, BreitbandGraphics.renderers.compat.pen_thickness),
+                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.pen))
+                BreitbandGraphics.renderers.d2d.fill_rectangle(rectangle,
+                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.brush))
+            end,
+            text = function(x, y, text)
+                local size = BreitbandGraphics.renderers.d2d.get_text_size(text,
+                    BreitbandGraphics.renderers.compat.font_size, BreitbandGraphics.renderers.compat.font_name)
+                BreitbandGraphics.renderers.d2d.draw_text({
+                        x = x,
+                        y = y,
+                        width = 9999999999,
+                        height = size.height,
+                    }, "start", "start", {},
+                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.text_color),
+                    BreitbandGraphics.renderers.compat.font_size, BreitbandGraphics.renderers.compat.font_name, text)
+            end,
+            line = function(x, y, x2, y2)
+                BreitbandGraphics.renderers.d2d.draw_line({
+                        x = x,
+                        y = y,
+                    }, {
+                        x = x2,
+                        y = y2,
+                    }, BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.pen),
+                    BreitbandGraphics.renderers.compat.pen_thickness)
+            end,
+            ellipse = function(x, y, right, bottom)
+                local rectangle = {
+                    x = x,
+                    y = y,
+                    width = right - x,
+                    height = bottom - y,
+                }
+                BreitbandGraphics.renderers.d2d.fill_ellipse(
+                    BreitbandGraphics.inflate_rectangle(rectangle, BreitbandGraphics.renderers.compat.pen_thickness),
+                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.pen))
+                BreitbandGraphics.renderers.d2d.fill_ellipse(rectangle,
+                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.brush))
+            end
         }
     }
 }
+
+-- reverse polyfill old gdi functions
+wgui.setbrush = BreitbandGraphics.renderers.compat.setbrush
+wgui.setpen = BreitbandGraphics.renderers.compat.setpen
+wgui.rect = BreitbandGraphics.renderers.compat.rect
+wgui.setcolor = BreitbandGraphics.renderers.compat.setcolor
+wgui.setfont = BreitbandGraphics.renderers.compat.setfont
+wgui.text = BreitbandGraphics.renderers.compat.text
+wgui.line = BreitbandGraphics.renderers.compat.line
+wgui.ellipse = BreitbandGraphics.renderers.compat.ellipse
+
 
 -- https://www.programmerall.com/article/6862983111/
 local function clone(obj)
