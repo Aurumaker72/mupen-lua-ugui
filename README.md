@@ -61,3 +61,10 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 `mupen-lua-ugui` depends on `BreitbandGraphics` for backend-agnostic rendering functionality.
 
 ⚠️ It is recommended to use `BreitbandGraphics` when drawing graphics instead of directly calling the Mupen Lua APIs, due to Intellisense and helpful utilities. 
+
+# 🔩 Porting
+
+Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Contact `aurumaker72` on Discord for help regarding this.
+
+Porting a script which utilizes the Lua GDI APIs to `BreitbandGraphics` is trivial. 
+By including the `mupen-lua-ugui` library, backwards compatibility will automatically be set up and no code will have to be changed manually.
