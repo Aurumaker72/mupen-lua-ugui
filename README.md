@@ -7,10 +7,17 @@
   mupen-lua-ugui
 </h1>
 <p align="center">
-  Lightweight and flexible immediate-mode GUI library for Mupen Lua
+  Flexible immediate-mode GUI library for Mupen Lua
 </p>
 
 # 🚀 Quickstart
+
+```lua
+dofile("mupen-lua-ugui.lua")
+```
+
+That's it. Don't forget to pass an absolute path, not a relative one.
+
 Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md) to see how the library is used.
 
 # 📈 Advantages
@@ -41,10 +48,11 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 - ToggleButton
 - Joystick
 - TrackBar
-  - Automatically layout adjustement based on size ratio 
+  - Automatic layout adjustement based on size ratio 
 - ComboBox
 - ListBox
-  - Virtualization
+  - Scrolling support
+  - Unlimited items with no performance degradation
 
 # 🎨 Graphics
 
@@ -55,16 +63,19 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
   BreitbandGraphics
 </h1>
 <p align="center">
-  Mupen Lua Graphics API abstraction layer
+  Powerful abstraction layer over Mupen Lua Direct2D APIs
 </p>
 
-`mupen-lua-ugui` depends on `BreitbandGraphics` for backend-agnostic rendering functionality.
-
-⚠️ It is recommended to use `BreitbandGraphics` when drawing graphics instead of directly calling the Mupen Lua APIs, due to Intellisense and helpful utilities. 
+`mupen-lua-ugui` uses `BreitbandGraphics` for rendering.
+It's recommended to use `BreitbandGraphics` when drawing graphics instead of directly calling the Mupen Lua APIs, due to Intellisense and helpful utilities. 
 
 # 🔩 Porting
 
+### To mupen-lua-ugui
+
 Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Contact `aurumaker72` on Discord for help regarding this.
 
-Porting a script which utilizes the Lua GDI APIs to `BreitbandGraphics` is trivial. 
+### To BreitbandGraphics
+
+Porting a script which utilizes the Lua GDI APIs to `BreitbandGraphics` is, however, trivial.
 By including the `mupen-lua-ugui` library, backwards compatibility will automatically be set up and no code will have to be changed manually.
