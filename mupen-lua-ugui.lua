@@ -1,5 +1,5 @@
-if not wgui.d2d_fill_rectangle then
-    print("BreitbandGraphics requires a Mupen64-rr-lua version newer than 1.1.2")
+if not wgui.fill_rectangle then
+    print("BreitbandGraphics requires a Mupen64-rr-lua version newer than 1.1.2\r\n")
 end
 
 BreitbandGraphics = {
@@ -69,6 +69,7 @@ BreitbandGraphics = {
 
     renderers = {
         d2d = {
+            bitmap_cache = {},
             color_to_float = function(color)
                 return {
                     r = color.r / 255.0,
@@ -78,40 +79,40 @@ BreitbandGraphics = {
                 }
             end,
             get_text_size = function(text, font_size, font_name)
-                local a = wgui.d2d_get_text_size(text, font_name, font_size, 99999999, 99999999)
+                local a = wgui.get_text_size(text, font_name, font_size, 99999999, 99999999)
 
                 return a;
             end,
             draw_rectangle = function(rectangle, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_draw_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                wgui.draw_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, thickness)
             end,
             fill_rectangle = function(rectangle, color)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_fill_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                wgui.fill_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0)
             end,
             draw_rounded_rectangle = function(rectangle, color, radii, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_draw_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                wgui.draw_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0,
                     thickness)
             end,
             fill_rounded_rectangle = function(rectangle, color, radii)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_fill_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                wgui.fill_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0)
             end,
             draw_ellipse = function(rectangle, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_draw_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
+                wgui.draw_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
                     rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0,
                     thickness)
             end,
             fill_ellipse = function(rectangle, color)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_fill_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
+                wgui.fill_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
                     rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0)
             end,
             draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
@@ -150,25 +151,30 @@ BreitbandGraphics = {
                 end
 
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_draw_text(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                wgui.draw_text(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, text, font_name,
                     font_size, d_style, d_horizontal_alignment, d_vertical_alignment)
             end,
             draw_line = function(from, to, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_draw_line(from.x, from.y, to.x, to.y, float_color.r, float_color.g, float_color.b, 1.0,
+                wgui.draw_line(from.x, from.y, to.x, to.y, float_color.r, float_color.g, float_color.b, 1.0,
                     thickness)
             end,
             push_clip = function(rectangle)
-                wgui.d2d_push_clip(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
+                wgui.push_clip(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height)
             end,
             pop_clip = function()
-                wgui.d2d_pop_clip()
+                wgui.pop_clip()
             end,
             draw_image = function(destination_rectangle, source_rectangle, path, color)
+                if not BreitbandGraphics.renderers.d2d.bitmap_cache[path] then
+                    print("Loaded image from " .. path)
+                    wgui.load_image(path, path)
+                end
+                BreitbandGraphics.renderers.d2d.bitmap_cache[path] = path
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
-                wgui.d2d_draw_image(destination_rectangle.x, destination_rectangle.y,
+                wgui.draw_image(destination_rectangle.x, destination_rectangle.y,
                     destination_rectangle.x + destination_rectangle.width,
                     destination_rectangle.y + destination_rectangle.height,
                     source_rectangle.x, source_rectangle.y, source_rectangle.x + source_rectangle.width,
