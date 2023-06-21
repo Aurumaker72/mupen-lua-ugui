@@ -11,6 +11,13 @@
 </p>
 
 # 🚀 Quickstart
+
+```lua
+dofile("mupen-lua-ugui.lua")
+```
+
+That's it. Don't forget to pass an absolute path, not a relative one.
+
 Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md) to see how the library is used.
 
 # 📈 Advantages
