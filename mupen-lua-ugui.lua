@@ -521,8 +521,9 @@ Mupen_lua_ugui = {
                     border_color)
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                     back_color)
-                local should_visualize_selection = Mupen_lua_ugui.control_data[control.uid].selection_start and
-                    Mupen_lua_ugui.control_data[control.uid].selection_end and control.is_enabled
+                local should_visualize_selection = not (Mupen_lua_ugui.control_data[control.uid].selection_start == nil) and
+                    not (Mupen_lua_ugui.control_data[control.uid].selection_end == nil) and control.is_enabled and
+                    not (Mupen_lua_ugui.control_data[control.uid].selection_start == Mupen_lua_ugui.control_data[control.uid].selection_end)
 
                 if should_visualize_selection then
                     local string_to_selection_start = control.text:sub(1,
@@ -585,7 +586,7 @@ Mupen_lua_ugui = {
                 local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif").width +
                     Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
-                if visual_state == Mupen_lua_ugui.visual_states.active then
+                if visual_state == Mupen_lua_ugui.visual_states.active and math.floor(os.clock() * 2) % 2 == 0 and not should_visualize_selection then
                     Mupen_lua_ugui.renderer.draw_line({
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y + 2
@@ -1042,8 +1043,8 @@ Mupen_lua_ugui = {
         if not Mupen_lua_ugui.control_data[control.uid] then
             Mupen_lua_ugui.control_data[control.uid] = {
                 caret_index = 1,
-                selection_start = 0,
-                selection_end = 0,
+                selection_start = nil,
+                selection_end = nil,
             }
         end
 
