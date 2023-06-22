@@ -189,7 +189,17 @@ BreitbandGraphics = {
             font_name = "Fixedsys",
             text_color = "#FF0000",
             text_options = "",
-
+            any_to_color = function(any)
+                if any:find("#") then
+                    return BreitbandGraphics.hex_to_color(any)
+                else
+                    if BreitbandGraphics.colors[any] then
+                        return BreitbandGraphics.colors[any]
+                    else
+                        print("Can't resolve color " .. any .. " to anything")
+                    end
+                end
+            end,
             setbrush = function(color)
                 BreitbandGraphics.renderers.compat.brush = color
             end,
@@ -214,9 +224,9 @@ BreitbandGraphics = {
                 }
                 BreitbandGraphics.renderers.d2d.fill_rectangle(
                     BreitbandGraphics.inflate_rectangle(rectangle, BreitbandGraphics.renderers.compat.pen_thickness),
-                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.pen))
+                    BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.pen))
                 BreitbandGraphics.renderers.d2d.fill_rectangle(rectangle,
-                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.brush))
+                    BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.brush))
             end,
             text = function(x, y, text)
                 local size = BreitbandGraphics.renderers.d2d.get_text_size(text,
@@ -230,7 +240,7 @@ BreitbandGraphics = {
                         is_bold = BreitbandGraphics.renderers.compat.text_options:find("b"),
                         is_italic = BreitbandGraphics.renderers.compat.text_options:find("i")
                     },
-                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.text_color),
+                    BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.text_color),
                     BreitbandGraphics.renderers.compat.font_size, BreitbandGraphics.renderers.compat.font_name, text)
             end,
             line = function(x, y, x2, y2)
@@ -240,7 +250,7 @@ BreitbandGraphics = {
                     }, {
                         x = x2,
                         y = y2,
-                    }, BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.pen),
+                    }, BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.pen),
                     BreitbandGraphics.renderers.compat.pen_thickness)
             end,
             ellipse = function(x, y, right, bottom)
@@ -252,9 +262,9 @@ BreitbandGraphics = {
                 }
                 BreitbandGraphics.renderers.d2d.fill_ellipse(
                     BreitbandGraphics.inflate_rectangle(rectangle, BreitbandGraphics.renderers.compat.pen_thickness),
-                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.pen))
+                    BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.pen))
                 BreitbandGraphics.renderers.d2d.fill_ellipse(rectangle,
-                    BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.brush))
+                    BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.brush))
             end
         }
     }
