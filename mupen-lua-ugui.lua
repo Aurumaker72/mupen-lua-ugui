@@ -188,6 +188,7 @@ BreitbandGraphics = {
             font_size = 0,
             font_name = "Fixedsys",
             text_color = "#FF0000",
+            text_options = "",
 
             setbrush = function(color)
                 BreitbandGraphics.renderers.compat.brush = color
@@ -199,9 +200,10 @@ BreitbandGraphics = {
             setcolor = function(color)
                 BreitbandGraphics.renderers.compat.text_color = color
             end,
-            setfont = function(size, name, special)
-                BreitbandGraphics.renderers.compat.font_size = size
+            setfont = function(size, name, text_options)
+                BreitbandGraphics.renderers.compat.font_size = size + 2
                 BreitbandGraphics.renderers.compat.font_name = name
+                BreitbandGraphics.renderers.compat.text_options = text_options
             end,
             rect = function(x, y, right, bottom)
                 local rectangle = {
@@ -224,7 +226,10 @@ BreitbandGraphics = {
                         y = y,
                         width = 9999999999,
                         height = size.height,
-                    }, "start", "start", {},
+                    }, "start", "start", {
+                        is_bold = BreitbandGraphics.renderers.compat.text_options:find("b"),
+                        is_italic = BreitbandGraphics.renderers.compat.text_options:find("i")
+                    },
                     BreitbandGraphics.hex_to_color(BreitbandGraphics.renderers.compat.text_color),
                     BreitbandGraphics.renderers.compat.font_size, BreitbandGraphics.renderers.compat.font_name, text)
             end,
