@@ -25,15 +25,17 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 - Easy Usage
   - Include only one file
 - Flexible
-  - Call library functions at any time
-  - Add or modify controls and stylers
+  - Add or extend controls
+  - Add or extend stylers
+  - Mockable input
 - Host-authoritative
-  - The host script coordinates everything: no library lock-in
-  - The library keeps no copies of application state
+  - Invokable anytime and anywhere
+  - No copies or mutation of application state
   - No global pollution - only necessary components are exposed as tables
 - Fast
   - Shallow callstacks
-  - Virtualization support
+  - Reduced indirection
+  - Controls optimized for large datasets
 
 # ✨ Features
 
@@ -77,5 +79,6 @@ Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Co
 
 ### To BreitbandGraphics
 
-Porting a script which utilizes the Lua GDI APIs to `BreitbandGraphics` is, however, trivial.
-By including the `mupen-lua-ugui` library, backwards compatibility will automatically be set up and no code will have to be changed manually.
+Porting a script which utilizes the old Lua GDI API to `BreitbandGraphics` is trivial.
+
+By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically reverse-polyfill all legacy APIs with no changes to your code.
