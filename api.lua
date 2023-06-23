@@ -1,6 +1,6 @@
 ---@meta
 
--- version 1.1.3.1
+-- version 1.1.3.3
 
 -- This file has meta definitions for the functions implemented in mupen64.
 -- https://github.com/mkdasher/mupen64-rr-lua-/blob/master/lua/LuaConsole.cpp
@@ -425,8 +425,9 @@ function wgui.fill_rectangle(x1, y1, x2, y2, red, green, blue, alpha) end
 ---@param green number d2d colors range from 0.0 to 1.0
 ---@param blue number d2d colors range from 0.0 to 1.0
 ---@param alpha number d2d colors range from 0.0 to 1.0
+---@param thickness number
 ---@return nil
-function wgui.draw_rectangle(x1, y1, x2, y2, red, green, blue, alpha) end
+function wgui.draw_rectangle(x1, y1, x2, y2, red, green, blue, alpha, thickness) end
 
 ---Draws a filled in ellipse at the specified coordinates and color.
 ---@param x integer
@@ -449,8 +450,9 @@ function wgui.fill_ellipse(x, y, radiusX, radiusY, red, green, blue, alpha) end
 ---@param green number d2d colors range from 0.0 to 1.0
 ---@param blue number d2d colors range from 0.0 to 1.0
 ---@param alpha number d2d colors range from 0.0 to 1.0
+---@param thickness number
 ---@return nil
-function wgui.draw_ellipse(x, y, radiusX, radiusY, red, green, blue, alpha) end
+function wgui.draw_ellipse(x, y, radiusX, radiusY, red, green, blue, alpha, thickness) end
 
 ---Draws a line from `(x1, y1)` to `(x2, y2)` in the specified color.
 ---@param x1 integer
@@ -461,9 +463,9 @@ function wgui.draw_ellipse(x, y, radiusX, radiusY, red, green, blue, alpha) end
 ---@param green number d2d colors range from 0.0 to 1.0
 ---@param blue number d2d colors range from 0.0 to 1.0
 ---@param alpha number d2d colors range from 0.0 to 1.0
----@param stroke_width number
+---@param thickness number
 ---@return nil
-function wgui.draw_line(x1, y1, x2, y2, red, green, blue, alpha, stroke_width) end
+function wgui.draw_line(x1, y1, x2, y2, red, green, blue, alpha, thickness) end
 
 ---Draws the text `text` at the specified coordinates, color, font, and
 ---alignment.
@@ -488,8 +490,10 @@ function wgui.draw_text(x1, y1, x2, y2, red, green, blue, alpha, text, fontname,
 ---@param text string
 ---@param fontname string
 ---@param fontsize number
+---@param max_width number
+---@param max_height number
 ---@return {width: integer, height: integer}
-function wgui.get_text_size(text, fontname, fontsize) end
+function wgui.get_text_size(text, fontname, fontsize, max_width, max_height) end
 
 ---Specifies a rectangle to which all subsequent drawing operations are clipped.
 ---This clip is put onto a stack. It can then be popped off the stack with
@@ -532,8 +536,9 @@ function wgui.fill_rounded_rectangle(x1, y1, x2, y2, radiusX, radiusY, red, gree
 ---@param green number d2d colors range from 0.0 to 1.0
 ---@param blue number d2d colors range from 0.0 to 1.0
 ---@param alpha number d2d colors range from 0.0 to 1.0
+---@param thickness number
 ---@return nil
-function wgui.draw_rounded_rectangle(x1, y1, x2, y2, radiusX, radiusY, red, green, blue, alpha) end
+function wgui.draw_rounded_rectangle(x1, y1, x2, y2, radiusX, radiusY, red, green, blue, alpha, thickness) end
 
 ---Loads an image file from `path` which you can then access through
 ---`identifier`.
@@ -558,8 +563,10 @@ function wgui.free_image(identifier) end
 ---@param srcx2 integer
 ---@param srcy2 integer
 ---@param identifier string
+---@param opacity number
+---@param interpolationMode integer 0: nearest neighbor, 1: linear, -1: don't use
 ---@return nil
-function wgui.draw_image(destx1, desty1, destx2, desty2, srcx1, srcy1, srcx2, srcy2, identifier) end
+function wgui.draw_image(destx1, desty1, destx2, desty2, srcx1, srcy1, srcx2, srcy2, identifier, opacity, interpolationMode) end
 
 ---Returns the width and height of the image at `identifier`.
 ---@nodiscard
