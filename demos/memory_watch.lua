@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\memory_watch.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\memory_watch.lua") .. "mupen-lua-ugui.lua")
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
@@ -47,7 +47,7 @@ local tab = {
     ["C"] = "1100",
     ["D"] = "1101",
     ["E"] = "1110",
-    ["F"] = "1111"
+    ["F"] = "1111",
 }
 local function fp_to_float(input)
     if not input then
@@ -126,11 +126,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -141,11 +141,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
     address = Mupen_lua_ugui.textbox({
@@ -157,7 +157,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 20,
         },
-        text = address
+        text = address,
     })
 
     type_index = Mupen_lua_ugui.combobox({
@@ -170,7 +170,7 @@ emu.atupdatescreen(function()
             height = 20,
         },
         items = types,
-        selected_index = type_index
+        selected_index = type_index,
     })
 
     if (Mupen_lua_ugui.button({
@@ -182,7 +182,7 @@ emu.atupdatescreen(function()
                 width = 190,
                 height = 30,
             },
-            text = "Add to watch"
+            text = "Add to watch",
         })) then
         local can_add = true
         for i = 1, #watches, 1 do
@@ -195,7 +195,7 @@ emu.atupdatescreen(function()
         if can_add then
             watches[#watches + 1] = {
                 address = address,
-                type = types[type_index]
+                type = types[type_index],
             }
             update_values()
         end
@@ -211,7 +211,7 @@ emu.atupdatescreen(function()
             height = 300,
         },
         items = items,
-        selected_index = selected_watch_index
+        selected_index = selected_watch_index,
     })
 
     Mupen_lua_ugui.end_frame()

@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\control_gallery.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\control_gallery.lua") .. "mupen-lua-ugui.lua")
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
@@ -13,11 +13,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 0,
         g = 0,
-        b = 0
+        b = 0,
     })
 
     local keys = input.get()
@@ -28,11 +28,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
     Mupen_lua_ugui.button({
@@ -44,7 +44,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        text = "Test"
+        text = "Test",
     })
 
     if (Mupen_lua_ugui.button({
@@ -56,9 +56,9 @@ emu.atupdatescreen(function()
                 width = 90,
                 height = 30,
             },
-            text = "Test"
+            text = "Test",
         })) then
-        print('a')
+        print("a")
     end
 
     Mupen_lua_ugui.textbox({
@@ -70,7 +70,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        text = "Test"
+        text = "Test",
     })
 
     Mupen_lua_ugui.textbox({
@@ -82,7 +82,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        text = "Test"
+        text = "Test",
     })
 
     Mupen_lua_ugui.combobox({
@@ -95,7 +95,7 @@ emu.atupdatescreen(function()
             height = 30,
         },
         items = {
-            "Test"
+            "Test",
         },
         selected_index = 1,
     })
@@ -110,7 +110,7 @@ emu.atupdatescreen(function()
             height = 30,
         },
         items = {
-            "Test"
+            "Test",
         },
         selected_index = 1,
     })
@@ -124,7 +124,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        value = 0
+        value = 0,
     })
 
     Mupen_lua_ugui.trackbar({
@@ -136,7 +136,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        value = 0
+        value = 0,
     })
 
 
@@ -152,8 +152,8 @@ emu.atupdatescreen(function()
         selected_index = 1,
         items = {
             "Test",
-            "Item"
-        }
+            "Item",
+        },
     })
 
     Mupen_lua_ugui.listbox({
@@ -168,8 +168,8 @@ emu.atupdatescreen(function()
         selected_index = 1,
         items = {
             "Test",
-            "Item"
-        }
+            "Item",
+        },
     })
 
     Mupen_lua_ugui.joystick({
@@ -184,7 +184,7 @@ emu.atupdatescreen(function()
         position = {
             x = 0,
             y = 0.5,
-        }
+        },
     })
 
     Mupen_lua_ugui.joystick({
@@ -199,7 +199,7 @@ emu.atupdatescreen(function()
         position = {
             x = 1,
             y = 0.5,
-        }
+        },
     })
 
 

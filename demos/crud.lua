@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\crud.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\crud.lua") .. "mupen-lua-ugui.lua")
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
@@ -15,7 +15,7 @@ local selected_list_index = 1
 local priorities = {
     "Low",
     "Medium",
-    "High"
+    "High",
 }
 local is_editing = false
 
@@ -35,11 +35,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -49,11 +49,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
 
@@ -131,7 +131,7 @@ emu.atupdatescreen(function()
             height = 20,
         },
         text = "Edit",
-        is_checked = is_editing
+        is_checked = is_editing,
     })
 
 
@@ -145,7 +145,7 @@ emu.atupdatescreen(function()
             height = 20,
         },
         selected_index = is_selection_valid() and items[get_safe_selected_list_index()].priority or 1,
-        items = priorities
+        items = priorities,
     })
 
     if is_selection_valid() then
@@ -163,7 +163,7 @@ emu.atupdatescreen(function()
             width = 180,
             height = 20,
         },
-        text = is_selection_valid() and items[selected_list_index].text or ""
+        text = is_selection_valid() and items[selected_list_index].text or "",
     })
 
     if is_selection_valid() then

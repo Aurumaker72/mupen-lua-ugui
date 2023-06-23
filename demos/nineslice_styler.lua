@@ -3,12 +3,12 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\nineslice_styler.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\nineslice_styler.lua") .. "mupen-lua-ugui.lua")
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
-local section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-10'
+local section_name_path = folder("nineslice_styler.lua") .. "res\\windows-10"
 
 local slice_cache = {}
 local control_transitions = {}
@@ -31,7 +31,7 @@ function parse_slices(path)
             x = tonumber(line[1]),
             y = tonumber(line[2]),
             width = tonumber(line[3]),
-            height = tonumber(line[4])
+            height = tonumber(line[4]),
         }
     end
 
@@ -93,52 +93,52 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
             r = 255,
             g = 255,
             b = 255,
-            a = opacity
+            a = opacity,
         }
 
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x,
             y = control.rectangle.y,
             width = result.top_left.width,
-            height = result.top_left.height
+            height = result.top_left.height,
         }, result.top_left, atlas_path, color)
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x + control.rectangle.width - result.top_right.width,
             y = control.rectangle.y,
             width = result.top_right.width,
-            height = result.top_right.height
+            height = result.top_right.height,
         }, result.top_right, atlas_path, color)
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x,
             y = control.rectangle.y + control.rectangle.height - result.bottom_left.height,
             width = result.bottom_left.width,
-            height = result.bottom_left.height
+            height = result.bottom_left.height,
         }, result.bottom_left, atlas_path, color)
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x + control.rectangle.width - result.bottom_right.width,
             y = control.rectangle.y + control.rectangle.height - result.bottom_right.height,
             width = result.bottom_right.width,
-            height = result.bottom_right.height
+            height = result.bottom_right.height,
         }, result.bottom_right, atlas_path, color)
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x + result.top_left.width,
             y = control.rectangle.y + result.top_left.height,
             width = control.rectangle.width - result.bottom_right.width * 2,
-            height = control.rectangle.height - result.bottom_right.height * 2
+            height = control.rectangle.height - result.bottom_right.height * 2,
         }, result.center, atlas_path, color)
 
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x,
             y = control.rectangle.y + result.top_left.height,
             width = result.left.width,
-            height = control.rectangle.height - result.bottom_left.height * 2
+            height = control.rectangle.height - result.bottom_left.height * 2,
         }, result.left, atlas_path, color)
 
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x + control.rectangle.width - result.top_right.width,
             y = control.rectangle.y + result.top_right.height,
             width = result.left.width,
-            height = control.rectangle.height - result.bottom_right.height * 2
+            height = control.rectangle.height - result.bottom_right.height * 2,
         }, result.right, atlas_path, color)
 
 
@@ -146,14 +146,14 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
             x = control.rectangle.x + result.top_left.width,
             y = control.rectangle.y,
             width = control.rectangle.width - result.top_right.width * 2,
-            height = result.top.height
+            height = result.top.height,
         }, result.top, atlas_path, color)
 
         BreitbandGraphics.renderers.d2d.draw_image({
             x = control.rectangle.x + result.top_left.width,
             y = control.rectangle.y + control.rectangle.height - result.bottom.height,
             width = control.rectangle.width - result.bottom_right.width * 2,
-            height = result.bottom.height
+            height = result.bottom.height,
         }, result.bottom, atlas_path, color)
     end
 
@@ -205,11 +205,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -220,11 +220,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
     Mupen_lua_ugui.joystick({
         uid = 0,
@@ -237,8 +237,8 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0.5,
-            y = 0.5
-        }
+            y = 0.5,
+        },
     })
     Mupen_lua_ugui.joystick({
         uid = 1,
@@ -251,8 +251,8 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0.5,
-            y = 0.5
-        }
+            y = 0.5,
+        },
     })
 
     if Mupen_lua_ugui.button({
@@ -264,9 +264,9 @@ emu.atupdatescreen(function()
                 width = 90,
                 height = 30,
             },
-            text = "Windows 10"
+            text = "Windows 10",
         }) then
-        section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-10'
+        section_name_path = folder("nineslice_styler.lua") .. "res\\windows-10"
     end
 
     if Mupen_lua_ugui.button({
@@ -278,9 +278,9 @@ emu.atupdatescreen(function()
                 width = 90,
                 height = 30,
             },
-            text = "Windows 11"
+            text = "Windows 11",
         }) then
-        section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-11'
+        section_name_path = folder("nineslice_styler.lua") .. "res\\windows-11"
     end
 
     if Mupen_lua_ugui.button({
@@ -292,9 +292,9 @@ emu.atupdatescreen(function()
                 width = 90,
                 height = 30,
             },
-            text = "Windows 7"
+            text = "Windows 7",
         }) then
-        section_name_path = folder('nineslice_styler.lua') .. 'res\\windows-aero'
+        section_name_path = folder("nineslice_styler.lua") .. "res\\windows-aero"
     end
 
 
