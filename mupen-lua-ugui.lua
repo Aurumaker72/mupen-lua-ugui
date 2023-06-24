@@ -265,7 +265,23 @@ BreitbandGraphics = {
                     BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.pen))
                 BreitbandGraphics.renderers.d2d.fill_ellipse(rectangle,
                     BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.brush))
-            end
+            end,
+            loadimage = function(path)
+                return path
+            end,
+            drawimage = function(identifier, x, y, width, height)
+                BreitbandGraphics.renderers.d2d.draw_image({
+                    x = x,
+                    y = y,
+                    width = width,
+                    height = height,
+                }, {
+                    x = 0,
+                    y = 0,
+                    width = 999999,
+                    height = 999999,
+                }, identifier, BreitbandGraphics.colors.white)
+            end,
         }
     }
 }
@@ -279,6 +295,8 @@ wgui.setfont = BreitbandGraphics.renderers.compat.setfont
 wgui.text = BreitbandGraphics.renderers.compat.text
 wgui.line = BreitbandGraphics.renderers.compat.line
 wgui.ellipse = BreitbandGraphics.renderers.compat.ellipse
+wgui.loadimage = BreitbandGraphics.renderers.compat.loadimage
+wgui.drawimage = BreitbandGraphics.renderers.compat.drawimage
 
 -- https://stackoverflow.com/a/26367080/14472122
 local function deep_clone(obj, seen)
