@@ -605,19 +605,31 @@ Mupen_lua_ugui = {
 
                     local string_to_selection_start = control.text:sub(1,
                         lower - 1)
+                    local string_to_selection_end = control.text:sub(1,
+                        higher - 1)
 
                     local selection_start_x = control.rectangle.x +
                         Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
                             "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
+                    local selection_end_x = control.rectangle.x +
+                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end, 12,
+                            "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
+
+                    Mupen_lua_ugui.renderer.push_clip({
+                        x = selection_start_x,
+                        y = control.rectangle.y,
+                        width = selection_end_x - selection_start_x,
+                        height = control.rectangle.height
+                    })
                     Mupen_lua_ugui.renderer.draw_text({
-                            x = selection_start_x,
+                            x = control.rectangle.x + Mupen_lua_ugui.stylers.windows_10.textbox_padding,
                             y = control.rectangle.y,
                             width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                             height = control.rectangle.height,
                         }, 'start', 'start', {}, BreitbandGraphics.colors.white, 12,
-                        "MS Sans Serif", control.text:sub(lower,
-                            higher - 1))
+                        "MS Sans Serif", control.text)
+                    Mupen_lua_ugui.renderer.pop_clip()
                 end
 
 
