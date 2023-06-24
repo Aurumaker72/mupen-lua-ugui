@@ -69,9 +69,8 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 </p>
 
 `mupen-lua-ugui` uses `BreitbandGraphics` for rendering.
-It's recommended to use `BreitbandGraphics` when drawing graphics instead of directly calling the Mupen Lua APIs, due to Intellisense and helpful utilities. 
 
-# 🔩 Porting
+## 🧩 Porting
 
 ### To mupen-lua-ugui
 
@@ -82,3 +81,13 @@ Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Co
 Porting a script which utilizes the old Lua GDI API to `BreitbandGraphics` is trivial.
 
 By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically reverse-polyfill all legacy APIs with no changes to your code.
+
+## 📈 Advantages
+
+- Maximized usability
+  - Polyfilled GDI and GDI+ APIs
+  - Non-changing API surface
+- Helpful utilities
+  - Hexadecimal color conversion
+  - Standard color tables 
+- Low overhead
