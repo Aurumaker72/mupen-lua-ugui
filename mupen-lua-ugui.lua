@@ -137,6 +137,7 @@ BreitbandGraphics = {
                 local d_style = 0
                 local d_weight = 400
                 local d_options = 0
+                local d_text_antialias_mode = 1
 
                 if horizontal_alignment == "center" then
                     d_horizontal_alignment = 2
@@ -165,7 +166,14 @@ BreitbandGraphics = {
                 if style.clip then
                     d_options = d_options | 0x00000002
                 end
+                if style.grayscale then
+                    d_text_antialias_mode = 2
+                end
+                if style.aliased then
+                    d_text_antialias_mode = 3
+                end
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
+                wgui.set_text_antialias_mode(d_text_antialias_mode)
                 wgui.draw_text(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, text, font_name,
                     font_size, d_weight, d_style, d_horizontal_alignment, d_vertical_alignment, d_options)
@@ -443,18 +451,12 @@ Mupen_lua_ugui = {
             bar_width = 6,
             bar_height = 16,
             item_height = 15,
+            font_size = 12,
+            font_name = "MS Shell Dlg 2",
 
             draw_raised_frame = function(control, visual_state)
-                local back_color = {
-                    r = 225,
-                    g = 225,
-                    b = 225
-                }
-                local border_color = {
-                    r = 173,
-                    g = 173,
-                    b = 173
-                }
+                local back_color = BreitbandGraphics.repeated_to_color(225)
+                local border_color = BreitbandGraphics.repeated_to_color(173)
 
                 if visual_state == Mupen_lua_ugui.visual_states.active then
                     back_color = {
@@ -479,16 +481,8 @@ Mupen_lua_ugui = {
                         b = 215
                     }
                 elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                    back_color = {
-                        r = 204,
-                        g = 204,
-                        b = 204
-                    }
-                    border_color = {
-                        r = 191,
-                        g = 191,
-                        b = 191
-                    }
+                    back_color = BreitbandGraphics.repeated_to_color(204)
+                    border_color = BreitbandGraphics.repeated_to_color(191)
                 end
 
                 Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
@@ -510,8 +504,8 @@ Mupen_lua_ugui = {
                     { clip = true },
                     visual_state == Mupen_lua_ugui.visual_states.disabled and
                     Mupen_lua_ugui.stylers.windows_10.button_disabled_text_color or BreitbandGraphics.colors.black,
-                    12,
-                    "MS Sans Serif", control.text)
+                    Mupen_lua_ugui.stylers.windows_10.font_size,
+                    Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
             end,
             draw_togglebutton = function(control)
                 Mupen_lua_ugui.stylers.windows_10.draw_button(control)
@@ -519,27 +513,15 @@ Mupen_lua_ugui = {
             draw_textbox = function(control)
                 local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
-                local back_color = {
-                    r = 255,
-                    g = 255,
-                    b = 255
-                }
-                local border_color = {
-                    r = 122,
-                    g = 122,
-                    b = 122
-                }
+                local back_color = BreitbandGraphics.colors.white
+                local border_color = BreitbandGraphics.repeated_to_color(122)
 
                 if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
                     visual_state = Mupen_lua_ugui.visual_states.active
                 end
 
                 if visual_state == Mupen_lua_ugui.visual_states.hovered then
-                    border_color = {
-                        r = 23,
-                        g = 23,
-                        b = 23,
-                    }
+                    border_color = BreitbandGraphics.repeated_to_color(23)
                 elseif visual_state == Mupen_lua_ugui.visual_states.active then
                     border_color = {
                         r = 0,
@@ -547,16 +529,8 @@ Mupen_lua_ugui = {
                         b = 153
                     }
                 elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                    back_color = {
-                        r = 240,
-                        g = 240,
-                        b = 240,
-                    }
-                    border_color = {
-                        r = 204,
-                        g = 204,
-                        b = 204,
-                    }
+                    back_color = BreitbandGraphics.repeated_to_color(240)
+                    border_color = BreitbandGraphics.repeated_to_color(204)
                 end
                 Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
                     border_color)
@@ -574,15 +548,18 @@ Mupen_lua_ugui = {
 
                     Mupen_lua_ugui.renderer.fill_rectangle({
                             x = control.rectangle.x +
-                                Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
-                                    "MS Sans Serif")
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start,
+                                    Mupen_lua_ugui.stylers.windows_10.font_size,
+                                    Mupen_lua_ugui.stylers.windows_10.font_name)
                                 .width + Mupen_lua_ugui.stylers.windows_10.textbox_padding,
                             y = control.rectangle.y,
-                            width = Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end, 12,
-                                    "MS Sans Serif")
+                            width = Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end,
+                                    Mupen_lua_ugui.stylers.windows_10.font_size,
+                                    Mupen_lua_ugui.stylers.windows_10.font_name)
                                 .width -
-                                Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
-                                    "MS Sans Serif")
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start,
+                                    Mupen_lua_ugui.stylers.windows_10.font_size,
+                                    Mupen_lua_ugui.stylers.windows_10.font_name)
                                 .width,
                             height = control.rectangle.height
                         },
@@ -595,8 +572,9 @@ Mupen_lua_ugui = {
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                         height = control.rectangle.height,
                     }, 'start', 'start', { clip = true }, visual_state == Mupen_lua_ugui.visual_states.disabled and
-                    Mupen_lua_ugui.stylers.windows_10.button_disabled_text_color or BreitbandGraphics.colors.black, 12,
-                    "MS Sans Serif", control.text)
+                    Mupen_lua_ugui.stylers.windows_10.button_disabled_text_color or BreitbandGraphics.colors.black,
+                    Mupen_lua_ugui.stylers.windows_10.font_size,
+                    Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
 
                 if should_visualize_selection then
                     local lower = Mupen_lua_ugui.control_data[control.uid].selection_start
@@ -612,12 +590,16 @@ Mupen_lua_ugui = {
                         higher - 1)
 
                     local selection_start_x = control.rectangle.x +
-                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
-                            "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
+                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start,
+                            Mupen_lua_ugui.stylers.windows_10.font_size,
+                            Mupen_lua_ugui.stylers.windows_10.font_name).width +
+                        Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
                     local selection_end_x = control.rectangle.x +
-                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end, 12,
-                            "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
+                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end,
+                            Mupen_lua_ugui.stylers.windows_10.font_size,
+                            Mupen_lua_ugui.stylers.windows_10.font_name).width +
+                        Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
                     Mupen_lua_ugui.renderer.push_clip({
                         x = selection_start_x,
@@ -630,14 +612,17 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y,
                             width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                             height = control.rectangle.height,
-                        }, 'start', 'start', { clip = true }, BreitbandGraphics.colors.white, 12,
-                        "MS Sans Serif", control.text)
+                        }, 'start', 'start', { clip = true }, BreitbandGraphics.colors.white,
+                        Mupen_lua_ugui.stylers.windows_10.font_size,
+                        Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
                     Mupen_lua_ugui.renderer.pop_clip()
                 end
 
 
                 local string_to_caret = control.text:sub(1, Mupen_lua_ugui.control_data[control.uid].caret_index - 1)
-                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif").width +
+                local caret_x = Mupen_lua_ugui.renderer.get_text_size(string_to_caret,
+                        Mupen_lua_ugui.stylers.windows_10.font_size,
+                        Mupen_lua_ugui.stylers.windows_10.font_name).width +
                     Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
                 if visual_state == Mupen_lua_ugui.visual_states.active and math.floor(os.clock() * 2) % 2 == 0 and not should_visualize_selection then
@@ -648,7 +633,8 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y +
                             math.max(15,
-                                Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif")
+                                Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12,
+                                    Mupen_lua_ugui.stylers.windows_10.font_name)
                                 .height) -- TODO: move text measurement into BreitbandGraphics
                     }, {
                         r = 0,
@@ -665,16 +651,8 @@ Mupen_lua_ugui = {
                     visual_state = Mupen_lua_ugui.visual_states.normal
                 end
 
-                local back_color = {
-                    r = 255,
-                    g = 255,
-                    b = 255
-                }
-                local outline_color = {
-                    r = 0,
-                    g = 0,
-                    b = 0
-                }
+                local back_color = BreitbandGraphics.colors.white
+                local outline_color = BreitbandGraphics.colors.black
                 local tip_color = {
                     r = 255,
                     g = 0,
@@ -687,11 +665,7 @@ Mupen_lua_ugui = {
                 }
 
                 if visual_state == Mupen_lua_ugui.visual_states.disabled then
-                    outline_color = {
-                        r = 191,
-                        g = 191,
-                        b = 191
-                    }
+                    outline_color = BreitbandGraphics.repeated_to_color(191)
                     tip_color = {
                         r = 255,
                         g = 128,
@@ -751,11 +725,8 @@ Mupen_lua_ugui = {
                     g = 234,
                     b = 234
                 }
-                local track_border_color = {
-                    r = 214,
-                    g = 214,
-                    b = 214
-                }
+                local track_rectangle = {}
+                local track_border_color = BreitbandGraphics.repeated_to_color(214)
                 if not is_horizontal then
                     track_rectangle = {
                         x = rectangle.x + rectangle.width / 2 - Mupen_lua_ugui.stylers.windows_10.track_thickness / 2,
@@ -783,24 +754,11 @@ Mupen_lua_ugui = {
                     b = 217
                 }
                 if visual_state == Mupen_lua_ugui.visual_states.hovered then
-                    head_color = {
-                        r = 23,
-                        g = 23,
-                        b = 23,
-                    }
-                elseif visual_state == Mupen_lua_ugui.visual_states.active then
-                    head_color = {
-                        r = 204,
-                        g = 204,
-                        b = 204,
-                    }
-                elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                    head_color = {
-                        r = 204,
-                        g = 204,
-                        b = 204,
-                    }
+                    head_color = BreitbandGraphics.repeated_to_color(23)
+                elseif visual_state == Mupen_lua_ugui.visual_states.active or visual_state == Mupen_lua_ugui.visual_states.disabled then
+                    head_color = BreitbandGraphics.repeated_to_color(204)
                 end
+
                 local head_rectangle = {}
                 local effective_bar_height = math.min((is_horizontal and rectangle.height or rectangle.width) * 2,
                     Mupen_lua_ugui.stylers.windows_10.bar_height)
@@ -855,7 +813,8 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, 'start', 'center', { clip = true }, text_color, 12, "MS Sans Serif",
+                    }, 'start', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                    Mupen_lua_ugui.stylers.windows_10.font_name,
                     control.items[control.selected_index])
 
                 Mupen_lua_ugui.renderer.draw_text({
@@ -863,8 +822,8 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 4,
                         height = control.rectangle.height,
-                    }, 'end', 'center', { clip = true }, text_color, 12, "Segoe UI Mono",
-                    Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
+                    }, 'end', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                    "Segoe UI Mono", "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
                     Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle({
@@ -887,34 +846,22 @@ Mupen_lua_ugui = {
                             height = Mupen_lua_ugui.stylers.windows_10.item_height
                         }
 
-                        local back_color = {
-                            r = 255,
-                            g = 255,
-                            b = 255
-                        }
-                        local text_color = {
-                            r = 0,
-                            g = 0,
-                            b = 0
-                        }
-
+                        local back_color = BreitbandGraphics.colors.white
+                        local text_color = BreitbandGraphics.colors.black
                         if Mupen_lua_ugui.control_data[control.uid].hovered_index == i then
                             back_color = {
                                 r = 0,
                                 g = 120,
                                 b = 215
                             }
-                            text_color = {
-                                r = 255,
-                                g = 255,
-                                b = 255
-                            }
+                            text_color = BreitbandGraphics.colors.white
                         end
 
                         Mupen_lua_ugui.renderer.fill_rectangle(rect, back_color)
                         rect.x = rect.x + 2
-                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', { clip = true }, text_color, 12,
-                            "MS Sans Serif",
+                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', { clip = true }, text_color,
+                            Mupen_lua_ugui.stylers.windows_10.font_size,
+                            Mupen_lua_ugui.stylers.windows_10.font_name,
                             control.items[i])
                     end
                 end
@@ -966,11 +913,7 @@ Mupen_lua_ugui = {
                         }
 
                         if visual_state == Mupen_lua_ugui.visual_states.disabled then
-                            accent_color = {
-                                r = 204,
-                                g = 204,
-                                b = 204,
-                            }
+                            accent_color = BreitbandGraphics.repeated_to_color(204)
                         end
 
 
@@ -994,7 +937,8 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
                             height = Mupen_lua_ugui.stylers.windows_10.item_height
-                        }, 'start', 'center', { clip = true }, text_color, 12, "MS Sans Serif",
+                        }, 'start', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                        Mupen_lua_ugui.stylers.windows_10.font_name,
                         control.items[i])
                 end
 
@@ -1014,22 +958,14 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = 10,
                         height = control.rectangle.height
-                    }, {
-                        r = 240,
-                        g = 240,
-                        b = 240
-                    })
+                    }, BreitbandGraphics.repeated_to_color(240))
 
                     Mupen_lua_ugui.renderer.fill_rectangle({
                         x = control.rectangle.x + control.rectangle.width - 10,
                         y = control.rectangle.y + scrollbar_y,
                         width = 10,
                         height = scrollbar_height
-                    }, {
-                        r = 204,
-                        g = 204,
-                        b = 204
-                    })
+                    }, BreitbandGraphics.repeated_to_color(204))
                 end
 
                 Mupen_lua_ugui.renderer.pop_clip()
@@ -1118,8 +1054,9 @@ Mupen_lua_ugui = {
             local lowest_distance = 9999999999
             local lowest_distance_index = -1
             for i = 1, #control.text + 2, 1 do
-                local dist = math.abs(Mupen_lua_ugui.renderer.get_text_size(control.text:sub(1, i - 1), 12,
-                    "MS Sans Serif").width - x)
+                local dist = math.abs(Mupen_lua_ugui.renderer.get_text_size(control.text:sub(1, i - 1),
+                    Mupen_lua_ugui.styler.font_size,
+                    Mupen_lua_ugui.stylers.windows_10.font_name).width - x)
                 if dist < lowest_distance then
                     lowest_distance = dist
                     lowest_distance_index = i
