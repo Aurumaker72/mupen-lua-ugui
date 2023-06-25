@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\internal_testing.lua") .. "mupen-lua-ugui.lua")
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
@@ -13,11 +13,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -28,11 +28,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
 
@@ -51,7 +51,7 @@ emu.atupdatescreen(function()
             "Item B",
             "Item C",
         },
-        selected_index = 0
+        selected_index = 0,
     })
     if Mupen_lua_ugui.button({
             uid = 1,
@@ -62,7 +62,7 @@ emu.atupdatescreen(function()
                 width = 90,
                 height = 30,
             },
-            text = "Test"
+            text = "Test",
         }) then
         print(math.random())
     end
@@ -81,7 +81,7 @@ emu.atupdatescreen(function()
             "Item B",
             "Item C",
         },
-        selected_index = 0
+        selected_index = 0,
     })
     Mupen_lua_ugui.combobox({
         uid = 3,
@@ -97,7 +97,7 @@ emu.atupdatescreen(function()
             "Item B",
             "Item C",
         },
-        selected_index = 0
+        selected_index = 0,
     })
 
     Mupen_lua_ugui.end_frame()

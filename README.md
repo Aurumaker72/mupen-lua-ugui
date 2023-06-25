@@ -74,7 +74,7 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 
 ### To mupen-lua-ugui
 
-Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Contact `aurumaker72` on Discord for help regarding this.
+Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Contact `aurumaker72` or `wade7` on Discord for help regarding this.
 
 ### To BreitbandGraphics
 

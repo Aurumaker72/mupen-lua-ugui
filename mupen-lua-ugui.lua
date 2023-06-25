@@ -4,62 +4,82 @@ if not wgui.fill_rectangle then
     print("BreitbandGraphics requires a Mupen64-rr-lua version newer than 1.1.2\r\n")
 end
 
+---@alias color {r: integer, g: integer, b: integer, a: integer?} RGBA color 0-255
+---@alias color_hex string "#RRGGBBB"
+---@alias color_float {r: number, g: number, b: number, a: number} Color passed into d2d function 0-1
+
+---@alias point {x: integer, y: integer}
+---@alias rectangle {x: integer, y: integer, width: integer, height: integer}
+---@alias radii {x: integer, y: integer}
+
+---@alias text_style {is_bold: boolean, is_italic: boolean}
+
 BreitbandGraphics = {
+    ---Converts `color` to `color_hex`.
+    ---@param color color
+    ---@return color_hex
     color_to_hex = function(color)
         return string.format("#%06X",
             (color.r * 0x10000) + (color.g * 0x100) + color.b)
     end,
+    ---Converts `color_hex` to `color`.
+    ---@param hex color_hex
+    ---@return color
     hex_to_color = function(hex)
         return
         {
             r = tonumber(hex:sub(2, 3), 16),
             g = tonumber(hex:sub(4, 5), 16),
-            b = tonumber(hex:sub(6, 7), 16)
+            b = tonumber(hex:sub(6, 7), 16),
         }
     end,
     colors = {
         white = {
             r = 255,
             g = 255,
-            b = 255
+            b = 255,
         },
         black = {
             r = 0,
             g = 0,
-            b = 0
+            b = 0,
         },
         red = {
             r = 255,
             g = 0,
-            b = 0
+            b = 0,
         },
         green = {
             r = 0,
             g = 255,
-            b = 0
+            b = 0,
         },
         blue = {
             r = 0,
             g = 0,
-            b = 255
+            b = 255,
         },
         yellow = {
             r = 255,
             g = 255,
-            b = 0
+            b = 0,
         },
         orange = {
             r = 255,
             g = 128,
-            b = 0
+            b = 0,
         },
         magenta = {
             r = 255,
             g = 0,
-            b = 255
+            b = 255,
         },
     },
 
+    ---Inflates a rectangle by `amount` and returns a new rectangle.
+    ---@param rectangle rectangle
+    ---@param amount integer
+    ---@return rectangle
     inflate_rectangle = function(rectangle, amount)
         return {
             x = rectangle.x - amount,
@@ -72,53 +92,91 @@ BreitbandGraphics = {
     renderers = {
         d2d = {
             bitmap_cache = {},
+            ---Converts `color` to `color_float`.
+            ---@param color color
+            ---@return color_float
             color_to_float = function(color)
                 return {
                     r = color.r / 255.0,
                     g = color.g / 255.0,
                     b = color.b / 255.0,
-                    a = (color.a and (color.a / 255.0) or 1.0)
+                    a = (color.a and (color.a / 255.0) or 1.0),
                 }
             end,
+            ---Returns the size of the given text.
+            ---@param text string
+            ---@param font_size number
+            ---@param font_name string
+            ---@return { width: integer, height: integer }
             get_text_size = function(text, font_size, font_name)
-                local a = wgui.get_text_size(text, font_name, font_size, 99999999, 99999999)
-
-                return a;
+                return wgui.get_text_size(text, font_name, font_size, 99999999, 99999999)
             end,
+            ---Draws the the border of a rectangle.
+            ---@param rectangle rectangle
+            ---@param color color
+            ---@param thickness number
             draw_rectangle = function(rectangle, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.draw_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, thickness)
             end,
+            ---Draws a filled in rectangle.
+            ---@param rectangle rectangle
+            ---@param color color
             fill_rectangle = function(rectangle, color)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.fill_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0)
             end,
+            ---Draws the border of a rounded rectangle.
+            ---@param rectangle rectangle
+            ---@param color color
+            ---@param radii radii
+            ---@param thickness number
             draw_rounded_rectangle = function(rectangle, color, radii, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.draw_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0,
                     thickness)
             end,
+            ---Draws a filled in rounded rectangle.
+            ---@param rectangle rectangle
+            ---@param color color
+            ---@param radii radii
             fill_rounded_rectangle = function(rectangle, color, radii)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.fill_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0)
             end,
+            ---Draws the border of an ellipse.
+            ---@param rectangle rectangle
+            ---@param color color
+            ---@param thickness number
             draw_ellipse = function(rectangle, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.draw_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
                     rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0,
                     thickness)
             end,
+            ---Draws a filled in ellipse.
+            ---@param rectangle rectangle
+            ---@param color color
             fill_ellipse = function(rectangle, color)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.fill_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
                     rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0)
             end,
+            ---Draws text.
+            ---@param rectangle rectangle
+            ---@param horizontal_alignment "center"|"start"|"end"|"stretch"
+            ---@param vertical_alignment "center"|"start"|"end"
+            ---@param style text_style
+            ---@param color color
+            ---@param font_size number
+            ---@param font_name string
+            ---@param text string
             draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
-                                 text)
+                text)
                 if text == nil then
                     text = ""
                 end
@@ -157,18 +215,31 @@ BreitbandGraphics = {
                     rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, text, font_name,
                     font_size, d_style, d_horizontal_alignment, d_vertical_alignment)
             end,
+            ---Draws a line.
+            ---@param from point
+            ---@param to point
+            ---@param color color
+            ---@param thickness number
             draw_line = function(from, to, color, thickness)
                 local float_color = BreitbandGraphics.renderers.d2d.color_to_float(color)
                 wgui.draw_line(from.x, from.y, to.x, to.y, float_color.r, float_color.g, float_color.b, 1.0,
                     thickness)
             end,
+            ---Pushes a clip
+            ---@param rectangle rectangle
             push_clip = function(rectangle)
                 wgui.push_clip(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
                     rectangle.y + rectangle.height)
             end,
+            ---Pops a clip
             pop_clip = function()
                 wgui.pop_clip()
             end,
+            ---Draws an image
+            ---@param destination_rectangle rectangle
+            ---@param source_rectangle rectangle
+            ---@param path string
+            ---@param color color
             draw_image = function(destination_rectangle, source_rectangle, path, color)
                 if not BreitbandGraphics.renderers.d2d.bitmap_cache[path] then
                     print("Loaded image from " .. path)
@@ -181,7 +252,7 @@ BreitbandGraphics = {
                     destination_rectangle.y + destination_rectangle.height,
                     source_rectangle.x, source_rectangle.y, source_rectangle.x + source_rectangle.width,
                     source_rectangle.y + source_rectangle.height, path, float_color.a, 1)
-            end
+            end,
         },
         compat = {
             brush = "#FF0000",
@@ -239,8 +310,8 @@ BreitbandGraphics = {
                         width = 9999999999,
                         height = size.height,
                     }, "start", "start", {
-                        is_bold = BreitbandGraphics.renderers.compat.text_options:find("b"),
-                        is_italic = BreitbandGraphics.renderers.compat.text_options:find("i")
+                        is_bold = BreitbandGraphics.renderers.compat.text_options:find("b") and true,
+                        is_italic = BreitbandGraphics.renderers.compat.text_options:find("i") and true,
                     },
                     BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.text_color),
                     BreitbandGraphics.renderers.compat.font_size, BreitbandGraphics.renderers.compat.font_name, text)
@@ -302,7 +373,7 @@ wgui.drawimage = BreitbandGraphics.renderers.compat.drawimage
 
 -- https://stackoverflow.com/a/26367080/14472122
 local function deep_clone(obj, seen)
-    if type(obj) ~= 'table' then return obj end
+    if type(obj) ~= "table" then return obj end
     if seen and seen[obj] then return seen[obj] end
     local s = seen or {}
     local res = setmetatable({}, getmetatable(obj))
@@ -311,10 +382,18 @@ local function deep_clone(obj, seen)
     return res
 end
 
+---Clamps `value` between `min` and `max`
+---@param value number
+---@param min number
+---@param max number
+---@return number
 local function clamp(value, min, max)
     return math.max(math.min(value, max), min)
 end
 
+---Whether the pointer is inside a given rectangle
+---@param rectangle rectangle
+---@return boolean
 local function is_pointer_inside(rectangle)
     return Mupen_lua_ugui.input_state.pointer.position.x > rectangle.x and
         Mupen_lua_ugui.input_state.pointer.position.y > rectangle.y and
@@ -391,7 +470,7 @@ Mupen_lua_ugui = {
     input_state = {},
     previous_input_state = {},
     active_control_uid = nil,
-    previous_pointer_primary_down_position = { x = 0, y = 0 },
+    previous_pointer_primary_down_position = {x = 0, y = 0},
     hittest_ignore_rectangles = {},
     -- we can only interact with one control per frame
     has_primary_input_been_handled = false,
@@ -426,46 +505,46 @@ Mupen_lua_ugui = {
                 local back_color = {
                     r = 225,
                     g = 225,
-                    b = 225
+                    b = 225,
                 }
                 local border_color = {
                     r = 173,
                     g = 173,
-                    b = 173
+                    b = 173,
                 }
 
                 if visual_state == Mupen_lua_ugui.visual_states.active then
                     back_color = {
                         r = 204,
                         g = 228,
-                        b = 247
+                        b = 247,
                     }
                     border_color = {
                         r = 0,
                         g = 84,
-                        b = 153
+                        b = 153,
                     }
                 elseif visual_state == Mupen_lua_ugui.visual_states.hovered then
                     back_color = {
                         r = 229,
                         g = 241,
-                        b = 251
+                        b = 251,
                     }
                     border_color = {
                         r = 0,
                         g = 120,
-                        b = 215
+                        b = 215,
                     }
                 elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
                     back_color = {
                         r = 204,
                         g = 204,
-                        b = 204
+                        b = 204,
                     }
                     border_color = {
                         r = 191,
                         g = 191,
-                        b = 191
+                        b = 191,
                     }
                 end
 
@@ -487,7 +566,7 @@ Mupen_lua_ugui = {
                 local text_color = {
                     r = 0,
                     g = 0,
-                    b = 0
+                    b = 0,
                 }
 
                 if visual_state == Mupen_lua_ugui.visual_states.disabled then
@@ -498,7 +577,7 @@ Mupen_lua_ugui = {
                     }
                 end
 
-                Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center',
+                Mupen_lua_ugui.renderer.draw_text(control.rectangle, "center", "center",
                     {}, text_color,
                     12,
                     "MS Sans Serif", control.text)
@@ -512,12 +591,12 @@ Mupen_lua_ugui = {
                 local back_color = {
                     r = 255,
                     g = 255,
-                    b = 255
+                    b = 255,
                 }
                 local border_color = {
                     r = 122,
                     g = 122,
-                    b = 122
+                    b = 122,
                 }
                 local text_color = {
                     r = 0,
@@ -539,7 +618,7 @@ Mupen_lua_ugui = {
                     border_color = {
                         r = 0,
                         g = 84,
-                        b = 153
+                        b = 153,
                     }
                 elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
                     back_color = {
@@ -584,7 +663,7 @@ Mupen_lua_ugui = {
                                 Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
                                     "MS Sans Serif")
                                 .width,
-                            height = control.rectangle.height
+                            height = control.rectangle.height,
                         },
                         BreitbandGraphics.hex_to_color("#0078D7"))
                 end
@@ -594,7 +673,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                         height = control.rectangle.height,
-                    }, 'start', 'start', {}, text_color, 12,
+                    }, "start", "start", {}, text_color, 12,
                     "MS Sans Serif", control.text)
 
                 if should_visualize_selection then
@@ -642,17 +721,17 @@ Mupen_lua_ugui = {
                 if visual_state == Mupen_lua_ugui.visual_states.active and math.floor(os.clock() * 2) % 2 == 0 and not should_visualize_selection then
                     Mupen_lua_ugui.renderer.draw_line({
                         x = control.rectangle.x + caret_x,
-                        y = control.rectangle.y + 2
+                        y = control.rectangle.y + 2,
                     }, {
                         x = control.rectangle.x + caret_x,
                         y = control.rectangle.y +
                             math.max(15,
                                 Mupen_lua_ugui.renderer.get_text_size(string_to_caret, 12, "MS Sans Serif")
-                                .height) -- TODO: move text measurement into BreitbandGraphics
+                                .height), -- TODO: move text measurement into BreitbandGraphics
                     }, {
                         r = 0,
                         g = 0,
-                        b = 0
+                        b = 0,
                     }, 1)
                 end
             end,
@@ -662,39 +741,39 @@ Mupen_lua_ugui = {
                 local back_color = {
                     r = 255,
                     g = 255,
-                    b = 255
+                    b = 255,
                 }
                 local outline_color = {
                     r = 0,
                     g = 0,
-                    b = 0
+                    b = 0,
                 }
                 local tip_color = {
                     r = 255,
                     g = 0,
-                    b = 0
+                    b = 0,
                 }
                 local line_color = {
                     r = 0,
                     g = 0,
-                    b = 255
+                    b = 255,
                 }
 
                 if visual_state == Mupen_lua_ugui.visual_states.disabled then
                     outline_color = {
                         r = 191,
                         g = 191,
-                        b = 191
+                        b = 191,
                     }
                     tip_color = {
                         r = 255,
                         g = 128,
-                        b = 128
+                        b = 128,
                     }
                     line_color = {
                         r = 128,
                         g = 128,
-                        b = 255
+                        b = 255,
                     }
                 end
 
@@ -702,7 +781,7 @@ Mupen_lua_ugui = {
                     x = remap(control.position.x, 0, 1, control.rectangle.x,
                         control.rectangle.x + control.rectangle.width),
                     y = remap(control.position.y, 0, 1, control.rectangle.y,
-                        control.rectangle.y + control.rectangle.height)
+                        control.rectangle.y + control.rectangle.height),
                 }
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
                 Mupen_lua_ugui.renderer.fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
@@ -714,7 +793,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                 }, {
                     x = control.rectangle.x + control.rectangle.width / 2,
-                    y = control.rectangle.y + control.rectangle.height
+                    y = control.rectangle.y + control.rectangle.height,
                 }, outline_color, 1)
                 Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x,
@@ -745,17 +824,17 @@ Mupen_lua_ugui = {
                 local track_color = {
                     r = 231,
                     g = 234,
-                    b = 234
+                    b = 234,
                 }
                 local track_border_color = {
                     r = 214,
                     g = 214,
-                    b = 214
+                    b = 214,
                 }
                 local head_color = {
                     r = 0,
                     g = 122,
-                    b = 217
+                    b = 217,
                 }
 
                 if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
@@ -796,26 +875,26 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x + control.rectangle.width / 2 - TRACK_THICKNESS / 2,
                         y = control.rectangle.y,
                         width = TRACK_THICKNESS,
-                        height = control.rectangle.height
+                        height = control.rectangle.height,
                     }
                     head_rectangle = {
                         x = control.rectangle.x + control.rectangle.width / 2 - HEAD_HEIGHT / 2,
                         y = control.rectangle.y + (control.value * control.rectangle.height) - HEAD_WIDTH / 2,
                         width = HEAD_HEIGHT,
-                        height = HEAD_WIDTH
+                        height = HEAD_WIDTH,
                     }
                 else
                     track_rectangle = {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height / 2 - TRACK_THICKNESS / 2,
                         width = control.rectangle.width,
-                        height = TRACK_THICKNESS
+                        height = TRACK_THICKNESS,
                     }
                     head_rectangle = {
                         x = control.rectangle.x + (control.value * control.rectangle.width) - HEAD_WIDTH / 2,
                         y = control.rectangle.y + control.rectangle.height / 2 - HEAD_HEIGHT / 2,
                         width = HEAD_WIDTH,
-                        height = HEAD_HEIGHT
+                        height = HEAD_HEIGHT,
                     }
                 end
 
@@ -851,7 +930,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, 'start', 'center', {}, text_color, 12, "MS Sans Serif",
+                    }, "start", "center", {}, text_color, 12, "MS Sans Serif",
                     control.items[control.selected_index])
 
                 Mupen_lua_ugui.renderer.draw_text({
@@ -859,7 +938,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 4,
                         height = control.rectangle.height,
-                    }, 'end', 'center', {}, text_color, 12, "Segoe UI Mono",
+                    }, "end", "center", {}, text_color, 12, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
@@ -867,11 +946,11 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
                         width = control.rectangle.width,
-                        height = #control.items * 20
+                        height = #control.items * 20,
                     }, 1), {
                         r = 0,
                         g = 120,
-                        b = 215
+                        b = 215,
                     })
 
                     for i = 1, #control.items, 1 do
@@ -879,36 +958,36 @@ Mupen_lua_ugui = {
                             x = control.rectangle.x,
                             y = control.rectangle.y + control.rectangle.height + (20 * (i - 1)),
                             width = control.rectangle.width,
-                            height = 20
+                            height = 20,
                         }
 
                         local back_color = {
                             r = 255,
                             g = 255,
-                            b = 255
+                            b = 255,
                         }
                         local text_color = {
                             r = 0,
                             g = 0,
-                            b = 0
+                            b = 0,
                         }
 
                         if Mupen_lua_ugui.control_data[control.uid].hovered_index == i then
                             back_color = {
                                 r = 0,
                                 g = 120,
-                                b = 215
+                                b = 215,
                             }
                             text_color = {
                                 r = 255,
                                 g = 255,
-                                b = 255
+                                b = 255,
                             }
                         end
 
                         Mupen_lua_ugui.renderer.fill_rectangle(rect, back_color)
                         rect.x = rect.x + 2
-                        Mupen_lua_ugui.renderer.draw_text(rect, 'start', 'center', {}, text_color, 12,
+                        Mupen_lua_ugui.renderer.draw_text(rect, "start", "center", {}, text_color, 12,
                             "MS Sans Serif",
                             control.items[i])
                     end
@@ -919,12 +998,12 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, 1), {
                     r = 130,
                     g = 135,
-                    b = 144
+                    b = 144,
                 })
                 Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle, {
                     r = 255,
                     g = 255,
-                    b = 255
+                    b = 255,
                 })
 
                 local visual_state = Mupen_lua_ugui.get_visual_state(control)
@@ -960,7 +1039,7 @@ Mupen_lua_ugui = {
                         local accent_color = {
                             r = 0,
                             g = 120,
-                            b = 215
+                            b = 215,
                         }
 
                         if visual_state == Mupen_lua_ugui.visual_states.disabled then
@@ -976,13 +1055,13 @@ Mupen_lua_ugui = {
                             x = control.rectangle.x,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
-                            height = 20
+                            height = 20,
                         }, accent_color)
 
                         text_color = {
                             r = 255,
                             g = 255,
-                            b = 255
+                            b = 255,
                         }
                     end
 
@@ -999,8 +1078,8 @@ Mupen_lua_ugui = {
                             x = control.rectangle.x + 2,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
-                            height = 20
-                        }, 'start', 'center', {}, text_color, 12, "MS Sans Serif",
+                            height = 20,
+                        }, "start", "center", {}, text_color, 12, "MS Sans Serif",
                         control.items[i])
                 end
 
@@ -1018,27 +1097,27 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x + control.rectangle.width - 10,
                         y = control.rectangle.y,
                         width = 10,
-                        height = control.rectangle.height
+                        height = control.rectangle.height,
                     }, {
                         r = 240,
                         g = 240,
-                        b = 240
+                        b = 240,
                     })
 
                     Mupen_lua_ugui.renderer.fill_rectangle({
                         x = control.rectangle.x + control.rectangle.width - 10,
                         y = control.rectangle.y + scrollbar_y,
                         width = 10,
-                        height = scrollbar_height
+                        height = scrollbar_height,
                     }, {
                         r = 204,
                         g = 204,
-                        b = 204
+                        b = 204,
                     })
                 end
 
                 Mupen_lua_ugui.renderer.pop_clip()
-            end
+            end,
         },
     },
 
@@ -1322,7 +1401,7 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
                         width = control.rectangle.width,
-                        height = 20 * #control.items
+                        height = 20 * #control.items,
                     }) then
                     Mupen_lua_ugui.control_data[control.uid].is_open = false
                 end
@@ -1337,7 +1416,7 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height + (20 * (i - 1)),
                         width = control.rectangle.width,
-                        height = 20
+                        height = 20,
                     }) then
                     if is_pointer_just_down() then
                         selected_index = i
@@ -1357,7 +1436,7 @@ Mupen_lua_ugui = {
                 x = control.rectangle.x,
                 y = control.rectangle.y + control.rectangle.height,
                 width = control.rectangle.width,
-                height = 20 * #control.items
+                height = 20 * #control.items,
             }
         end
         selected_index = clamp(selected_index, 1, #control.items)
@@ -1425,5 +1504,5 @@ Mupen_lua_ugui = {
         Mupen_lua_ugui.styler.draw_listbox(control)
 
         return selected_index
-    end
+    end,
 }

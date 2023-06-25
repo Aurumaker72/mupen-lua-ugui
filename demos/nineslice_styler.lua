@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\nineslice_styler.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\nineslice_styler.lua") .. "mupen-lua-ugui.lua")
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
@@ -38,7 +38,7 @@ local function parse_ustyles(path)
             x = tonumber(line[1]),
             y = tonumber(line[2]),
             width = tonumber(line[3]),
-            height = tonumber(line[4])
+            height = tonumber(line[4]),
         }
     end
 
@@ -277,11 +277,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
     Mupen_lua_ugui.joystick({
         uid = 0,
@@ -294,8 +294,8 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0.5,
-            y = 0.5
-        }
+            y = 0.5,
+        },
     })
     Mupen_lua_ugui.joystick({
         uid = 1,
@@ -308,8 +308,8 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0.5,
-            y = 0.5
-        }
+            y = 0.5,
+        },
     })
 
     style_index = Mupen_lua_ugui.combobox({

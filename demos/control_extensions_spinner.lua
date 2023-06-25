@@ -3,7 +3,7 @@ function folder(thisFileName)
     return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
 end
 
-dofile(folder('demos\\control_extensions_spinner.lua') .. 'mupen-lua-ugui.lua')
+dofile(folder("demos\\control_extensions_spinner.lua") .. "mupen-lua-ugui.lua")
 
 
 Mupen_lua_ugui.spinner = function(control)
@@ -22,7 +22,7 @@ Mupen_lua_ugui.spinner = function(control)
             width = control.rectangle.width - width * 2,
             height = control.rectangle.height,
         },
-        text = tostring(value)
+        text = tostring(value),
     })
 
     if tonumber(new_text) then
@@ -39,7 +39,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width,
                     height = control.rectangle.height,
                 },
-                text = "-"
+                text = "-",
             }))
         then
             value = value - 1
@@ -54,7 +54,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width,
                     height = control.rectangle.height,
                 },
-                text = "+"
+                text = "+",
             }))
         then
             value = value + 1
@@ -69,7 +69,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width * 2,
                     height = control.rectangle.height / 2,
                 },
-                text = "+"
+                text = "+",
             }))
         then
             value = value + 1
@@ -84,7 +84,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width * 2,
                     height = control.rectangle.height / 2,
                 },
-                text = "-"
+                text = "-",
             }))
         then
             value = value - 1
@@ -103,11 +103,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -118,11 +118,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
     some_number = Mupen_lua_ugui.spinner({
@@ -150,7 +150,7 @@ emu.atupdatescreen(function()
             height = 30,
         },
         is_checked = is_toggled,
-        text = "horizontal"
+        text = "horizontal",
     })
 
     Mupen_lua_ugui.end_frame()
