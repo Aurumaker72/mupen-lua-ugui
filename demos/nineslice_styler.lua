@@ -36,15 +36,64 @@ function parse_slices(path)
     end
 
     function fill_structure(structure, index)
-        structure.top_left = rectangle_from_line(lines[index])
-        structure.top_right = rectangle_from_line(lines[index + 1])
-        structure.bottom_left = rectangle_from_line(lines[index + 2])
-        structure.bottom_right = rectangle_from_line(lines[index + 3])
-        structure.center = rectangle_from_line(lines[index + 4])
-        structure.top = rectangle_from_line(lines[index + 5])
-        structure.left = rectangle_from_line(lines[index + 6])
-        structure.right = rectangle_from_line(lines[index + 7])
-        structure.bottom = rectangle_from_line(lines[index + 8])
+        local bounds = rectangle_from_line(lines[index])
+        local center = rectangle_from_line(lines[index + 1])
+
+        structure.center = center
+
+        local corner_size = {
+            x = math.abs(center.x - bounds.x),
+            y = math.abs(center.y - bounds.y)
+        }
+        structure.top_left = {
+            x = bounds.x,
+            y = bounds.y,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.bottom_left = {
+            x = bounds.x,
+            y = center.y + center.height,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.left = {
+            x = bounds.x,
+            y = center.y,
+            width = corner_size.x,
+            height = bounds.height - corner_size.y * 2,
+        }
+        structure.top_right = {
+            x = bounds.x + bounds.width - corner_size.x,
+            y = bounds.y,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.bottom_right = {
+            x = bounds.x + bounds.width - corner_size.x,
+            y = center.y + center.height,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.top = {
+            x = center.x,
+            y = bounds.y,
+            width = bounds.width - corner_size.x * 2,
+            height = corner_size.y,
+        }
+
+        structure.right = {
+            x = bounds.x + bounds.width - corner_size.x,
+            y = center.y,
+            width = corner_size.x,
+            height = bounds.height - corner_size.y * 2,
+        }
+        structure.bottom = {
+            x = center.x,
+            y = bounds.y + bounds.height - corner_size.y,
+            width = bounds.width - corner_size.x * 2,
+            height = corner_size.y,
+        }
     end
 
     local rectangles = {
@@ -55,9 +104,9 @@ function parse_slices(path)
     }
 
     fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 2)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 13)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 24)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 35)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 6)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 10)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 14)
 
     return rectangles
 end
