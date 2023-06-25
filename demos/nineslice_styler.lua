@@ -9,10 +9,10 @@ local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
 local styles = {
-    "windows-10",
     "windows-11",
+    "windows-10",
     "windows-aero",
-    "windows-xp",
+    "react-os",
 }
 local style_index = 1
 local section_name_path = ''
@@ -118,10 +118,10 @@ local function parse_ustyles(path)
         [Mupen_lua_ugui.visual_states.disabled] = {},
     }
 
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 4)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 8)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 12)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 16)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 6)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 11)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 16)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 21)
 
     local background_color = color_from_line(lines[1])
     return {
@@ -253,7 +253,7 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
     end
 end
 
-
+local trackbar_value = 0
 emu.atupdatescreen(function()
     section_name_path = folder('nineslice_styler.lua') .. 'res\\' .. styles[style_index]
 
@@ -338,7 +338,28 @@ emu.atupdatescreen(function()
         },
         text = "Hello World!"
     })
-
+    Mupen_lua_ugui.button({
+        uid = 4,
+        is_enabled = false,
+        rectangle = {
+            x = initial_size.width + 110,
+            y = 130,
+            width = 80,
+            height = 30,
+        },
+        text = "Hello World!"
+    })
+    trackbar_value = Mupen_lua_ugui.trackbar({
+        uid = 5,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 400,
+            width = 100,
+            height = 20,
+        },
+        value = trackbar_value
+    })
 
 
     Mupen_lua_ugui.end_frame()

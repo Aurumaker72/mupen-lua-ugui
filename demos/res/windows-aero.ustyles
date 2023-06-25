@@ -1,17 +1,23 @@
 249 249 249 background color
 
+button
+
 normal
 1 1 11 21 bounds
 4 4 5 15 center
+0 0 0 text color
 
 hover
 1 24 11 21 bounds
 4 27 5 15 center
+0 0 0 text color
 
 active
 1 47 11 21 bounds
 4 50 5 15 center
+0 0 0 text color
 
 disabled
 1 70 11 21 bounds
 4 73 5 15 center
+160 160 160 text color
