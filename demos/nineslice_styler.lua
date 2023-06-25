@@ -8,12 +8,19 @@ dofile(folder("demos\\nineslice_styler.lua") .. "mupen-lua-ugui.lua")
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
-local section_name_path = folder("nineslice_styler.lua") .. "res\\windows-10"
+local styles = {
+    "windows-10",
+    "windows-11",
+    "windows-aero",
+    "windows-xp",
+}
+local style_index = 1
+local section_name_path = ''
 
-local slice_cache = {}
+local ustyles = {}
 local control_transitions = {}
 
-function parse_slices(path)
+local function parse_ustyles(path)
     local file = io.open(path, "rb")
     local lines = {}
     for line in io.lines(path) do
@@ -35,16 +42,73 @@ function parse_slices(path)
         }
     end
 
+    function color_from_line(line)
+        return {
+            r = tonumber(line[1]),
+            g = tonumber(line[2]),
+            b = tonumber(line[3]),
+        }
+    end
+
     function fill_structure(structure, index)
-        structure.top_left = rectangle_from_line(lines[index])
-        structure.top_right = rectangle_from_line(lines[index + 1])
-        structure.bottom_left = rectangle_from_line(lines[index + 2])
-        structure.bottom_right = rectangle_from_line(lines[index + 3])
-        structure.center = rectangle_from_line(lines[index + 4])
-        structure.top = rectangle_from_line(lines[index + 5])
-        structure.left = rectangle_from_line(lines[index + 6])
-        structure.right = rectangle_from_line(lines[index + 7])
-        structure.bottom = rectangle_from_line(lines[index + 8])
+        local bounds = rectangle_from_line(lines[index])
+        local center = rectangle_from_line(lines[index + 1])
+
+        structure.center = center
+
+        local corner_size = {
+            x = math.abs(center.x - bounds.x),
+            y = math.abs(center.y - bounds.y)
+        }
+        structure.top_left = {
+            x = bounds.x,
+            y = bounds.y,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.bottom_left = {
+            x = bounds.x,
+            y = center.y + center.height,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.left = {
+            x = bounds.x,
+            y = center.y,
+            width = corner_size.x,
+            height = bounds.height - corner_size.y * 2,
+        }
+        structure.top_right = {
+            x = bounds.x + bounds.width - corner_size.x,
+            y = bounds.y,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.bottom_right = {
+            x = bounds.x + bounds.width - corner_size.x,
+            y = center.y + center.height,
+            width = corner_size.x,
+            height = corner_size.y,
+        }
+        structure.top = {
+            x = center.x,
+            y = bounds.y,
+            width = bounds.width - corner_size.x * 2,
+            height = corner_size.y,
+        }
+
+        structure.right = {
+            x = bounds.x + bounds.width - corner_size.x,
+            y = center.y,
+            width = corner_size.x,
+            height = bounds.height - corner_size.y * 2,
+        }
+        structure.bottom = {
+            x = center.x,
+            y = bounds.y + bounds.height - corner_size.y,
+            width = bounds.width - corner_size.x * 2,
+            height = corner_size.y,
+        }
     end
 
     local rectangles = {
@@ -54,19 +118,19 @@ function parse_slices(path)
         [Mupen_lua_ugui.visual_states.disabled] = {},
     }
 
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 2)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 13)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 24)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 35)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 4)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 8)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 12)
+    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 16)
 
-    return rectangles
+    local background_color = color_from_line(lines[1])
+    return {
+        background_color = background_color,
+        rectangles = rectangles
+    }
 end
 
 local function move_color_towards(color, target)
-    -- if (math.abs(target.r - color.r) + math.abs(target.g - color.g) + math.abs(target.b - color.b)) / 3 < 5 then
-    --     return target
-    -- end
-
     return {
         r = math.floor(color.r + (target.r - color.r) * 0.25),
         g = math.floor(color.g + (target.g - color.g) * 0.25),
@@ -75,88 +139,78 @@ local function move_color_towards(color, target)
     }
 end
 
+local function get_ustyle_path()
+    return section_name_path .. ".ustyles"
+end
+
+local function draw_nineslice(identifier, slices, opacity, rectangle)
+    if opacity == 0 then
+        return
+    end
+    local color = {
+        r = 255,
+        g = 255,
+        b = 255,
+        a = opacity
+    }
+
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x,
+        y = rectangle.y,
+        width = slices.top_left.width,
+        height = slices.top_left.height
+    }, slices.top_left, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x + rectangle.width - slices.top_right.width,
+        y = rectangle.y,
+        width = slices.top_right.width,
+        height = slices.top_right.height
+    }, slices.top_right, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x,
+        y = rectangle.y + rectangle.height - slices.bottom_left.height,
+        width = slices.bottom_left.width,
+        height = slices.bottom_left.height
+    }, slices.bottom_left, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x + rectangle.width - slices.bottom_right.width,
+        y = rectangle.y + rectangle.height - slices.bottom_right.height,
+        width = slices.bottom_right.width,
+        height = slices.bottom_right.height
+    }, slices.bottom_right, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x + slices.top_left.width,
+        y = rectangle.y + slices.top_left.height,
+        width = rectangle.width - slices.bottom_right.width * 2,
+        height = rectangle.height - slices.bottom_right.height * 2
+    }, slices.center, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x,
+        y = rectangle.y + slices.top_left.height,
+        width = slices.left.width,
+        height = rectangle.height - slices.bottom_left.height * 2
+    }, slices.left, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x + rectangle.width - slices.top_right.width,
+        y = rectangle.y + slices.top_right.height,
+        width = slices.left.width,
+        height = rectangle.height - slices.bottom_right.height * 2
+    }, slices.right, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x + slices.top_left.width,
+        y = rectangle.y,
+        width = rectangle.width - slices.top_right.width * 2,
+        height = slices.top.height
+    }, slices.top, identifier, color)
+    BreitbandGraphics.renderers.d2d.draw_image({
+        x = rectangle.x + slices.top_left.width,
+        y = rectangle.y + rectangle.height - slices.bottom.height,
+        width = rectangle.width - slices.bottom_right.width * 2,
+        height = slices.bottom.height
+    }, slices.bottom, identifier, color)
+end
 
 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
-    local atlas_path = section_name_path .. ".png"
-    local slices_path = section_name_path .. ".txt"
-
-    if not slice_cache[slices_path] then
-        print("Creating slice cache...")
-        slice_cache[slices_path] = parse_slices(slices_path)
-    end
-
-    function draw_nineslice(result, opacity)
-        if opacity == 0 then
-            return
-        end
-        local color = {
-            r = 255,
-            g = 255,
-            b = 255,
-            a = opacity,
-        }
-
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x,
-            y = control.rectangle.y,
-            width = result.top_left.width,
-            height = result.top_left.height,
-        }, result.top_left, atlas_path, color)
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x + control.rectangle.width - result.top_right.width,
-            y = control.rectangle.y,
-            width = result.top_right.width,
-            height = result.top_right.height,
-        }, result.top_right, atlas_path, color)
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x,
-            y = control.rectangle.y + control.rectangle.height - result.bottom_left.height,
-            width = result.bottom_left.width,
-            height = result.bottom_left.height,
-        }, result.bottom_left, atlas_path, color)
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x + control.rectangle.width - result.bottom_right.width,
-            y = control.rectangle.y + control.rectangle.height - result.bottom_right.height,
-            width = result.bottom_right.width,
-            height = result.bottom_right.height,
-        }, result.bottom_right, atlas_path, color)
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x + result.top_left.width,
-            y = control.rectangle.y + result.top_left.height,
-            width = control.rectangle.width - result.bottom_right.width * 2,
-            height = control.rectangle.height - result.bottom_right.height * 2,
-        }, result.center, atlas_path, color)
-
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x,
-            y = control.rectangle.y + result.top_left.height,
-            width = result.left.width,
-            height = control.rectangle.height - result.bottom_left.height * 2,
-        }, result.left, atlas_path, color)
-
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x + control.rectangle.width - result.top_right.width,
-            y = control.rectangle.y + result.top_right.height,
-            width = result.left.width,
-            height = control.rectangle.height - result.bottom_right.height * 2,
-        }, result.right, atlas_path, color)
-
-
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x + result.top_left.width,
-            y = control.rectangle.y,
-            width = control.rectangle.width - result.top_right.width * 2,
-            height = result.top.height,
-        }, result.top, atlas_path, color)
-
-        BreitbandGraphics.renderers.d2d.draw_image({
-            x = control.rectangle.x + result.top_left.width,
-            y = control.rectangle.y + control.rectangle.height - result.bottom.height,
-            width = control.rectangle.width - result.bottom_right.width * 2,
-            height = result.bottom.height,
-        }, result.bottom, atlas_path, color)
-    end
-
     local opaque = {
         r = 255,
         g = 255,
@@ -193,24 +247,27 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
         control_transitions[control.uid][visual_state], opaque)
 
 
-    for key, value in pairs(control_transitions[control.uid]) do
-        draw_nineslice(slice_cache[slices_path][key],
-            control_transitions[control.uid][key].a)
+    for key, _ in pairs(control_transitions[control.uid]) do
+        draw_nineslice(section_name_path .. ".png", ustyles[get_ustyle_path()].rectangles[key],
+            control_transitions[control.uid][key].a, control.rectangle)
     end
 end
 
 
 emu.atupdatescreen(function()
+    section_name_path = folder('nineslice_styler.lua') .. 'res\\' .. styles[style_index]
+
+    if not ustyles[get_ustyle_path()] then
+        print("Parsing ustyles...")
+        ustyles[get_ustyle_path()] = parse_ustyles(get_ustyle_path())
+    end
+
     BreitbandGraphics.renderers.d2d.fill_rectangle({
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height,
-    }, {
-        r = 253,
-        g = 253,
-        b = 253,
-    })
+        height = initial_size.height
+    }, ustyles[get_ustyle_path()].background_color)
 
     local keys = input.get()
 
@@ -255,47 +312,32 @@ emu.atupdatescreen(function()
         },
     })
 
-    if Mupen_lua_ugui.button({
-            uid = 2,
-            is_enabled = true,
-            rectangle = {
-                x = initial_size.width + 10,
-                y = 50,
-                width = 90,
-                height = 30,
-            },
-            text = "Windows 10",
-        }) then
-        section_name_path = folder("nineslice_styler.lua") .. "res\\windows-10"
-    end
+    style_index = Mupen_lua_ugui.combobox({
+        uid = 2,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 50,
+            width = 120,
+            height = 30,
+        },
+        items = styles,
+        selected_index = style_index
+    })
 
-    if Mupen_lua_ugui.button({
-            uid = 3,
-            is_enabled = true,
-            rectangle = {
-                x = initial_size.width + 10,
-                y = 90,
-                width = 90,
-                height = 30,
-            },
-            text = "Windows 11",
-        }) then
-        section_name_path = folder("nineslice_styler.lua") .. "res\\windows-11"
-    end
 
-    if Mupen_lua_ugui.button({
-            uid = 4,
-            is_enabled = true,
-            rectangle = {
-                x = initial_size.width + 10,
-                y = 130,
-                width = 90,
-                height = 30,
-            },
-            text = "Windows 7",
-        }) then
-        section_name_path = folder("nineslice_styler.lua") .. "res\\windows-aero"
-    end
+
+    Mupen_lua_ugui.button({
+        uid = 3,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 130,
+            width = 90,
+            height = 30,
+        },
+        text = "Hello World!"
+    })
 
 
 

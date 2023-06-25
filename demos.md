@@ -16,10 +16,11 @@ A customizable memory watch list with CRUD functionality
 Shows how to implement page-based navigation
 
 # [nineslice_styler.lua](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos/nineslice_styler.lua)
-Shows how to implement an advanced custom styler with support for parameterized nineslicing
+Shows how to implement an advanced custom styler with your own control images
 
-# Cool stuff
+# Media
 
-### The nine-slice styler demo
-https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/1c403e8a-4806-4b68-ac18-0e8cccbcb035
+
+https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/a979a2e3-dd5a-49ce-827c-7b5ae8d399eb
+
 

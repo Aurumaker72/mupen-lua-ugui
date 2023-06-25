@@ -1,3 +1,5 @@
+-- mupen-lua-ugui 1.0.0
+
 if not wgui.fill_rectangle then
     print("BreitbandGraphics requires a Mupen64-rr-lua version newer than 1.1.2\r\n")
 end
@@ -337,8 +339,24 @@ BreitbandGraphics = {
                 BreitbandGraphics.renderers.d2d.fill_ellipse(rectangle,
                     BreitbandGraphics.renderers.compat.any_to_color(BreitbandGraphics.renderers.compat.brush))
             end,
-        },
-    },
+            loadimage = function(path)
+                return path
+            end,
+            drawimage = function(identifier, x, y, width, height)
+                BreitbandGraphics.renderers.d2d.draw_image({
+                    x = x,
+                    y = y,
+                    width = width,
+                    height = height,
+                }, {
+                    x = 0,
+                    y = 0,
+                    width = 999999,
+                    height = 999999,
+                }, identifier, BreitbandGraphics.colors.white)
+            end,
+        }
+    }
 }
 
 -- reverse polyfill old gdi functions
@@ -350,6 +368,8 @@ wgui.setfont = BreitbandGraphics.renderers.compat.setfont
 wgui.text = BreitbandGraphics.renderers.compat.text
 wgui.line = BreitbandGraphics.renderers.compat.line
 wgui.ellipse = BreitbandGraphics.renderers.compat.ellipse
+wgui.loadimage = BreitbandGraphics.renderers.compat.loadimage
+wgui.drawimage = BreitbandGraphics.renderers.compat.drawimage
 
 -- https://stackoverflow.com/a/26367080/14472122
 local function deep_clone(obj, seen)
@@ -666,19 +686,31 @@ Mupen_lua_ugui = {
 
                     local string_to_selection_start = control.text:sub(1,
                         lower - 1)
+                    local string_to_selection_end = control.text:sub(1,
+                        higher - 1)
 
                     local selection_start_x = control.rectangle.x +
                         Mupen_lua_ugui.renderer.get_text_size(string_to_selection_start, 12,
                             "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
 
+                    local selection_end_x = control.rectangle.x +
+                        Mupen_lua_ugui.renderer.get_text_size(string_to_selection_end, 12,
+                            "MS Sans Serif").width + Mupen_lua_ugui.stylers.windows_10.textbox_padding
+
+                    Mupen_lua_ugui.renderer.push_clip({
+                        x = selection_start_x,
+                        y = control.rectangle.y,
+                        width = selection_end_x - selection_start_x,
+                        height = control.rectangle.height
+                    })
                     Mupen_lua_ugui.renderer.draw_text({
-                            x = selection_start_x,
+                            x = control.rectangle.x + Mupen_lua_ugui.stylers.windows_10.textbox_padding,
                             y = control.rectangle.y,
                             width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                             height = control.rectangle.height,
-                        }, "start", "start", {}, BreitbandGraphics.colors.white, 12,
-                        "MS Sans Serif", control.text:sub(lower,
-                            higher - 1))
+                        }, 'start', 'start', {}, BreitbandGraphics.colors.white, 12,
+                        "MS Sans Serif", control.text)
+                    Mupen_lua_ugui.renderer.pop_clip()
                 end
 
 
@@ -752,8 +784,10 @@ Mupen_lua_ugui = {
                         control.rectangle.y + control.rectangle.height),
                 }
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
-                Mupen_lua_ugui.renderer.fill_ellipse(control.rectangle, back_color)
-                Mupen_lua_ugui.renderer.draw_ellipse(control.rectangle, outline_color, 1)
+                Mupen_lua_ugui.renderer.fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    back_color)
+                Mupen_lua_ugui.renderer.draw_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    outline_color, 1)
                 Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y,
@@ -892,7 +926,7 @@ Mupen_lua_ugui = {
                     }
                 end
                 Mupen_lua_ugui.renderer.draw_text({
-                        x = control.rectangle.x + 2,
+                        x = control.rectangle.x + Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
@@ -902,7 +936,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.draw_text({
                         x = control.rectangle.x,
                         y = control.rectangle.y,
-                        width = control.rectangle.width - 8,
+                        width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 4,
                         height = control.rectangle.height,
                     }, "end", "center", {}, text_color, 12, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
