@@ -1,3 +1,5 @@
+-- mupen-lua-ugui 1.0.0
+
 if not wgui.fill_rectangle then
     print("BreitbandGraphics requires a Mupen64-rr-lua version newer than 1.1.2\r\n")
 end
