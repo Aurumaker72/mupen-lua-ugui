@@ -1,6 +1,6 @@
 function folder(thisFileName)
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
+    local str = debug.getinfo(2, 'S').source:sub(2)
+    return (str:match('^.*/(.*).lua$') or str):sub(1, -(thisFileName):len() - 1)
 end
 
 dofile(folder('demos\\nineslice_styler.lua') .. 'mupen-lua-ugui.lua')
@@ -9,10 +9,10 @@ local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
 local styles = {
-    "windows-11",
-    "windows-10",
-    "windows-aero",
-    "react-os",
+    'windows-11',
+    'windows-10',
+    'windows-aero',
+    'react-os',
 }
 local style_index = 1
 local section_name_path = ''
@@ -21,11 +21,11 @@ local ustyles = {}
 local control_transitions = {}
 
 local function parse_ustyles(path)
-    local file = io.open(path, "rb")
+    local file = io.open(path, 'rb')
     local lines = {}
     for line in io.lines(path) do
         local words = {}
-        for word in line:gmatch("%w+") do
+        for word in line:gmatch('%w+') do
             table.insert(words, word)
         end
         table.insert(lines, words)
@@ -38,7 +38,7 @@ local function parse_ustyles(path)
             x = tonumber(line[1]),
             y = tonumber(line[2]),
             width = tonumber(line[3]),
-            height = tonumber(line[4])
+            height = tonumber(line[4]),
         }
     end
 
@@ -58,7 +58,7 @@ local function parse_ustyles(path)
 
         local corner_size = {
             x = math.abs(center.x - bounds.x),
-            y = math.abs(center.y - bounds.y)
+            y = math.abs(center.y - bounds.y),
         }
         structure.top_left = {
             x = bounds.x,
@@ -126,7 +126,7 @@ local function parse_ustyles(path)
     local background_color = color_from_line(lines[1])
     return {
         background_color = background_color,
-        rectangles = rectangles
+        rectangles = rectangles,
     }
 end
 
@@ -140,7 +140,7 @@ local function move_color_towards(color, target)
 end
 
 local function get_ustyle_path()
-    return section_name_path .. ".ustyles"
+    return section_name_path .. '.ustyles'
 end
 
 local function draw_nineslice(identifier, slices, opacity, rectangle)
@@ -151,62 +151,62 @@ local function draw_nineslice(identifier, slices, opacity, rectangle)
         r = 255,
         g = 255,
         b = 255,
-        a = opacity
+        a = opacity,
     }
 
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x,
         y = rectangle.y,
         width = slices.top_left.width,
-        height = slices.top_left.height
+        height = slices.top_left.height,
     }, slices.top_left, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x + rectangle.width - slices.top_right.width,
         y = rectangle.y,
         width = slices.top_right.width,
-        height = slices.top_right.height
+        height = slices.top_right.height,
     }, slices.top_right, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x,
         y = rectangle.y + rectangle.height - slices.bottom_left.height,
         width = slices.bottom_left.width,
-        height = slices.bottom_left.height
+        height = slices.bottom_left.height,
     }, slices.bottom_left, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x + rectangle.width - slices.bottom_right.width,
         y = rectangle.y + rectangle.height - slices.bottom_right.height,
         width = slices.bottom_right.width,
-        height = slices.bottom_right.height
+        height = slices.bottom_right.height,
     }, slices.bottom_right, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x + slices.top_left.width,
         y = rectangle.y + slices.top_left.height,
         width = rectangle.width - slices.bottom_right.width * 2,
-        height = rectangle.height - slices.bottom_right.height * 2
+        height = rectangle.height - slices.bottom_right.height * 2,
     }, slices.center, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x,
         y = rectangle.y + slices.top_left.height,
         width = slices.left.width,
-        height = rectangle.height - slices.bottom_left.height * 2
+        height = rectangle.height - slices.bottom_left.height * 2,
     }, slices.left, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x + rectangle.width - slices.top_right.width,
         y = rectangle.y + slices.top_right.height,
         width = slices.left.width,
-        height = rectangle.height - slices.bottom_right.height * 2
+        height = rectangle.height - slices.bottom_right.height * 2,
     }, slices.right, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x + slices.top_left.width,
         y = rectangle.y,
         width = rectangle.width - slices.top_right.width * 2,
-        height = slices.top.height
+        height = slices.top.height,
     }, slices.top, identifier, color)
     BreitbandGraphics.renderers.d2d.draw_image({
         x = rectangle.x + slices.top_left.width,
         y = rectangle.y + rectangle.height - slices.bottom.height,
         width = rectangle.width - slices.bottom_right.width * 2,
-        height = slices.bottom.height
+        height = slices.bottom.height,
     }, slices.bottom, identifier, color)
 end
 
@@ -248,7 +248,7 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
 
 
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. ".png", ustyles[get_ustyle_path()].rectangles[key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].rectangles[key],
             control_transitions[control.uid][key].a, control.rectangle)
     end
 end
@@ -258,7 +258,7 @@ emu.atupdatescreen(function()
     section_name_path = folder('nineslice_styler.lua') .. 'res\\' .. styles[style_index]
 
     if not ustyles[get_ustyle_path()] then
-        print("Parsing ustyles...")
+        print('Parsing ustyles...')
         ustyles[get_ustyle_path()] = parse_ustyles(get_ustyle_path())
     end
 
@@ -266,7 +266,7 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, ustyles[get_ustyle_path()].background_color)
 
     local keys = input.get()
@@ -277,11 +277,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
     Mupen_lua_ugui.joystick({
         uid = 0,
@@ -294,8 +294,8 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0.5,
-            y = 0.5
-        }
+            y = 0.5,
+        },
     })
     Mupen_lua_ugui.joystick({
         uid = 1,
@@ -308,8 +308,8 @@ emu.atupdatescreen(function()
         },
         position = {
             x = 0.5,
-            y = 0.5
-        }
+            y = 0.5,
+        },
     })
 
     style_index = Mupen_lua_ugui.combobox({
@@ -322,7 +322,7 @@ emu.atupdatescreen(function()
             height = 30,
         },
         items = styles,
-        selected_index = style_index
+        selected_index = style_index,
     })
 
 
@@ -336,7 +336,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        text = "Hello World!"
+        text = 'Hello World!',
     })
     Mupen_lua_ugui.button({
         uid = 4,
@@ -347,7 +347,7 @@ emu.atupdatescreen(function()
             width = 80,
             height = 30,
         },
-        text = "Hello World!"
+        text = 'Hello World!',
     })
     trackbar_value = Mupen_lua_ugui.trackbar({
         uid = 5,
@@ -358,7 +358,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 20,
         },
-        value = trackbar_value
+        value = trackbar_value,
     })
 
 

@@ -1,6 +1,6 @@
 function folder(thisFileName)
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
+    local str = debug.getinfo(2, 'S').source:sub(2)
+    return (str:match('^.*/(.*).lua$') or str):sub(1, -(thisFileName):len() - 1)
 end
 
 dofile(folder('demos\\stress_test.lua') .. 'mupen-lua-ugui.lua')
@@ -13,11 +13,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -28,11 +28,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
     for x = 1, 10, 1 do
@@ -46,7 +46,7 @@ emu.atupdatescreen(function()
                     width = 20,
                     height = 20,
                 },
-                text = ":)"
+                text = ':)',
             })
         end
     end

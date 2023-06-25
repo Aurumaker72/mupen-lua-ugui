@@ -1,6 +1,6 @@
 function folder(thisFileName)
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
+    local str = debug.getinfo(2, 'S').source:sub(2)
+    return (str:match('^.*/(.*).lua$') or str):sub(1, -(thisFileName):len() - 1)
 end
 
 dofile(folder('demos\\sm64lua.lua') .. 'mupen-lua-ugui.lua')
@@ -21,7 +21,7 @@ Mupen_lua_ugui.spinner = function(control)
             width = control.rectangle.width - width * 2,
             height = control.rectangle.height,
         },
-        text = tostring(value)
+        text = tostring(value),
     })
 
     if tonumber(new_text) then
@@ -38,7 +38,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width,
                     height = control.rectangle.height,
                 },
-                text = "-"
+                text = '-',
             }))
         then
             value = value - 1
@@ -53,7 +53,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width,
                     height = control.rectangle.height,
                 },
-                text = "+"
+                text = '+',
             }))
         then
             value = value + 1
@@ -68,7 +68,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width * 2,
                     height = control.rectangle.height / 2,
                 },
-                text = "+"
+                text = '+',
             }))
         then
             value = value + 1
@@ -83,7 +83,7 @@ Mupen_lua_ugui.spinner = function(control)
                     width = width * 2,
                     height = control.rectangle.height / 2,
                 },
-                text = "-"
+                text = '-',
             }))
         then
             value = value - 1
@@ -102,11 +102,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -117,11 +117,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
     Mupen_lua_ugui.toggle_button({
@@ -133,7 +133,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 25,
         },
-        text = "Disabled"
+        text = 'Disabled',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 1,
@@ -144,7 +144,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 25,
         },
-        text = "Match Yaw"
+        text = 'Match Yaw',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 2,
@@ -155,7 +155,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 25,
         },
-        text = "Reverse Angle"
+        text = 'Reverse Angle',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 3,
@@ -166,7 +166,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 25,
         },
-        text = "Match Angle"
+        text = 'Match Angle',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 4,
@@ -177,7 +177,7 @@ emu.atupdatescreen(function()
             width = 60,
             height = 25,
         },
-        text = "Always"
+        text = 'Always',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 5,
@@ -188,7 +188,7 @@ emu.atupdatescreen(function()
             width = 30,
             height = 25,
         },
-        text = ".99"
+        text = '.99',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 6,
@@ -199,7 +199,7 @@ emu.atupdatescreen(function()
             width = 45,
             height = 25,
         },
-        text = "Left"
+        text = 'Left',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 7,
@@ -210,7 +210,7 @@ emu.atupdatescreen(function()
             width = 45,
             height = 25,
         },
-        text = "Right"
+        text = 'Right',
     })
 
 
@@ -223,7 +223,7 @@ emu.atupdatescreen(function()
             width = 45,
             height = 25,
         },
-        text = "DYaw"
+        text = 'DYaw',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 9,
@@ -234,7 +234,7 @@ emu.atupdatescreen(function()
             width = 45,
             height = 25,
         },
-        text = "Swim"
+        text = 'Swim',
     })
 
     Mupen_lua_ugui.textbox({
@@ -246,7 +246,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 25,
         },
-        text = "000000"
+        text = '000000',
     })
 
     Mupen_lua_ugui.joystick({
@@ -261,7 +261,7 @@ emu.atupdatescreen(function()
         position = {
             x = 0.5,
             y = 0.5,
-        }
+        },
     })
 
     BreitbandGraphics.renderers.d2d.draw_text({
@@ -269,7 +269,7 @@ emu.atupdatescreen(function()
         y = 120,
         width = 100,
         height = 20,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Magnitude")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Magnitude')
 
     Mupen_lua_ugui.spinner({
         uid = 12,
@@ -295,7 +295,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 25,
         },
-        text = "Speedkick"
+        text = 'Speedkick',
     })
 
     Mupen_lua_ugui.toggle_button({
@@ -307,7 +307,7 @@ emu.atupdatescreen(function()
             width = 45,
             height = 20,
         },
-        text = "High"
+        text = 'High',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 15,
@@ -318,7 +318,7 @@ emu.atupdatescreen(function()
             width = 45,
             height = 20,
         },
-        text = "Reset"
+        text = 'Reset',
     })
 
     BreitbandGraphics.renderers.d2d.draw_text({
@@ -326,85 +326,85 @@ emu.atupdatescreen(function()
         y = 220,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Yaw Facing: EXAMPLE (EXAMPLE2)")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Yaw Facing: EXAMPLE (EXAMPLE2)')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 235,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Yaw Intended: EXAMPLE (EXAMPLE2)")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Yaw Intended: EXAMPLE (EXAMPLE2)')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 250,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "H Speed: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'H Speed: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 265,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "H Sliding Speed: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'H Sliding Speed: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 280,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "XZ Movement: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'XZ Movement: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 295,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Speed Efficiency: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Speed Efficiency: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 310,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Y Speed: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Y Speed: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 325,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Mario X: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Mario X: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 340,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Mario Y: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Mario Y: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 355,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Mario Z: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Mario Z: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 370,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Read-only: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Read-only: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 385,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "RNG Value: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'RNG Value: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 400,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "RNG Index: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'RNG Index: EXAMPLE')
     BreitbandGraphics.renderers.d2d.draw_text({
         x = initial_size.width,
         y = 415,
         width = 99999,
         height = 15,
-    }, "start", "start", {}, BreitbandGraphics.colors.black, 11, "MS Sans Serif", "Moved Distance: EXAMPLE")
+    }, 'start', 'start', {}, BreitbandGraphics.colors.black, 11, 'MS Sans Serif', 'Moved Distance: EXAMPLE')
 
     Mupen_lua_ugui.toggle_button({
         uid = 17,
@@ -415,7 +415,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 25,
         },
-        text = "Record Ghost"
+        text = 'Record Ghost',
     })
 
     Mupen_lua_ugui.button({
@@ -427,7 +427,7 @@ emu.atupdatescreen(function()
             width = 100,
             height = 25,
         },
-        text = "Apply RNG"
+        text = 'Apply RNG',
     })
 
     Mupen_lua_ugui.toggle_button({
@@ -439,7 +439,7 @@ emu.atupdatescreen(function()
             width = 15,
             height = 25,
         },
-        text = "V"
+        text = 'V',
     })
 
     Mupen_lua_ugui.toggle_button({
@@ -451,7 +451,7 @@ emu.atupdatescreen(function()
             width = 15,
             height = 25,
         },
-        text = "I"
+        text = 'I',
     })
 
     Mupen_lua_ugui.textbox({
@@ -463,7 +463,7 @@ emu.atupdatescreen(function()
             width = 70,
             height = 25,
         },
-        text = "EXAMPLE"
+        text = 'EXAMPLE',
     })
 
     Mupen_lua_ugui.toggle_button({
@@ -475,7 +475,7 @@ emu.atupdatescreen(function()
             width = 140,
             height = 25,
         },
-        text = "Measure distance moved"
+        text = 'Measure distance moved',
     })
     Mupen_lua_ugui.toggle_button({
         uid = 22,
@@ -486,7 +486,7 @@ emu.atupdatescreen(function()
             width = 60,
             height = 25,
         },
-        text = "Ignore Y"
+        text = 'Ignore Y',
     })
     Mupen_lua_ugui.end_frame()
 end)

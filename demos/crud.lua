@@ -1,6 +1,6 @@
 function folder(thisFileName)
-    local str = debug.getinfo(2, "S").source:sub(2)
-    return (str:match("^.*/(.*).lua$") or str):sub(1, -(thisFileName):len() - 1)
+    local str = debug.getinfo(2, 'S').source:sub(2)
+    return (str:match('^.*/(.*).lua$') or str):sub(1, -(thisFileName):len() - 1)
 end
 
 dofile(folder('demos\\crud.lua') .. 'mupen-lua-ugui.lua')
@@ -9,13 +9,13 @@ wgui.resize(initial_size.width + 200, initial_size.height)
 
 
 
-local text = ""
+local text = ''
 local items = {}
 local selected_list_index = 1
 local priorities = {
-    "Low",
-    "Medium",
-    "High"
+    'Low',
+    'Medium',
+    'High',
 }
 local is_editing = false
 
@@ -35,11 +35,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -49,11 +49,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
 
@@ -78,20 +78,20 @@ emu.atupdatescreen(function()
                 width = 20,
                 height = 20,
             },
-            text = "+",
+            text = '+',
         })) then
         items[#items + 1] = {
             text = text,
             priority = 1,
         }
 
-        text = ""
+        text = ''
     end
 
 
     local list_items = {}
     for i = 1, #items, 1 do
-        list_items[i] = priorities[items[i].priority] .. " - " .. items[i].text
+        list_items[i] = priorities[items[i].priority] .. ' - ' .. items[i].text
     end
 
     selected_list_index = Mupen_lua_ugui.listbox({
@@ -116,7 +116,7 @@ emu.atupdatescreen(function()
                 width = 85,
                 height = 20,
             },
-            text = "Delete",
+            text = 'Delete',
         })) then
         table.remove(items, selected_list_index)
     end
@@ -130,8 +130,8 @@ emu.atupdatescreen(function()
             width = 85,
             height = 20,
         },
-        text = "Edit",
-        is_checked = is_editing
+        text = 'Edit',
+        is_checked = is_editing,
     })
 
 
@@ -145,7 +145,7 @@ emu.atupdatescreen(function()
             height = 20,
         },
         selected_index = is_selection_valid() and items[get_safe_selected_list_index()].priority or 1,
-        items = priorities
+        items = priorities,
     })
 
     if is_selection_valid() then
@@ -163,7 +163,7 @@ emu.atupdatescreen(function()
             width = 180,
             height = 20,
         },
-        text = is_selection_valid() and items[selected_list_index].text or ""
+        text = is_selection_valid() and items[selected_list_index].text or '',
     })
 
     if is_selection_valid() then
