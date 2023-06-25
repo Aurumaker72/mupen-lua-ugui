@@ -705,8 +705,10 @@ Mupen_lua_ugui = {
                         control.rectangle.y + control.rectangle.height)
                 }
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
-                Mupen_lua_ugui.renderer.fill_ellipse(control.rectangle, back_color)
-                Mupen_lua_ugui.renderer.draw_ellipse(control.rectangle, outline_color, 1)
+                Mupen_lua_ugui.renderer.fill_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    back_color)
+                Mupen_lua_ugui.renderer.draw_ellipse(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    outline_color, 1)
                 Mupen_lua_ugui.renderer.draw_line({
                     x = control.rectangle.x + control.rectangle.width / 2,
                     y = control.rectangle.y,
@@ -845,7 +847,7 @@ Mupen_lua_ugui = {
                     }
                 end
                 Mupen_lua_ugui.renderer.draw_text({
-                        x = control.rectangle.x + 2,
+                        x = control.rectangle.x + Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
@@ -855,7 +857,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.draw_text({
                         x = control.rectangle.x,
                         y = control.rectangle.y,
-                        width = control.rectangle.width - 8,
+                        width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 4,
                         height = control.rectangle.height,
                     }, 'end', 'center', {}, text_color, 12, "Segoe UI Mono",
                     Mupen_lua_ugui.control_data[control.uid].is_open and "^" or "v")
