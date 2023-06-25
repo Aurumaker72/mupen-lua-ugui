@@ -442,6 +442,7 @@ Mupen_lua_ugui = {
             track_thickness = 2,
             bar_width = 6,
             bar_height = 16,
+            item_height = 15,
 
             draw_raised_frame = function(control, visual_state)
                 local back_color = {
@@ -867,10 +868,10 @@ Mupen_lua_ugui = {
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
                     Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle({
-                        x = control.rectangle.x,
+                        x = control.rectangle.x + 1,
                         y = control.rectangle.y + control.rectangle.height,
-                        width = control.rectangle.width,
-                        height = #control.items * 20
+                        width = control.rectangle.width - 2,
+                        height = #control.items * Mupen_lua_ugui.stylers.windows_10.item_height
                     }, 1), {
                         r = 0,
                         g = 120,
@@ -879,10 +880,11 @@ Mupen_lua_ugui = {
 
                     for i = 1, #control.items, 1 do
                         local rect = {
-                            x = control.rectangle.x,
-                            y = control.rectangle.y + control.rectangle.height + (20 * (i - 1)),
-                            width = control.rectangle.width,
-                            height = 20
+                            x = control.rectangle.x + 1,
+                            y = control.rectangle.y + control.rectangle.height +
+                                (Mupen_lua_ugui.stylers.windows_10.item_height * (i - 1)),
+                            width = control.rectangle.width - 2,
+                            height = Mupen_lua_ugui.stylers.windows_10.item_height
                         }
 
                         local back_color = {
@@ -936,10 +938,12 @@ Mupen_lua_ugui = {
                 -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
 
                 local index_begin = (Mupen_lua_ugui.control_data[control.uid].y_translation *
-                    ((20 * #control.items) - control.rectangle.height)) / 20
+                        ((Mupen_lua_ugui.stylers.windows_10.item_height * #control.items) - control.rectangle.height)) /
+                    Mupen_lua_ugui.stylers.windows_10.item_height
 
                 local index_end = (control.rectangle.height + (Mupen_lua_ugui.control_data[control.uid].y_translation *
-                    ((20 * #control.items) - control.rectangle.height))) / 20
+                        ((Mupen_lua_ugui.stylers.windows_10.item_height * #control.items) - control.rectangle.height))) /
+                    Mupen_lua_ugui.stylers.windows_10.item_height
 
                 index_begin = math.max(index_begin, 0)
                 index_end = math.min(index_end, #control.items)
@@ -947,8 +951,8 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.push_clip(control.rectangle)
 
                 for i = math.floor(index_begin), math.ceil(index_end), 1 do
-                    local y = (20 * (i - 1)) -
-                        (Mupen_lua_ugui.control_data[control.uid].y_translation * ((20 * #control.items) - control.rectangle.height))
+                    local y = (Mupen_lua_ugui.stylers.windows_10.item_height * (i - 1)) -
+                        (Mupen_lua_ugui.control_data[control.uid].y_translation * ((Mupen_lua_ugui.stylers.windows_10.item_height * #control.items) - control.rectangle.height))
 
                     local text_color = BreitbandGraphics.colors.black
 
@@ -974,7 +978,7 @@ Mupen_lua_ugui = {
                             x = control.rectangle.x,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
-                            height = 20
+                            height = Mupen_lua_ugui.stylers.windows_10.item_height
                         }, accent_color)
 
                         text_color = BreitbandGraphics.colors.white
@@ -989,16 +993,17 @@ Mupen_lua_ugui = {
                             x = control.rectangle.x + 2,
                             y = control.rectangle.y + y,
                             width = control.rectangle.width,
-                            height = 20
+                            height = Mupen_lua_ugui.stylers.windows_10.item_height
                         }, 'start', 'center', { clip = true }, text_color, 12, "MS Sans Serif",
                         control.items[i])
                 end
 
 
-                if #control.items * 20 > control.rectangle.height then
+                if #control.items * Mupen_lua_ugui.stylers.windows_10.item_height > control.rectangle.height then
                     local scrollbar_y = Mupen_lua_ugui.control_data[control.uid].y_translation * control.rectangle
                         .height
-                    local scrollbar_height = 2 * 20 * (control.rectangle.height / (20 * #control.items))
+                    local scrollbar_height = 2 * Mupen_lua_ugui.stylers.windows_10.item_height *
+                        (control.rectangle.height / (Mupen_lua_ugui.stylers.windows_10.item_height * #control.items))
                     -- we center the scrollbar around the translation value
 
                     scrollbar_y = scrollbar_y - scrollbar_height / 2
@@ -1312,7 +1317,7 @@ Mupen_lua_ugui = {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
                         width = control.rectangle.width,
-                        height = 20 * #control.items
+                        height = Mupen_lua_ugui.styler.item_height * #control.items
                     }) then
                     Mupen_lua_ugui.control_data[control.uid].is_open = false
                 end
@@ -1325,9 +1330,10 @@ Mupen_lua_ugui = {
             for i = 1, #control.items, 1 do
                 if is_pointer_inside({
                         x = control.rectangle.x,
-                        y = control.rectangle.y + control.rectangle.height + (20 * (i - 1)),
+                        y = control.rectangle.y + control.rectangle.height +
+                            (Mupen_lua_ugui.styler.item_height * (i - 1)),
                         width = control.rectangle.width,
-                        height = 20
+                        height = Mupen_lua_ugui.styler.item_height
                     }) then
                     if is_pointer_just_down() then
                         selected_index = i
@@ -1347,7 +1353,7 @@ Mupen_lua_ugui = {
                 x = control.rectangle.x,
                 y = control.rectangle.y + control.rectangle.height,
                 width = control.rectangle.width,
-                height = 20 * #control.items
+                height = Mupen_lua_ugui.styler.item_height * #control.items
             }
         end
         selected_index = clamp(selected_index, 1, #control.items)
@@ -1389,7 +1395,8 @@ Mupen_lua_ugui = {
             if is_pointer_down() and not is_pointer_inside(scrollbar_rect) and not is_previous_primary_down_pointer_inside(scrollbar_rect) then
                 local relative_y = Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y;
                 local new_index = math.ceil((relative_y + (Mupen_lua_ugui.control_data[control.uid].y_translation *
-                    ((20 * #control.items) - control.rectangle.height))) / 20)
+                        ((Mupen_lua_ugui.styler.item_height * #control.items) - control.rectangle.height))) /
+                    Mupen_lua_ugui.styler.item_height)
                 -- we only assign the new index if it's within bounds, as
                 -- this emulates windows commctl behaviour
                 if new_index <= #control.items then
@@ -1402,7 +1409,7 @@ Mupen_lua_ugui = {
         if Mupen_lua_ugui.active_control_uid == control.uid then
             -- only allow translation if content overflows
 
-            if #control.items * 20 > control.rectangle.height then
+            if #control.items * Mupen_lua_ugui.styler.item_height > control.rectangle.height then
                 local v = (Mupen_lua_ugui.input_state.pointer.position.y - control.rectangle.y) /
                     control.rectangle.height
                 Mupen_lua_ugui.control_data[control.uid].y_translation = v
