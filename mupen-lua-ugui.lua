@@ -721,7 +721,7 @@ Mupen_lua_ugui = {
                 if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
                     visual_state = Mupen_lua_ugui.visual_states.active
                 end
-                Mupen_lua_ugui.stylers.windows_10.draw_edit_frame(control, visual_state)
+                Mupen_lua_ugui.stylers.windows_10.draw_edit_frame(control, control.rectangle, visual_state)
 
                 local should_visualize_selection = not (Mupen_lua_ugui.control_data[control.uid].selection_start == nil) and
                     not (Mupen_lua_ugui.control_data[control.uid].selection_end == nil) and control.is_enabled and
