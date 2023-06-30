@@ -43,3 +43,55 @@ disabled
 25 16 5 5 bounds
 27 18 1 1 center
 160 160 160 text color
+
+track
+
+2 thickness
+
+normal
+37 1 6 6 bounds
+39 3 2 2 center
+
+hover
+37 1 6 6 bounds
+39 3 2 2 center
+
+active
+37 1 6 6 bounds
+39 3 2 2 center
+
+disabled
+37 1 6 6 bounds
+39 3 2 2 center
+
+horizontal thumb
+
+7 14 size
+
+normal
+46 0 28 45 bounds
+
+hover
+46 48 28 45 bounds
+
+active
+46 96 28 45 bounds
+
+disabled
+46 192 28 45 bounds
+
+vertical thumb
+
+14 7 size
+
+normal
+82 2 44 25 bounds
+
+hover
+82 30 44 25 bounds
+
+active
+82 58 44 25 bounds
+
+disabled
+82 114 44 25 bounds

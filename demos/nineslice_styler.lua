@@ -12,7 +12,6 @@ local styles = {
     'windows-11',
     'windows-10',
     'windows-aero',
-    'react-os',
 }
 local style_index = 1
 local section_name_path = ''
@@ -33,7 +32,7 @@ local function parse_ustyles(path)
     file:close()
 
 
-    function rectangle_from_line(line)
+    local function rectangle_from_line(line)
         return {
             x = tonumber(line[1]),
             y = tonumber(line[2]),
@@ -42,7 +41,18 @@ local function parse_ustyles(path)
         }
     end
 
-    function color_from_line(line)
+    local function number_from_line(line)
+        return tonumber(line[1])
+    end
+
+    local function vector2_from_line(line)
+        return {
+            x = tonumber(line[1]),
+            y = tonumber(line[2]),
+        }
+    end
+
+    local function color_from_line(line)
         return {
             r = tonumber(line[1]),
             g = tonumber(line[2]),
@@ -50,7 +60,8 @@ local function parse_ustyles(path)
         }
     end
 
-    function fill_structure(structure, index)
+    local function get_nineslice_rect_collection(index)
+        local structure = {}
         local bounds = rectangle_from_line(lines[index])
         local center = rectangle_from_line(lines[index + 1])
 
@@ -109,9 +120,11 @@ local function parse_ustyles(path)
             width = bounds.width - corner_size.x * 2,
             height = corner_size.y,
         }
+        return structure
     end
 
-    local rectangles = {
+
+    local data = {
         ['raised_frame'] = {
             [Mupen_lua_ugui.visual_states.normal] = {},
             [Mupen_lua_ugui.visual_states.hovered] = {},
@@ -124,21 +137,58 @@ local function parse_ustyles(path)
             [Mupen_lua_ugui.visual_states.active] = {},
             [Mupen_lua_ugui.visual_states.disabled] = {},
         },
+        ['track'] = {
+            [Mupen_lua_ugui.visual_states.normal] = {},
+            [Mupen_lua_ugui.visual_states.hovered] = {},
+            [Mupen_lua_ugui.visual_states.active] = {},
+            [Mupen_lua_ugui.visual_states.disabled] = {},
+        },
+        ['thumb_horizontal'] = {
+            [Mupen_lua_ugui.visual_states.normal] = {},
+            [Mupen_lua_ugui.visual_states.hovered] = {},
+            [Mupen_lua_ugui.visual_states.active] = {},
+            [Mupen_lua_ugui.visual_states.disabled] = {},
+        },
+        ['thumb_vertical'] = {
+            [Mupen_lua_ugui.visual_states.normal] = {},
+            [Mupen_lua_ugui.visual_states.hovered] = {},
+            [Mupen_lua_ugui.visual_states.active] = {},
+            [Mupen_lua_ugui.visual_states.disabled] = {},
+        },
     }
 
-    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.normal], 6)
-    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.hovered], 11)
-    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.active], 16)
-    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.disabled], 21)
-    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.normal], 28)
-    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.hovered], 33)
-    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.active], 38)
-    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.disabled], 43)
+    data['raised_frame'][Mupen_lua_ugui.visual_states.normal] = get_nineslice_rect_collection(6)
+    data['raised_frame'][Mupen_lua_ugui.visual_states.hovered] = get_nineslice_rect_collection(11)
+    data['raised_frame'][Mupen_lua_ugui.visual_states.active] = get_nineslice_rect_collection(16)
+    data['raised_frame'][Mupen_lua_ugui.visual_states.disabled] = get_nineslice_rect_collection(21)
+
+    data['edit_frame'][Mupen_lua_ugui.visual_states.normal] = get_nineslice_rect_collection(28)
+    data['edit_frame'][Mupen_lua_ugui.visual_states.hovered] = get_nineslice_rect_collection(33)
+    data['edit_frame'][Mupen_lua_ugui.visual_states.active] = get_nineslice_rect_collection(38)
+    data['edit_frame'][Mupen_lua_ugui.visual_states.disabled] = get_nineslice_rect_collection(43)
+
+    data['track']['thickness'] = number_from_line(lines[49])
+    data['track'][Mupen_lua_ugui.visual_states.normal] = get_nineslice_rect_collection(52)
+    data['track'][Mupen_lua_ugui.visual_states.hovered] = get_nineslice_rect_collection(56)
+    data['track'][Mupen_lua_ugui.visual_states.active] = get_nineslice_rect_collection(60)
+    data['track'][Mupen_lua_ugui.visual_states.disabled] = get_nineslice_rect_collection(64)
+
+    data['thumb_horizontal']['size'] = vector2_from_line(lines[69])
+    data['thumb_horizontal'][Mupen_lua_ugui.visual_states.normal] = rectangle_from_line(lines[72])
+    data['thumb_horizontal'][Mupen_lua_ugui.visual_states.hovered] = rectangle_from_line(lines[75])
+    data['thumb_horizontal'][Mupen_lua_ugui.visual_states.active] = rectangle_from_line(lines[78])
+    data['thumb_horizontal'][Mupen_lua_ugui.visual_states.disabled] = rectangle_from_line(lines[81])
+
+    data['thumb_vertical']['size'] = vector2_from_line(lines[85])
+    data['thumb_vertical'][Mupen_lua_ugui.visual_states.normal] = rectangle_from_line(lines[88])
+    data['thumb_vertical'][Mupen_lua_ugui.visual_states.hovered] = rectangle_from_line(lines[91])
+    data['thumb_vertical'][Mupen_lua_ugui.visual_states.active] = rectangle_from_line(lines[94])
+    data['thumb_vertical'][Mupen_lua_ugui.visual_states.disabled] = rectangle_from_line(lines[97])
 
     local background_color = color_from_line(lines[1])
     return {
         background_color = background_color,
-        rectangles = rectangles,
+        data = data,
     }
 end
 
@@ -262,15 +312,73 @@ end
 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].rectangles['raised_frame'][key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['raised_frame'][key],
             control_transitions[control.uid][key].a, control.rectangle)
     end
 end
 Mupen_lua_ugui.stylers.windows_10.draw_edit_frame = function(control, visual_state)
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].rectangles['edit_frame'][key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['edit_frame'][key],
             control_transitions[control.uid][key].a, control.rectangle)
+    end
+end
+Mupen_lua_ugui.stylers.windows_10.draw_track = function(control, visual_state, is_horizontal)
+    local track_rectangle = {}
+    local track_thickness = ustyles[get_ustyle_path()].data['track']['thickness']
+    if not is_horizontal then
+        track_rectangle = {
+            x = control.rectangle.x + control.rectangle.width / 2 - track_thickness / 2,
+            y = control.rectangle.y,
+            width = track_thickness,
+            height = control.rectangle.height,
+        }
+    else
+        track_rectangle = {
+            x = control.rectangle.x,
+            y = control.rectangle.y + control.rectangle.height / 2 - track_thickness / 2,
+            width = control.rectangle.width,
+            height = track_thickness,
+        }
+    end
+
+
+    update_transition(control, visual_state)
+    for key, _ in pairs(control_transitions[control.uid]) do
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['track'][key],
+            control_transitions[control.uid][key].a, BreitbandGraphics.inflate_rectangle(track_rectangle, 1))
+    end
+end
+
+Mupen_lua_ugui.stylers.windows_10.draw_thumb = function(control, visual_state, is_horizontal, value)
+    local head_rectangle = {}
+
+    local info = ustyles[get_ustyle_path()].data[is_horizontal and 'thumb_horizontal' or 'thumb_vertical']
+    local bar_width = info['size'].x
+    local bar_height = info['size'].y
+
+    if is_horizontal then
+        head_rectangle = {
+            x = control.rectangle.x + (value * control.rectangle.width) -
+                bar_width / 2,
+            y = control.rectangle.y + control.rectangle.height / 2 -
+                bar_height / 2,
+            width = bar_width,
+            height = bar_height,
+        }
+    else
+        head_rectangle = {
+            x = control.rectangle.x + control.rectangle.width / 2 -
+                bar_width / 2,
+            y = control.rectangle.y + (value * control.rectangle.height) -
+                bar_height / 2,
+            width = bar_width,
+            height = bar_height,
+        }
+    end
+    update_transition(control, visual_state)
+    for key, _ in pairs(control_transitions[control.uid]) do
+        BreitbandGraphics.renderers.d2d.draw_image(head_rectangle, info[key], section_name_path .. '.png', control_transitions[control.uid][key])
     end
 end
 
@@ -378,6 +486,17 @@ emu.atupdatescreen(function()
             y = 400,
             width = 100,
             height = 20,
+        },
+        value = trackbar_value,
+    })
+    trackbar_value = Mupen_lua_ugui.trackbar({
+        uid = 9,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 450,
+            width = 20,
+            height = 100,
         },
         value = trackbar_value,
     })

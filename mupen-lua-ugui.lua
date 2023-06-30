@@ -802,7 +802,7 @@ Mupen_lua_ugui = {
                     height = tip_size,
                 }, tip_color)
             end,
-            draw_track = function(rectangle, visual_state, is_horizontal)
+            draw_track = function(control, visual_state, is_horizontal)
                 local track_color = {
                     r = 231,
                     g = 234,
@@ -812,16 +812,16 @@ Mupen_lua_ugui = {
                 local track_border_color = BreitbandGraphics.repeated_to_color(214)
                 if not is_horizontal then
                     track_rectangle = {
-                        x = rectangle.x + rectangle.width / 2 - Mupen_lua_ugui.stylers.windows_10.track_thickness / 2,
-                        y = rectangle.y,
+                        x = control.rectangle.x + control.rectangle.width / 2 - Mupen_lua_ugui.stylers.windows_10.track_thickness / 2,
+                        y = control.rectangle.y,
                         width = Mupen_lua_ugui.stylers.windows_10.track_thickness,
-                        height = rectangle.height,
+                        height = control.rectangle.height,
                     }
                 else
                     track_rectangle = {
-                        x = rectangle.x,
-                        y = rectangle.y + rectangle.height / 2 - Mupen_lua_ugui.stylers.windows_10.track_thickness / 2,
-                        width = rectangle.width,
+                        x = control.rectangle.x,
+                        y = control.rectangle.y + control.rectangle.height / 2 - Mupen_lua_ugui.stylers.windows_10.track_thickness / 2,
+                        width = control.rectangle.width,
                         height = Mupen_lua_ugui.stylers.windows_10.track_thickness,
                     }
                 end
@@ -830,7 +830,7 @@ Mupen_lua_ugui = {
                     track_border_color)
                 Mupen_lua_ugui.renderer.fill_rectangle(track_rectangle, track_color)
             end,
-            draw_head = function(rectangle, visual_state, is_horizontal, value)
+            draw_thumb = function(control, visual_state, is_horizontal, value)
                 local head_color = {
                     r = 0,
                     g = 122,
@@ -843,22 +843,22 @@ Mupen_lua_ugui = {
                 end
 
                 local head_rectangle = {}
-                local effective_bar_height = math.min((is_horizontal and rectangle.height or rectangle.width) * 2,
+                local effective_bar_height = math.min((is_horizontal and control.rectangle.height or control.rectangle.width) * 2,
                     Mupen_lua_ugui.stylers.windows_10.bar_height)
                 if not is_horizontal then
                     head_rectangle = {
-                        x = rectangle.x + rectangle.width / 2 -
+                        x = control.rectangle.x + control.rectangle.width / 2 -
                             effective_bar_height / 2,
-                        y = rectangle.y + (value * rectangle.height) -
+                        y = control.rectangle.y + (value * control.rectangle.height) -
                             Mupen_lua_ugui.stylers.windows_10.bar_width / 2,
                         width = effective_bar_height,
                         height = Mupen_lua_ugui.stylers.windows_10.bar_width,
                     }
                 else
                     head_rectangle = {
-                        x = rectangle.x + (value * rectangle.width) -
+                        x = control.rectangle.x + (value * control.rectangle.width) -
                             Mupen_lua_ugui.stylers.windows_10.bar_width / 2,
-                        y = rectangle.y + rectangle.height / 2 -
+                        y = control.rectangle.y + control.rectangle.height / 2 -
                             effective_bar_height / 2,
                         width = Mupen_lua_ugui.stylers.windows_10.bar_width,
                         height = effective_bar_height,
@@ -875,8 +875,8 @@ Mupen_lua_ugui = {
 
                 local is_horizontal = control.rectangle.width > control.rectangle.height
 
-                Mupen_lua_ugui.stylers.windows_10.draw_track(control.rectangle, visual_state, is_horizontal)
-                Mupen_lua_ugui.stylers.windows_10.draw_head(control.rectangle, visual_state, is_horizontal, control
+                Mupen_lua_ugui.stylers.windows_10.draw_track(control, visual_state, is_horizontal)
+                Mupen_lua_ugui.stylers.windows_10.draw_thumb(control, visual_state, is_horizontal, control
                     .value)
             end,
             draw_combobox = function(control)
