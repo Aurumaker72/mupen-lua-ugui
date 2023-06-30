@@ -192,12 +192,17 @@ local function parse_ustyles(path)
     }
 end
 
-local function move_color_towards(color, target)
+local function move_color_towards(color, target, speed)
+    local difference_sum = math.abs(color.r - target.r) + math.abs(color.g - target.g) + math.abs(color.b - target.b) + math.abs(color.a - target.a)
+    local avg = difference_sum / 3
+    if avg < 5 then
+        return target
+    end
     return {
-        r = math.floor(color.r + (target.r - color.r) * 0.25),
-        g = math.floor(color.g + (target.g - color.g) * 0.25),
-        b = math.floor(color.b + (target.b - color.b) * 0.25),
-        a = math.floor(color.a + (target.a - color.a) * 0.25),
+        r = math.floor(color.r + (target.r - color.r) * speed),
+        g = math.floor(color.g + (target.g - color.g) * speed),
+        b = math.floor(color.b + (target.b - color.b) * speed),
+        a = math.floor(color.a + (target.a - color.a) * speed),
     }
 end
 
@@ -288,25 +293,24 @@ local function update_transition(control, visual_state)
 
     if not control_transitions[control.uid] then
         control_transitions[control.uid] = {
-            [Mupen_lua_ugui.visual_states.normal] = opaque,
-            [Mupen_lua_ugui.visual_states.hovered] = opaque,
-            [Mupen_lua_ugui.visual_states.active] = opaque,
-            [Mupen_lua_ugui.visual_states.disabled] = opaque,
+            [Mupen_lua_ugui.visual_states.normal] = transparent,
+            [Mupen_lua_ugui.visual_states.hovered] = transparent,
+            [Mupen_lua_ugui.visual_states.active] = transparent,
+            [Mupen_lua_ugui.visual_states.disabled] = transparent,
         }
+        control_transitions[control.uid][visual_state] = opaque
     end
 
     -- gradually reset all inactive transition targets
-    for key, value in pairs(control_transitions[control.uid]) do
+    for key, _ in pairs(control_transitions[control.uid]) do
         if key == visual_state then
-            goto continue
+            control_transitions[control.uid][visual_state] = move_color_towards(
+                control_transitions[control.uid][visual_state], opaque, 0.2)
+        else
+            control_transitions[control.uid][key] = move_color_towards(
+                control_transitions[control.uid][key], transparent, 0.1)
         end
-        control_transitions[control.uid][key] = move_color_towards(
-            control_transitions[control.uid][key], transparent)
-        ::continue::
     end
-
-    control_transitions[control.uid][visual_state] = move_color_towards(
-        control_transitions[control.uid][visual_state], opaque)
 end
 
 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
@@ -346,7 +350,7 @@ Mupen_lua_ugui.stylers.windows_10.draw_track = function(control, visual_state, i
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
         draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['track'][key],
-            control_transitions[control.uid][key].a, BreitbandGraphics.inflate_rectangle(track_rectangle, 1))
+            control_transitions[control.uid][key].a, track_rectangle)
     end
 end
 
