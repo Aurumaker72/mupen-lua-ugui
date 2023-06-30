@@ -1,6 +1,6 @@
 249 249 249 background color
 
-button
+raised frame
 
 normal
 1 1 11 21 bounds
@@ -20,4 +20,26 @@ active
 disabled
 1 70 11 21 bounds
 4 73 5 15 center
+160 160 160 text color
+
+edit frame
+
+normal
+25 1 5 5 bounds
+27 3 1 1 center
+0 0 0 text color
+
+hover
+25 6 5 5 bounds
+27 8 1 1 center
+0 0 0 text color
+
+active
+25 11 5 5 bounds
+27 13 1 1 center
+0 0 0 text color
+
+disabled
+25 16 5 5 bounds
+27 18 1 1 center
 160 160 160 text color

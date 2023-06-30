@@ -569,6 +569,28 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                     back_color)
             end,
+            draw_edit_frame = function(control, visual_state)
+                local back_color = BreitbandGraphics.colors.white
+                local border_color = BreitbandGraphics.repeated_to_color(122)
+
+
+                if visual_state == Mupen_lua_ugui.visual_states.hovered then
+                    border_color = BreitbandGraphics.repeated_to_color(23)
+                elseif visual_state == Mupen_lua_ugui.visual_states.active then
+                    border_color = {
+                        r = 0,
+                        g = 84,
+                        b = 153,
+                    }
+                elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
+                    back_color = BreitbandGraphics.repeated_to_color(240)
+                    border_color = BreitbandGraphics.repeated_to_color(204)
+                end
+                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
+                    border_color)
+                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                    back_color)
+            end,
             draw_button = function(control)
                 local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
@@ -592,29 +614,11 @@ Mupen_lua_ugui = {
             draw_textbox = function(control)
                 local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
-                local back_color = BreitbandGraphics.colors.white
-                local border_color = BreitbandGraphics.repeated_to_color(122)
-
                 if Mupen_lua_ugui.active_control_uid == control.uid and control.is_enabled then
                     visual_state = Mupen_lua_ugui.visual_states.active
                 end
+                Mupen_lua_ugui.stylers.windows_10.draw_edit_frame(control, visual_state)
 
-                if visual_state == Mupen_lua_ugui.visual_states.hovered then
-                    border_color = BreitbandGraphics.repeated_to_color(23)
-                elseif visual_state == Mupen_lua_ugui.visual_states.active then
-                    border_color = {
-                        r = 0,
-                        g = 84,
-                        b = 153,
-                    }
-                elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                    back_color = BreitbandGraphics.repeated_to_color(240)
-                    border_color = BreitbandGraphics.repeated_to_color(204)
-                end
-                Mupen_lua_ugui.renderer.fill_rectangle(control.rectangle,
-                    border_color)
-                Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
-                    back_color)
                 local should_visualize_selection = not (Mupen_lua_ugui.control_data[control.uid].selection_start == nil) and
                     not (Mupen_lua_ugui.control_data[control.uid].selection_end == nil) and control.is_enabled and
                     not (Mupen_lua_ugui.control_data[control.uid].selection_start == Mupen_lua_ugui.control_data[control.uid].selection_end)

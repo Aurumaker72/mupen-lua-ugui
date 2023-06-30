@@ -112,16 +112,28 @@ local function parse_ustyles(path)
     end
 
     local rectangles = {
-        [Mupen_lua_ugui.visual_states.normal] = {},
-        [Mupen_lua_ugui.visual_states.hovered] = {},
-        [Mupen_lua_ugui.visual_states.active] = {},
-        [Mupen_lua_ugui.visual_states.disabled] = {},
+        ['raised_frame'] = {
+            [Mupen_lua_ugui.visual_states.normal] = {},
+            [Mupen_lua_ugui.visual_states.hovered] = {},
+            [Mupen_lua_ugui.visual_states.active] = {},
+            [Mupen_lua_ugui.visual_states.disabled] = {},
+        },
+        ['edit_frame'] = {
+            [Mupen_lua_ugui.visual_states.normal] = {},
+            [Mupen_lua_ugui.visual_states.hovered] = {},
+            [Mupen_lua_ugui.visual_states.active] = {},
+            [Mupen_lua_ugui.visual_states.disabled] = {},
+        },
     }
 
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.normal], 6)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.hovered], 11)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.active], 16)
-    fill_structure(rectangles[Mupen_lua_ugui.visual_states.disabled], 21)
+    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.normal], 6)
+    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.hovered], 11)
+    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.active], 16)
+    fill_structure(rectangles['raised_frame'][Mupen_lua_ugui.visual_states.disabled], 21)
+    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.normal], 28)
+    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.hovered], 33)
+    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.active], 38)
+    fill_structure(rectangles['edit_frame'][Mupen_lua_ugui.visual_states.disabled], 43)
 
     local background_color = color_from_line(lines[1])
     return {
@@ -210,7 +222,7 @@ local function draw_nineslice(identifier, slices, opacity, rectangle)
     }, slices.bottom, identifier, color)
 end
 
-Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
+local function update_transition(control, visual_state)
     local opaque = {
         r = 255,
         g = 255,
@@ -245,10 +257,19 @@ Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_s
 
     control_transitions[control.uid][visual_state] = move_color_towards(
         control_transitions[control.uid][visual_state], opaque)
+end
 
-
+Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
+    update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].rectangles[key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].rectangles['raised_frame'][key],
+            control_transitions[control.uid][key].a, control.rectangle)
+    end
+end
+Mupen_lua_ugui.stylers.windows_10.draw_edit_frame = function(control, visual_state)
+    update_transition(control, visual_state)
+    for key, _ in pairs(control_transitions[control.uid]) do
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].rectangles['edit_frame'][key],
             control_transitions[control.uid][key].a, control.rectangle)
     end
 end
@@ -360,8 +381,28 @@ emu.atupdatescreen(function()
         },
         value = trackbar_value,
     })
-
-
+    Mupen_lua_ugui.textbox({
+        uid = 6,
+        is_enabled = false,
+        rectangle = {
+            x = initial_size.width + 110,
+            y = 300,
+            width = 60,
+            height = 20,
+        },
+        text = 'qwertz',
+    })
+    Mupen_lua_ugui.textbox({
+        uid = 7,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 110,
+            y = 200,
+            width = 60,
+            height = 20,
+        },
+        text = 'qwertz',
+    })
     Mupen_lua_ugui.end_frame()
 end)
 
