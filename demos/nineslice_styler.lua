@@ -303,13 +303,8 @@ local function update_transition(control, visual_state)
 
     -- gradually reset all inactive transition targets
     for key, _ in pairs(control_transitions[control.uid]) do
-        if key == visual_state then
-            control_transitions[control.uid][visual_state] = move_color_towards(
-                control_transitions[control.uid][visual_state], opaque, 0.2)
-        else
-            control_transitions[control.uid][key] = move_color_towards(
-                control_transitions[control.uid][key], transparent, 0.1)
-        end
+        control_transitions[control.uid][key] = move_color_towards(
+            control_transitions[control.uid][key], key == visual_state and opaque or transparent, 0.1)
     end
 end
 
@@ -382,7 +377,7 @@ Mupen_lua_ugui.stylers.windows_10.draw_thumb = function(control, visual_state, i
     end
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        BreitbandGraphics.renderers.d2d.draw_image(head_rectangle, info[key], section_name_path .. '.png', control_transitions[control.uid][key])
+        BreitbandGraphics.renderers.d2d.draw_image(head_rectangle, info[key], section_name_path .. '.png', control_transitions[control.uid][key], 'linear')
     end
 end
 
@@ -452,7 +447,7 @@ emu.atupdatescreen(function()
             x = initial_size.width + 10,
             y = 50,
             width = 120,
-            height = 30,
+            height = 25,
         },
         items = styles,
         selected_index = style_index,
@@ -525,6 +520,31 @@ emu.atupdatescreen(function()
             height = 20,
         },
         text = 'qwertz',
+    })
+    a = Mupen_lua_ugui.listbox({
+        uid = 8,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 120,
+            y = 340,
+            width = 70,
+            height = 100,
+        },
+        items = {
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+            'a',
+        },
+        selected_index = a,
     })
     Mupen_lua_ugui.end_frame()
 end)
