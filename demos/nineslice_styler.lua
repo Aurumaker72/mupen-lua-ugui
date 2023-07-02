@@ -14,7 +14,7 @@ local styles = {
     'windows-aero',
 }
 local style_index = 1
-local section_name_path = ''
+local selected_style = ''
 
 local ustyles = {}
 local control_transitions = {}
@@ -125,36 +125,13 @@ local function parse_ustyles(path)
 
 
     local data = {
-        ['raised_frame'] = {
-            [Mupen_lua_ugui.visual_states.normal] = {},
-            [Mupen_lua_ugui.visual_states.hovered] = {},
-            [Mupen_lua_ugui.visual_states.active] = {},
-            [Mupen_lua_ugui.visual_states.disabled] = {},
-        },
-        ['edit_frame'] = {
-            [Mupen_lua_ugui.visual_states.normal] = {},
-            [Mupen_lua_ugui.visual_states.hovered] = {},
-            [Mupen_lua_ugui.visual_states.active] = {},
-            [Mupen_lua_ugui.visual_states.disabled] = {},
-        },
-        ['track'] = {
-            [Mupen_lua_ugui.visual_states.normal] = {},
-            [Mupen_lua_ugui.visual_states.hovered] = {},
-            [Mupen_lua_ugui.visual_states.active] = {},
-            [Mupen_lua_ugui.visual_states.disabled] = {},
-        },
-        ['thumb_horizontal'] = {
-            [Mupen_lua_ugui.visual_states.normal] = {},
-            [Mupen_lua_ugui.visual_states.hovered] = {},
-            [Mupen_lua_ugui.visual_states.active] = {},
-            [Mupen_lua_ugui.visual_states.disabled] = {},
-        },
-        ['thumb_vertical'] = {
-            [Mupen_lua_ugui.visual_states.normal] = {},
-            [Mupen_lua_ugui.visual_states.hovered] = {},
-            [Mupen_lua_ugui.visual_states.active] = {},
-            [Mupen_lua_ugui.visual_states.disabled] = {},
-        },
+        ['background_color'] = color_from_line(lines[1]),
+
+        ['raised_frame'] = {},
+        ['edit_frame'] = {},
+        ['track'] = {},
+        ['thumb_horizontal'] = {},
+        ['thumb_vertical'] = {},
     }
 
     data['raised_frame'][Mupen_lua_ugui.visual_states.normal] = get_nineslice_rect_collection(6)
@@ -185,11 +162,7 @@ local function parse_ustyles(path)
     data['thumb_vertical'][Mupen_lua_ugui.visual_states.active] = rectangle_from_line(lines[94])
     data['thumb_vertical'][Mupen_lua_ugui.visual_states.disabled] = rectangle_from_line(lines[97])
 
-    local background_color = color_from_line(lines[1])
-    return {
-        background_color = background_color,
-        data = data,
-    }
+    return data
 end
 
 local function move_color_towards(color, target, speed)
@@ -311,20 +284,20 @@ end
 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame = function(control, visual_state)
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['raised_frame'][key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()]['raised_frame'][key],
             control_transitions[control.uid][key].a, control.rectangle)
     end
 end
-Mupen_lua_ugui.stylers.windows_10.draw_edit_frame = function(control, visual_state)
+Mupen_lua_ugui.stylers.windows_10.draw_edit_frame = function(control, rectangle, visual_state)
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['edit_frame'][key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()]['edit_frame'][key],
             control_transitions[control.uid][key].a, control.rectangle)
     end
 end
 Mupen_lua_ugui.stylers.windows_10.draw_track = function(control, visual_state, is_horizontal)
     local track_rectangle = {}
-    local track_thickness = ustyles[get_ustyle_path()].data['track']['thickness']
+    local track_thickness = ustyles[get_ustyle_path()]['track']['thickness']
     if not is_horizontal then
         track_rectangle = {
             x = control.rectangle.x + control.rectangle.width / 2 - track_thickness / 2,
@@ -344,7 +317,7 @@ Mupen_lua_ugui.stylers.windows_10.draw_track = function(control, visual_state, i
 
     update_transition(control, visual_state)
     for key, _ in pairs(control_transitions[control.uid]) do
-        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()].data['track'][key],
+        draw_nineslice(section_name_path .. '.png', ustyles[get_ustyle_path()]['track'][key],
             control_transitions[control.uid][key].a, track_rectangle)
     end
 end
@@ -352,7 +325,7 @@ end
 Mupen_lua_ugui.stylers.windows_10.draw_thumb = function(control, visual_state, is_horizontal, value)
     local head_rectangle = {}
 
-    local info = ustyles[get_ustyle_path()].data[is_horizontal and 'thumb_horizontal' or 'thumb_vertical']
+    local info = ustyles[get_ustyle_path()][is_horizontal and 'thumb_horizontal' or 'thumb_vertical']
     local bar_width = info['size'].x
     local bar_height = info['size'].y
 
