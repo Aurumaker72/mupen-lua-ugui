@@ -72,15 +72,14 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 
 ## 🧩 Porting
 
-### To mupen-lua-ugui
-
-Porting a script to `mupen-lua-ugui` is not trivial and requires manual work. Contact `aurumaker72` on Discord for help regarding this.
-
 ### To BreitbandGraphics
 
-Porting a script which utilizes the old Lua GDI API to `BreitbandGraphics` is trivial.
+By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically fix scripts utilizing old graphics APIs.
 
-By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically reverse-polyfill all legacy APIs with no changes to your code.
+### To mupen-lua-ugui
+
+Porting a script to `mupen-lua-ugui` requires an understanding of the library's usage, achieved by reading the demos and comment docs.
+For individual help, contact me on Discord (`aurumaker72`) or post an issue in this repository.
 
 ## 📈 Advantages
 
