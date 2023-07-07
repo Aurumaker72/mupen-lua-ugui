@@ -27,7 +27,7 @@ Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/de
 - Flexible
   - Add or extend controls
   - Add or extend stylers
-  - Mockable input
+  - Mock subsystems
 - Host-authoritative
   - Invokable anytime and anywhere
   - No copies or mutation of application state
