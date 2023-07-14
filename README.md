@@ -18,7 +18,7 @@ dofile("mupen-lua-ugui.lua")
 
 That's it. Don't forget to pass an absolute path, not a relative one.
 
-Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md), [the ported SM64Lua](https://github.com/Aurumaker72/SM64Lua-BreitbandGraphics) or [tasinput-lua](https://github.com/Aurumaker72/tasinput-lua) to see how the library is used.
+Check out the [demos](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md), [the ported SM64Lua](https://github.com/Mupen64-Rewrite/SM64Lua) or [tasinput-lua](https://github.com/Aurumaker72/tasinput-lua) to see how the library is used.
 
 # 📈 Advantages
 
