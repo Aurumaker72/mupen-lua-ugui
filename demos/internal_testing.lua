@@ -7,7 +7,7 @@ dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
-
+local index = 1
 emu.atupdatescreen(function()
     BreitbandGraphics.renderers.d2d.fill_rectangle({
         x = initial_size.width,
@@ -98,6 +98,23 @@ emu.atupdatescreen(function()
             'Item C',
         },
         selected_index = 0,
+    })
+
+    index = Mupen_lua_ugui.carrousel_button({
+        uid = 4,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 100,
+            y = 150,
+            width = 90,
+            height = 30,
+        },
+        items = {
+            'Item A',
+            'Item B',
+            'Item C',
+        },
+        selected_index = index,
     })
 
     Mupen_lua_ugui.end_frame()
