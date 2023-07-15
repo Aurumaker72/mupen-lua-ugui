@@ -26,6 +26,8 @@ Cool projects made with `mupen-lua-ugui.lua`
 
 - [SM64Lua by the Mupen64 team](https://github.com/Mupen64-Rewrite/SM64Lua)
 - [TASInput Lua](https://github.com/Aurumaker72/tasinput-lua)
+- [mupen-lua-ugui-ext](https://github.com/Aurumaker72/mupen-lua-ugui-ext)
+
 
 # 📈 Advantages
 
