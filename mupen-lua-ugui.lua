@@ -1087,6 +1087,9 @@ Mupen_lua_ugui = {
     ---@param styler table A styler, which abides by the mupen-lua-ugui styler contract (recommended: `Mupen_lua_ugui.stylers.windows_10`)
     ---@param input_state table A table describing the state of the user's input devices as `{ pointer = { position = {x, y}, is_primary_down }, keyboard = { held_keys } }`
     begin_frame = function(renderer, styler, input_state)
+        if not Mupen_lua_ugui.input_state then
+            Mupen_lua_ugui.input_state = input_state
+        end
         Mupen_lua_ugui.previous_input_state = deep_clone(Mupen_lua_ugui.input_state)
         Mupen_lua_ugui.input_state = deep_clone(input_state)
         Mupen_lua_ugui.renderer = renderer
