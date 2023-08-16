@@ -1,6 +1,6 @@
 -- mupen-lua-ugui 1.0.4
 
-if not emu.set_renderer(2) then
+if not emu.set_renderer then
     print('BreitbandGraphics requires mupen64-rr-lua 1.1.4 or above\r\n')
 end
 
