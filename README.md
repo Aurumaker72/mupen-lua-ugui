@@ -22,7 +22,7 @@ Read the [demo scripts](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/
 
 # 🏗️ Projects
 
-Cool projects made with `mupen-lua-ugui.lua`
+Cool projects using `mupen-lua-ugui`
 
 - [SM64Lua by the Mupen64 team](https://github.com/Mupen64-Rewrite/SM64Lua)
 - [TASInput Lua](https://github.com/Aurumaker72/tasinput-lua)
@@ -81,21 +81,15 @@ Cool projects made with `mupen-lua-ugui.lua`
 
 ## 🧩 Porting
 
-### To BreitbandGraphics
-
-By including the `mupen-lua-ugui` library, `BreitbandGraphics` will automatically fix scripts utilizing old graphics APIs.
-
 ### To mupen-lua-ugui
 
 Porting a script to `mupen-lua-ugui` requires an understanding of the library's usage, achieved by reading the demos and comment docs.
 For individual help, contact me on Discord (`aurumaker72`) or post an issue in this repository.
 
 ## 📈 Advantages
-
 - Maximized usability
-  - Polyfilled GDI and GDI+ APIs
-  - Non-changing API surface
+  - Stable API surface
 - Helpful utilities
   - Hexadecimal color conversion
-  - Standard color tables 
+  - Standard color tables
 - Low overhead
