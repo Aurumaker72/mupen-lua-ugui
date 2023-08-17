@@ -1,7 +1,9 @@
-function folder(thisFileName)
-    local str = debug.getinfo(2, 'S').source:sub(2)
-    return (str:match('^.*/(.*).lua$') or str):sub(1, -(thisFileName):len() - 1)
+local function folder(file)
+    local s = debug.getinfo(2, "S").source:sub(2)
+    local p = file:gsub("[%(%)%%%.%+%-%*%?%^%$]", "%%%0"):gsub("[\\/]", "[\\/]") .. "$"
+    return s:gsub(p, "")
 end
+
 
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 
