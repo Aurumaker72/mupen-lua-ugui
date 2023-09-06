@@ -1,7 +1,7 @@
 local function folder(file)
-    local s = debug.getinfo(2, "S").source:sub(2)
-    local p = file:gsub("[%(%)%%%.%+%-%*%?%^%$]", "%%%0"):gsub("[\\/]", "[\\/]") .. "$"
-    return s:gsub(p, "")
+    local s = debug.getinfo(2, 'S').source:sub(2)
+    local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
+    return s:gsub(p, '')
 end
 
 dofile(folder('demos\\control_extensions_iconbutton.lua') .. 'mupen-lua-ugui.lua')
@@ -9,17 +9,13 @@ dofile(folder('demos\\control_extensions_iconbutton.lua') .. 'mupen-lua-ugui.lua
 
 Mupen_lua_ugui.iconbutton = function(control)
     local pushed = Mupen_lua_ugui.button(control)
+    local icon_info = BreitbandGraphics.renderers.d2d.get_image_info(control.icon)
 
-    BreitbandGraphics.renderers.d2d.draw_image({
-        x = control.rectangle.x,
-        y = control.rectangle.y,
-        width = control.rectangle.width,
-        height = control.rectangle.height
-    }, {
+    BreitbandGraphics.renderers.d2d.draw_image(control.rectangle, {
         x = 0,
         y = 0,
-        width = 99999,
-        height = 99999
+        width = icon_info.width,
+        height = icon_info.height,
     }, control.icon, BreitbandGraphics.colors.white)
 
     return pushed
@@ -33,11 +29,11 @@ emu.atupdatescreen(function()
         x = initial_size.width,
         y = 0,
         width = 200,
-        height = initial_size.height
+        height = initial_size.height,
     }, {
         r = 253,
         g = 253,
-        b = 253
+        b = 253,
     })
 
     local keys = input.get()
@@ -48,11 +44,11 @@ emu.atupdatescreen(function()
                 x = keys.xmouse,
                 y = keys.ymouse,
             },
-            is_primary_down = keys.leftclick
+            is_primary_down = keys.leftclick,
         },
         keyboard = {
-            held_keys = keys
-        }
+            held_keys = keys,
+        },
     })
 
     if Mupen_lua_ugui.iconbutton({
@@ -64,9 +60,9 @@ emu.atupdatescreen(function()
                 width = 80,
                 height = 80,
             },
-            icon = folder('control_extensions_iconbutton.lua') .. 'res/image.png'
+            icon = folder('control_extensions_iconbutton.lua') .. 'res\\image.png',
         }) then
-        print("hi")
+        print('hi')
     end
 
     Mupen_lua_ugui.end_frame()
