@@ -32,7 +32,7 @@ local function get_safe_selected_list_index()
 end
 
 emu.atupdatescreen(function()
-    BreitbandGraphics.renderers.d2d.fill_rectangle({
+    BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
         y = 0,
         width = 200,
@@ -44,7 +44,7 @@ emu.atupdatescreen(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame(BreitbandGraphics.renderers.d2d, Mupen_lua_ugui.stylers.windows_10, {
+    Mupen_lua_ugui.begin_frame(BreitbandGraphics, Mupen_lua_ugui.stylers.windows_10, {
         pointer = {
             position = {
                 x = keys.xmouse,

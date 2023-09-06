@@ -9,9 +9,9 @@ dofile(folder('demos\\control_extensions_iconbutton.lua') .. 'mupen-lua-ugui.lua
 
 Mupen_lua_ugui.iconbutton = function(control)
     local pushed = Mupen_lua_ugui.button(control)
-    local icon_info = BreitbandGraphics.renderers.d2d.get_image_info(control.icon)
+    local icon_info = BreitbandGraphics.get_image_info(control.icon)
 
-    BreitbandGraphics.renderers.d2d.draw_image(control.rectangle, {
+    BreitbandGraphics.draw_image(control.rectangle, {
         x = 0,
         y = 0,
         width = icon_info.width,
@@ -25,7 +25,7 @@ local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
 emu.atupdatescreen(function()
-    BreitbandGraphics.renderers.d2d.fill_rectangle({
+    BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
         y = 0,
         width = 200,
@@ -38,7 +38,7 @@ emu.atupdatescreen(function()
 
     local keys = input.get()
 
-    Mupen_lua_ugui.begin_frame(BreitbandGraphics.renderers.d2d, Mupen_lua_ugui.stylers.windows_10, {
+    Mupen_lua_ugui.begin_frame(BreitbandGraphics, Mupen_lua_ugui.stylers.windows_10, {
         pointer = {
             position = {
                 x = keys.xmouse,
