@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.0.4
+-- mupen-lua-ugui 1.0.5
 
 if not emu.set_renderer then
     print('BreitbandGraphics requires mupen64-rr-lua 1.1.4 or above\r\n')
@@ -191,7 +191,7 @@ BreitbandGraphics = {
     ---@param font_name string The font name
     ---@param text string The text
     draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
-        text)
+                         text)
         if text == nil then
             text = ''
         end
@@ -380,7 +380,7 @@ Mupen_lua_ugui = {
     input_state = {},
     previous_input_state = {},
     active_control_uid = nil,
-    previous_pointer_primary_down_position = {x = 0, y = 0},
+    previous_pointer_primary_down_position = { x = 0, y = 0 },
     hittest_ignore_rectangles = {},
     has_primary_input_been_handled = false,
     end_frame_callbacks = {},
@@ -502,7 +502,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
                     back_color)
             end,
-            draw_list = function(control, rectangle, selected_index)
+            draw_list_frame = function(rectangle, visual_state)
                 Mupen_lua_ugui.renderer.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, 1), {
                     r = 130,
                     g = 135,
@@ -513,8 +513,42 @@ Mupen_lua_ugui = {
                     g = 255,
                     b = 255,
                 })
+            end,
+            draw_list_item = function(item, rectangle, visual_state)
+                if visual_state == Mupen_lua_ugui.visual_states.active then
+                    local accent_color = {
+                        r = 0,
+                        g = 120,
+                        b = 215,
+                    }
 
+                    if visual_state == Mupen_lua_ugui.visual_states.disabled then
+                        accent_color = BreitbandGraphics.repeated_to_color(204)
+                    end
+
+
+                    Mupen_lua_ugui.renderer.fill_rectangle(rectangle, accent_color)
+                end
+
+
+                Mupen_lua_ugui.renderer.draw_text({
+                        x = rectangle.x + 2,
+                        y = rectangle.y,
+                        width = rectangle.width,
+                        height = rectangle.height,
+                    }, 'start', 'center', { clip = true },
+                    Mupen_lua_ugui.stylers.windows_10.list_text_colors[visual_state],
+                    Mupen_lua_ugui.stylers.windows_10.font_size,
+                    Mupen_lua_ugui.stylers.windows_10.font_name,
+                    item)
+            end,
+            draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
+                Mupen_lua_ugui.renderer.fill_rectangle(container_rectangle, BreitbandGraphics.repeated_to_color(240))
+                Mupen_lua_ugui.renderer.fill_rectangle(thumb_rectangle, BreitbandGraphics.repeated_to_color(204))
+            end,
+            draw_list = function(control, rectangle, selected_index)
                 local visual_state = Mupen_lua_ugui.get_visual_state(control)
+                Mupen_lua_ugui.styler.draw_list_frame(rectangle, visual_state)
 
                 -- item y position:
                 -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
@@ -545,36 +579,14 @@ Mupen_lua_ugui = {
 
                     if selected_index == i then
                         item_visual_state = Mupen_lua_ugui.visual_states.active
-                        local accent_color = {
-                            r = 0,
-                            g = 120,
-                            b = 215,
-                        }
-
-                        if visual_state == Mupen_lua_ugui.visual_states.disabled then
-                            accent_color = BreitbandGraphics.repeated_to_color(204)
-                        end
-
-
-                        Mupen_lua_ugui.renderer.fill_rectangle({
-                            x = rectangle.x,
-                            y = rectangle.y + y,
-                            width = rectangle.width,
-                            height = Mupen_lua_ugui.stylers.windows_10.item_height,
-                        }, accent_color)
                     end
 
-
-                    Mupen_lua_ugui.renderer.draw_text({
-                            x = rectangle.x + 2,
-                            y = rectangle.y + y,
-                            width = rectangle.width,
-                            height = Mupen_lua_ugui.stylers.windows_10.item_height,
-                        }, 'start', 'center', {clip = true},
-                        Mupen_lua_ugui.stylers.windows_10.list_text_colors[item_visual_state],
-                        Mupen_lua_ugui.stylers.windows_10.font_size,
-                        Mupen_lua_ugui.stylers.windows_10.font_name,
-                        control.items[i])
+                    Mupen_lua_ugui.styler.draw_list_item(control.items[i], {
+                        x = rectangle.x,
+                        y = rectangle.y + y,
+                        width = rectangle.width,
+                        height = Mupen_lua_ugui.stylers.windows_10.item_height,
+                    }, item_visual_state)
                 end
 
 
@@ -588,19 +600,19 @@ Mupen_lua_ugui = {
                     scrollbar_y = scrollbar_y - scrollbar_height / 2
                     scrollbar_y = clamp(scrollbar_y, 0, rectangle.height - scrollbar_height)
 
-                    Mupen_lua_ugui.renderer.fill_rectangle({
+                    local container_rectangle = {
                         x = rectangle.x + rectangle.width - 10,
                         y = rectangle.y,
                         width = 10,
                         height = rectangle.height,
-                    }, BreitbandGraphics.repeated_to_color(240))
-
-                    Mupen_lua_ugui.renderer.fill_rectangle({
+                    }
+                    local thumb_rectangle = {
                         x = rectangle.x + rectangle.width - 10,
                         y = rectangle.y + scrollbar_y,
                         width = 10,
                         height = scrollbar_height,
-                    }, BreitbandGraphics.repeated_to_color(204))
+                    }
+                    Mupen_lua_ugui.styler.draw_scrollbar(container_rectangle, thumb_rectangle, visual_state)
                 end
 
                 Mupen_lua_ugui.renderer.pop_clip()
@@ -616,7 +628,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
 
                 Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center',
-                    {clip = true},
+                    { clip = true },
                     Mupen_lua_ugui.stylers.windows_10.raised_frame_text_colors[visual_state],
                     Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
@@ -693,7 +705,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                         height = control.rectangle.height,
-                    }, 'start', 'start', {clip = true},
+                    }, 'start', 'start', { clip = true },
                     Mupen_lua_ugui.stylers.windows_10.edit_frame_text_colors[visual_state],
                     Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
@@ -734,7 +746,7 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y,
                             width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                             height = control.rectangle.height,
-                        }, 'start', 'start', {clip = true},
+                        }, 'start', 'start', { clip = true },
                         BreitbandGraphics.invert_color(Mupen_lua_ugui.stylers.windows_10.edit_frame_text_colors
                             [visual_state]),
                         Mupen_lua_ugui.stylers.windows_10.font_size,
@@ -939,7 +951,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, 'start', 'center', {clip = true}, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                    }, 'start', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name,
                     control.items[control.selected_index])
 
@@ -948,7 +960,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 4,
                         height = control.rectangle.height,
-                    }, 'end', 'center', {clip = true}, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                    }, 'end', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
                     'Segoe UI Mono', 'v')
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
