@@ -343,7 +343,12 @@ local function is_pointer_just_down()
     return Mupen_lua_ugui.input_state.pointer.is_primary_down and
         not Mupen_lua_ugui.previous_input_state.pointer.is_primary_down;
 end
-
+local function is_mouse_wheel_up()
+    return Mupen_lua_ugui.input_state.pointer.wheel == 1
+end
+local function is_mouse_wheel_down()
+    return Mupen_lua_ugui.input_state.pointer.wheel == -1
+end
 local function get_just_pressed_keys()
     local keys = {}
     for key, value in pairs(Mupen_lua_ugui.input_state.keyboard.held_keys) do
@@ -377,8 +382,8 @@ end
 
 Mupen_lua_ugui = {
     control_data = {},
-    input_state = {},
-    previous_input_state = {},
+    input_state = nil,
+    previous_input_state = nil,
     active_control_uid = nil,
     previous_pointer_primary_down_position = {x = 0, y = 0},
     hittest_ignore_rectangles = {},
@@ -1436,6 +1441,15 @@ Mupen_lua_ugui = {
                     selected_index = new_index
                 end
             end
+
+            local inc = 0
+            if is_mouse_wheel_up() then
+                inc = -1 / #control.items
+            end
+            if is_mouse_wheel_down() then
+                inc = 1 / #control.items
+            end
+            Mupen_lua_ugui.control_data[control.uid].y_translation = Mupen_lua_ugui.control_data[control.uid].y_translation + inc
         end
 
 
