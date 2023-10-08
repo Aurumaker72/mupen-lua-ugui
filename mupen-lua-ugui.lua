@@ -191,7 +191,7 @@ BreitbandGraphics = {
     ---@param font_name string The font name
     ---@param text string The text
     draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
-        text)
+                         text)
         if text == nil then
             text = ''
         end
@@ -385,7 +385,7 @@ Mupen_lua_ugui = {
     input_state = nil,
     previous_input_state = nil,
     active_control_uid = nil,
-    previous_pointer_primary_down_position = {x = 0, y = 0},
+    previous_pointer_primary_down_position = { x = 0, y = 0 },
     hittest_ignore_rectangles = {},
     has_primary_input_been_handled = false,
     end_frame_callbacks = {},
@@ -430,6 +430,7 @@ Mupen_lua_ugui = {
             bar_height = 16,
             item_height = 15,
             font_size = 12,
+            scrollbar_thickness = 17,
             font_name = 'MS Shell Dlg 2',
             raised_frame_text_colors = {
                 [1] = BreitbandGraphics.colors.black,
@@ -541,7 +542,7 @@ Mupen_lua_ugui = {
                         y = rectangle.y,
                         width = rectangle.width,
                         height = rectangle.height,
-                    }, 'start', 'center', {clip = true},
+                    }, 'start', 'center', { clip = true },
                     Mupen_lua_ugui.stylers.windows_10.list_text_colors[visual_state],
                     Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name,
@@ -606,15 +607,15 @@ Mupen_lua_ugui = {
                     scrollbar_y = clamp(scrollbar_y, 0, rectangle.height - scrollbar_height)
 
                     local container_rectangle = {
-                        x = rectangle.x + rectangle.width - 10,
+                        x = rectangle.x + rectangle.width - Mupen_lua_ugui.stylers.windows_10.scrollbar_thickness,
                         y = rectangle.y,
-                        width = 10,
+                        width = Mupen_lua_ugui.stylers.windows_10.scrollbar_thickness,
                         height = rectangle.height,
                     }
                     local thumb_rectangle = {
-                        x = rectangle.x + rectangle.width - 10,
+                        x = rectangle.x + rectangle.width - Mupen_lua_ugui.stylers.windows_10.scrollbar_thickness,
                         y = rectangle.y + scrollbar_y,
-                        width = 10,
+                        width = Mupen_lua_ugui.stylers.windows_10.scrollbar_thickness,
                         height = scrollbar_height,
                     }
                     Mupen_lua_ugui.styler.draw_scrollbar(container_rectangle, thumb_rectangle, visual_state)
@@ -633,7 +634,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.stylers.windows_10.draw_raised_frame(control, visual_state)
 
                 Mupen_lua_ugui.renderer.draw_text(control.rectangle, 'center', 'center',
-                    {clip = true},
+                    { clip = true },
                     Mupen_lua_ugui.stylers.windows_10.raised_frame_text_colors[visual_state],
                     Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
@@ -710,7 +711,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                         height = control.rectangle.height,
-                    }, 'start', 'start', {clip = true},
+                    }, 'start', 'start', { clip = true },
                     Mupen_lua_ugui.stylers.windows_10.edit_frame_text_colors[visual_state],
                     Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name, control.text)
@@ -751,7 +752,7 @@ Mupen_lua_ugui = {
                             y = control.rectangle.y,
                             width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 2,
                             height = control.rectangle.height,
-                        }, 'start', 'start', {clip = true},
+                        }, 'start', 'start', { clip = true },
                         BreitbandGraphics.invert_color(Mupen_lua_ugui.stylers.windows_10.edit_frame_text_colors
                             [visual_state]),
                         Mupen_lua_ugui.stylers.windows_10.font_size,
@@ -956,7 +957,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width,
                         height = control.rectangle.height,
-                    }, 'start', 'center', {clip = true}, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                    }, 'start', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
                     Mupen_lua_ugui.stylers.windows_10.font_name,
                     control.items[control.selected_index])
 
@@ -965,7 +966,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.stylers.windows_10.textbox_padding * 4,
                         height = control.rectangle.height,
-                    }, 'end', 'center', {clip = true}, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
+                    }, 'end', 'center', { clip = true }, text_color, Mupen_lua_ugui.stylers.windows_10.font_size,
                     'Segoe UI Mono', 'v')
 
                 if Mupen_lua_ugui.control_data[control.uid].is_open then
@@ -1413,9 +1414,9 @@ Mupen_lua_ugui = {
         end
 
         local scrollbar_rect = {
-            x = control.rectangle.x + control.rectangle.width - 10,
+            x = control.rectangle.x + control.rectangle.width - Mupen_lua_ugui.styler.scrollbar_thickness,
             y = control.rectangle.y,
-            width = 10,
+            width = Mupen_lua_ugui.styler.scrollbar_thickness,
             height = control.rectangle.height,
         }
 
@@ -1449,7 +1450,8 @@ Mupen_lua_ugui = {
             if is_mouse_wheel_down() then
                 inc = 1 / #control.items
             end
-            Mupen_lua_ugui.control_data[control.uid].y_translation = Mupen_lua_ugui.control_data[control.uid].y_translation + inc
+            Mupen_lua_ugui.control_data[control.uid].y_translation = Mupen_lua_ugui.control_data[control.uid]
+                .y_translation + inc
         end
 
 
