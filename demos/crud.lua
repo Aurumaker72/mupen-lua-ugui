@@ -1,15 +1,14 @@
 local function folder(file)
-    local s = debug.getinfo(2, "S").source:sub(2)
-    local p = file:gsub("[%(%)%%%.%+%-%*%?%^%$]", "%%%0"):gsub("[\\/]", "[\\/]") .. "$"
-    return s:gsub(p, "")
+    local s = debug.getinfo(2, 'S').source:sub(2)
+    local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
+    return s:gsub(p, '')
 end
 
 dofile(folder('demos\\crud.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
 
-
-
+local mouse_wheel = -1
 local text = ''
 local items = {}
 local selected_list_index = 1
@@ -45,18 +44,15 @@ emu.atupdatescreen(function()
 
     local keys = input.get()
     Mupen_lua_ugui.begin_frame(BreitbandGraphics, Mupen_lua_ugui.stylers.windows_10, {
-        pointer = {
-            position = {
-                x = keys.xmouse,
-                y = keys.ymouse,
-            },
-            is_primary_down = keys.leftclick,
+        mouse_position = {
+            x = keys.xmouse,
+            y = keys.ymouse,
         },
-        keyboard = {
-            held_keys = keys,
-        },
+        wheel = mouse_wheel,
+        is_primary_down = keys.leftclick,
+        held_keys = keys,
     })
-
+    mouse_wheel = 0
 
     text = Mupen_lua_ugui.textbox({
         uid = 1,
@@ -177,7 +173,17 @@ emu.atupdatescreen(function()
     Mupen_lua_ugui.end_frame()
 end)
 
-
 emu.atstop(function()
     wgui.resize(initial_size.width, initial_size.height)
+end)
+
+emu.atwindowmessage(function(_, msg_id, wparam, _)
+    if msg_id == 522 then
+        local scroll = math.floor(wparam / 65536)
+        if scroll == 120 then
+            mouse_wheel = 1
+        elseif scroll == 65416 then
+            mouse_wheel = -1
+        end
+    end
 end)
