@@ -18,7 +18,7 @@ dofile("mupen-lua-ugui.lua")
 
 That's it. Don't forget to pass an absolute path, not a relative one.
 
-Read the [demo scripts](https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/demos.md) and function documentation for usage information.
+Read the [demo scripts](https://github.com/Aurumaker72/mupen-lua-ugui/tree/main/demos) and function documentation for usage information.
 
 # 🏗️ Projects
 
@@ -39,7 +39,6 @@ Cool projects using `mupen-lua-ugui`
   - Mock subsystems
 - Host-authoritative
   - Invokable anytime and anywhere
-  - No copies or mutation of application state
   - No global pollution - only necessary components are exposed as tables
 - Fast
   - Shallow callstacks
