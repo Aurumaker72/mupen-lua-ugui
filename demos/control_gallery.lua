@@ -23,7 +23,7 @@ emu.atupdatescreen(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame(BreitbandGraphics, Mupen_lua_ugui.stylers.windows_10, {
+    Mupen_lua_ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,

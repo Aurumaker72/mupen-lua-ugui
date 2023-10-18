@@ -6,15 +6,9 @@ end
 
 local mouse_wheel = 0
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
-
-local many_items = {}
-for i = 1, 1000, 1 do
-    many_items[i] = i
-end
 local initial_size = wgui.info()
-local mouse_wheel = 0
+local selected_index = 1
 wgui.resize(initial_size.width + 200, initial_size.height)
-local index = 1
 emu.atupdatescreen(function()
     BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
@@ -28,7 +22,7 @@ emu.atupdatescreen(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame(BreitbandGraphics, Mupen_lua_ugui.stylers.windows_10, {
+    Mupen_lua_ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -39,98 +33,40 @@ emu.atupdatescreen(function()
     })
     mouse_wheel = 0
 
-    Mupen_lua_ugui.combobox({
+    selected_index = Mupen_lua_ugui.combobox({
         uid = 0,
         is_enabled = true,
         rectangle = {
             x = initial_size.width + 10,
             y = 20,
             width = 90,
-            height = 30,
+            height = 20,
         },
         items = {
             'Item A',
             'Item B',
             'Item C',
+            'Item D',
+            'Item E',
+            'Item F',
+            'Item G',
         },
-        selected_index = 0,
+        selected_index = selected_index,
     })
     if Mupen_lua_ugui.button({
             uid = 1,
             is_enabled = true,
             rectangle = {
                 x = initial_size.width + 10,
-                y = 90,
-                width = 90,
-                height = 30,
+                y = 60,
+                width = 150,
+                height = 20,
             },
             text = 'Test',
         }) then
         print(math.random())
     end
 
-    Mupen_lua_ugui.combobox({
-        uid = 2,
-        is_enabled = true,
-        rectangle = {
-            x = initial_size.width + 100,
-            y = 20,
-            width = 90,
-            height = 30,
-        },
-        items = {
-            'Item A',
-            'Item B',
-            'Item C',
-        },
-        selected_index = 0,
-    })
-    Mupen_lua_ugui.combobox({
-        uid = 3,
-        is_enabled = true,
-        rectangle = {
-            x = initial_size.width + 100,
-            y = 90,
-            width = 90,
-            height = 30,
-        },
-        items = {
-            'Item A',
-            'Item B',
-            'Item C',
-        },
-        selected_index = 0,
-    })
-
-    index = Mupen_lua_ugui.carrousel_button({
-        uid = 4,
-        is_enabled = true,
-        rectangle = {
-            x = initial_size.width + 100,
-            y = 150,
-            width = 90,
-            height = 30,
-        },
-        items = {
-            'Item A',
-            'Item B',
-            'Item C',
-        },
-        selected_index = index,
-    })
-
-    Mupen_lua_ugui.listbox({
-        uid = 100,
-        is_enabled = true,
-        rectangle = {
-            x = initial_size.width + 10,
-            y = 140,
-            width = 180,
-            height = 200,
-        },
-        items = many_items,
-        selected_index = 0,
-    })
 
     Mupen_lua_ugui.end_frame()
 end)
