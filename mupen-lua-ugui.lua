@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.2.0
+-- mupen-lua-ugui 1.2.1
 
 if not emu.set_renderer then
     print('BreitbandGraphics requires mupen64-rr-lua 1.1.4 or above\r\n')
@@ -393,7 +393,14 @@ Mupen_lua_ugui = {
             return keys
         end,
         is_pushed = function(control)
-            return Mupen_lua_ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) and control.is_enabled
+            local base = Mupen_lua_ugui.internal.is_mouse_just_down()
+                and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle)
+                and control.is_enabled
+
+            if not control.topmost and BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, Mupen_lua_ugui.internal.hittest_free_rects) then
+                base = false
+            end
+            return base
         end,
     },
     -- The possible states of a control, which are used by the styler
@@ -415,13 +422,24 @@ Mupen_lua_ugui = {
             return Mupen_lua_ugui.visual_states.disabled
         end
 
-        if BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
-            if BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position, control.rectangle) and Mupen_lua_ugui.internal.input_state.is_primary_down then
-                return Mupen_lua_ugui.visual_states.active
-            end
+        local is_inside = BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle)
+            and not BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, Mupen_lua_ugui.internal.hittest_free_rects)
 
+        local mouse_down_inside = BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position, control.rectangle)
+            and not BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.mouse_down_position, Mupen_lua_ugui.internal.hittest_free_rects)
+
+        if is_inside and not Mupen_lua_ugui.internal.input_state.is_primary_down then
             return Mupen_lua_ugui.visual_states.hovered
         end
+
+        if mouse_down_inside and Mupen_lua_ugui.internal.input_state.is_primary_down and not is_inside then
+            return Mupen_lua_ugui.visual_states.hovered
+        end
+
+        if is_inside and Mupen_lua_ugui.internal.input_state.is_primary_down then
+            return Mupen_lua_ugui.visual_states.active
+        end
+
         return Mupen_lua_ugui.visual_states.normal
     end,
 
@@ -999,6 +1017,7 @@ Mupen_lua_ugui = {
         end
 
         Mupen_lua_ugui.internal.late_callbacks = {}
+        Mupen_lua_ugui.internal.hittest_free_rects = {}
     end,
 
     ---Places a Button
@@ -1333,17 +1352,20 @@ Mupen_lua_ugui = {
         local selected_index = control.selected_index
 
         if Mupen_lua_ugui.internal.control_data[control.uid].is_open and control.is_enabled then
+            local list_rect = {
+                x = control.rectangle.x,
+                y = control.rectangle.y + control.rectangle.height,
+                width = control.rectangle.width,
+                height = Mupen_lua_ugui.standard_styler.item_height * #control.items + 2,
+            }
+            Mupen_lua_ugui.internal.hittest_free_rects[#Mupen_lua_ugui.internal.hittest_free_rects + 1] = list_rect
+
             selected_index = Mupen_lua_ugui.listbox({
                 uid = control.uid + 1,
                 is_enabled = true,
                 -- we tell the listbox to paint itself at the end of the frame, because we need it on top of all other controls
-                paint_late = true,
-                rectangle = {
-                    x = control.rectangle.x,
-                    y = control.rectangle.y + control.rectangle.height,
-                    width = control.rectangle.width,
-                    height = Mupen_lua_ugui.standard_styler.item_height * #control.items + 2,
-                },
+                topmost = true,
+                rectangle = list_rect,
                 items = control.items,
                 selected_index = selected_index,
             })
@@ -1382,7 +1404,8 @@ Mupen_lua_ugui = {
 
         local selected_index = control.selected_index
 
-        if control.is_enabled and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
+        if control.is_enabled and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle)
+            and not BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, Mupen_lua_ugui.internal.hittest_free_rects) then
             if Mupen_lua_ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, scrollbar_rect) then
                 Mupen_lua_ugui.internal.active_control_uid = control.uid
             end
@@ -1423,7 +1446,7 @@ Mupen_lua_ugui = {
         Mupen_lua_ugui.internal.control_data[control.uid].y_translation = Mupen_lua_ugui.internal.clamp(
             Mupen_lua_ugui.internal.control_data[control.uid].y_translation, 0, 1)
 
-        if control.paint_late then
+        if control.topmost then
             Mupen_lua_ugui.internal.late_callbacks[#Mupen_lua_ugui.internal.late_callbacks + 1] = function()
                 Mupen_lua_ugui.standard_styler.draw_listbox(control)
             end

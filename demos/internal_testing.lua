@@ -8,6 +8,7 @@ local mouse_wheel = 0
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
 local selected_index = 1
+local selected_index_2 = 1
 wgui.resize(initial_size.width + 200, initial_size.height)
 emu.atupdatescreen(function()
     BreitbandGraphics.fill_rectangle({
@@ -53,19 +54,26 @@ emu.atupdatescreen(function()
         },
         selected_index = selected_index,
     })
-    if Mupen_lua_ugui.button({
-            uid = 1,
-            is_enabled = true,
-            rectangle = {
-                x = initial_size.width + 10,
-                y = 60,
-                width = 150,
-                height = 20,
-            },
-            text = 'Test',
-        }) then
-        print(math.random())
-    end
+    selected_index_2 = Mupen_lua_ugui.listbox({
+        uid = 1,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 10,
+            y = 60,
+            width = 150,
+            height = 400,
+        },
+        items = {
+            'Item A',
+            'Item B',
+            'Item C',
+            'Item D',
+            'Item E',
+            'Item F',
+            'Item G',
+        },
+        selected_index = selected_index_2,
+    })
 
 
     Mupen_lua_ugui.end_frame()
