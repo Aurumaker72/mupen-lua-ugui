@@ -11,7 +11,7 @@ wgui.resize(initial_size.width + 200, initial_size.height)
 
 
 local pages = {}
-local selected_page_index = 0
+local selected_page_index = 1
 local mouse_wheel = 0
 local is_joystick_enabled = true
 
