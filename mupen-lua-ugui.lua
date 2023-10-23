@@ -213,7 +213,7 @@ BreitbandGraphics = {
     ---@param font_name string The font name
     ---@param text string The text
     draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
-        text)
+                         text)
         if text == nil then
             text = ''
         end
@@ -331,7 +331,7 @@ Mupen_lua_ugui = {
         previous_input_state = nil,
 
         -- the position of the mouse at the last click
-        mouse_down_position = {x = 0, y = 0},
+        mouse_down_position = { x = 0, y = 0 },
 
         -- uid of the currently pushed control (last mouse down is on it and mouse has not been released)
         pushed_control = nil,
@@ -735,7 +735,7 @@ Mupen_lua_ugui = {
                     y = rectangle.y,
                     width = rectangle.width,
                     height = rectangle.height,
-                }, 'start', 'center', {clip = true},
+                }, 'start', 'center', { clip = true },
                 Mupen_lua_ugui.standard_styler.list_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name,
@@ -790,14 +790,16 @@ Mupen_lua_ugui = {
 
 
             if #control.items * Mupen_lua_ugui.standard_styler.item_height > rectangle.height then
-                local scrollbar_y = y_translation * rectangle
-                    .height
-                local scrollbar_height = 2 * Mupen_lua_ugui.standard_styler.item_height *
-                    (rectangle.height / (Mupen_lua_ugui.standard_styler.item_height * #control.items))
-                -- we center the scrollbar around the translation value
 
-                scrollbar_y = scrollbar_y - scrollbar_height / 2
-                scrollbar_y = Mupen_lua_ugui.internal.clamp(scrollbar_y, 0, rectangle.height - scrollbar_height)
+                -- figure out height of scrollbar
+                local scrollbar_base_height = rectangle.height
+                local content_overflow_ratio = (Mupen_lua_ugui.standard_styler.item_height * #control.items) /
+                    rectangle.height
+                local inverse_content_overflow_ratio = 1 / content_overflow_ratio
+                local scrollbar_height = scrollbar_base_height * inverse_content_overflow_ratio
+
+                -- we center the scrollbar around the translation value, and shrink it accordingly
+                local scrollbar_y = Mupen_lua_ugui.internal.remap(y_translation, 0, 1, 0, rectangle.height - scrollbar_height)
 
                 local container_rectangle = {
                     x = rectangle.x + rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
@@ -827,7 +829,7 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.standard_styler.draw_raised_frame(control, visual_state)
 
             BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-                {clip = true},
+                { clip = true },
                 Mupen_lua_ugui.standard_styler.raised_frame_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name, control.text)
@@ -905,7 +907,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                     width = control.rectangle.width - Mupen_lua_ugui.standard_styler.textbox_padding * 2,
                     height = control.rectangle.height,
-                }, 'start', 'start', {clip = true},
+                }, 'start', 'start', { clip = true },
                 Mupen_lua_ugui.standard_styler.edit_frame_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name, control.text)
@@ -946,7 +948,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.standard_styler.textbox_padding * 2,
                         height = control.rectangle.height,
-                    }, 'start', 'start', {clip = true},
+                    }, 'start', 'start', { clip = true },
                     BreitbandGraphics.invert_color(Mupen_lua_ugui.standard_styler.edit_frame_text_colors
                         [visual_state]),
                     Mupen_lua_ugui.standard_styler.font_size,
@@ -1091,7 +1093,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                     width = control.rectangle.width,
                     height = control.rectangle.height,
-                }, 'start', 'center', {clip = true}, text_color, Mupen_lua_ugui.standard_styler.font_size,
+                }, 'start', 'center', { clip = true }, text_color, Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name,
                 control.items[control.selected_index])
 
@@ -1100,7 +1102,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                     width = control.rectangle.width - Mupen_lua_ugui.standard_styler.textbox_padding * 4,
                     height = control.rectangle.height,
-                }, 'end', 'center', {clip = true}, text_color, Mupen_lua_ugui.standard_styler.font_size,
+                }, 'end', 'center', { clip = true }, text_color, Mupen_lua_ugui.standard_styler.font_size,
                 'Segoe UI Mono', 'v')
         end,
 
