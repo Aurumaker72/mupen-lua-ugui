@@ -72,7 +72,7 @@ emu.atupdatescreen(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame( {
+    Mupen_lua_ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -95,8 +95,21 @@ emu.atupdatescreen(function()
         rectangle = {
             x = initial_size.width + 5,
             y = 10,
+            width = 80,
+            height = 20,
+        },
+        items = items,
+        selected_index = selected_page_index,
+    })
+
+    selected_page_index = Mupen_lua_ugui.carrousel_button({
+        uid = 60001,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 5,
+            y = 40,
             width = 190,
-            height = 30,
+            height = 20,
         },
         items = items,
         selected_index = selected_page_index,

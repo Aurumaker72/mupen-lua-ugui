@@ -38,8 +38,8 @@ emu.atupdatescreen(function()
         uid = 0,
         is_enabled = true,
         rectangle = {
-            x = initial_size.width + 10,
-            y = 20,
+            x = initial_size.width + 5,
+            y = 5,
             width = 90,
             height = 20,
         },
@@ -54,12 +54,27 @@ emu.atupdatescreen(function()
         },
         selected_index = selected_index,
     })
+
+    if Mupen_lua_ugui.button({
+        uid = 123,
+        is_enabled = true,
+        rectangle = {
+            x = initial_size.width + 100,
+            y = 5,
+            width = 90,
+            height = 20,
+        },
+        text = "a"
+    }) then
+        print(math.random())
+    end
+    
     selected_index_2 = Mupen_lua_ugui.listbox({
         uid = 1,
         is_enabled = true,
         rectangle = {
-            x = initial_size.width + 10,
-            y = 60,
+            x = initial_size.width + 5,
+            y = 80,
             width = 150,
             height = 400,
         },

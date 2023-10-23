@@ -8,6 +8,7 @@ dofile(folder('demos\\control_gallery.lua') .. 'mupen-lua-ugui.lua')
 
 local mouse_wheel = 0
 local initial_size = wgui.info()
+local value = 0
 wgui.resize(initial_size.width + 200, initial_size.height)
 
 emu.atupdatescreen(function()
@@ -114,7 +115,7 @@ emu.atupdatescreen(function()
         selected_index = 1,
     })
 
-    Mupen_lua_ugui.trackbar({
+    value = Mupen_lua_ugui.trackbar({
         uid = 6,
         is_enabled = true,
         rectangle = {
@@ -123,7 +124,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        value = 0,
+        value = value,
     })
 
     Mupen_lua_ugui.trackbar({
@@ -135,7 +136,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 30,
         },
-        value = 0,
+        value = value,
     })
 
 
