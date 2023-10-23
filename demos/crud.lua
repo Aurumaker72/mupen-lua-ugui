@@ -152,7 +152,7 @@ emu.atupdatescreen(function()
 
 
     local text = Mupen_lua_ugui.textbox({
-        uid = 6,
+        uid = 8,
         is_enabled = is_selection_valid() and is_editing,
         rectangle = {
             x = initial_size.width + 10,
