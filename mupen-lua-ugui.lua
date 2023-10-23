@@ -383,6 +383,9 @@ Mupen_lua_ugui = {
             return (value - from1) / (to1 - from1) * (to2 - from2) + from2
         end,
         clamp = function(value, min, max)
+            if value == nil then
+                return value
+            end
             return math.max(math.min(value, max), min)
         end,
         get_just_pressed_keys = function()
@@ -1226,11 +1229,13 @@ Mupen_lua_ugui = {
 
 
         local function sel_hi()
-            return math.max(Mupen_lua_ugui.internal.control_data[control.uid].selection_start, Mupen_lua_ugui.internal.control_data[control.uid].selection_end)
+            return math.max(Mupen_lua_ugui.internal.control_data[control.uid].selection_start,
+                Mupen_lua_ugui.internal.control_data[control.uid].selection_end)
         end
 
         local function sel_lo()
-            return math.min(Mupen_lua_ugui.internal.control_data[control.uid].selection_start, Mupen_lua_ugui.internal.control_data[control.uid].selection_end)
+            return math.min(Mupen_lua_ugui.internal.control_data[control.uid].selection_start,
+                Mupen_lua_ugui.internal.control_data[control.uid].selection_end)
         end
 
 
@@ -1250,10 +1255,14 @@ Mupen_lua_ugui = {
             end
 
             local just_pressed_keys = Mupen_lua_ugui.internal.get_just_pressed_keys()
-            local has_selection = Mupen_lua_ugui.internal.control_data[control.uid].selection_start ~= Mupen_lua_ugui.internal.control_data[control.uid].selection_end
+            local has_selection = Mupen_lua_ugui.internal.control_data[control.uid].selection_start ~=
+                Mupen_lua_ugui.internal.control_data[control.uid].selection_end
 
             for key, _ in pairs(just_pressed_keys) do
-                local result = Mupen_lua_ugui.internal.handle_special_key(key, has_selection, control.text, Mupen_lua_ugui.internal.control_data[control.uid].selection_start, Mupen_lua_ugui.internal.control_data[control.uid].selection_end, Mupen_lua_ugui.internal.control_data[control.uid].caret_index)
+                local result = Mupen_lua_ugui.internal.handle_special_key(key, has_selection, control.text,
+                    Mupen_lua_ugui.internal.control_data[control.uid].selection_start,
+                    Mupen_lua_ugui.internal.control_data[control.uid].selection_end,
+                    Mupen_lua_ugui.internal.control_data[control.uid].caret_index)
 
 
                 -- special key press wasn't handled, we proceed to just insert the pressed character (or replace the selection)
