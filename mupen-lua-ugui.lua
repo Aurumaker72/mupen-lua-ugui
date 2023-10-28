@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.3.0
+-- mupen-lua-ugui 1.3.1
 
 if not emu.set_renderer then
     print('BreitbandGraphics requires mupen64-rr-lua 1.1.4 or above\r\n')
@@ -294,11 +294,6 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param filter string The texture filter to be used while drawing the image. `nearest` | `linear`
     draw_image = function(destination_rectangle, source_rectangle, path, color, filter)
-        if not BreitbandGraphics.bitmap_cache[path] then
-            print('Loaded image from ' .. path)
-            d2d.load_image(path, path)
-            BreitbandGraphics.bitmap_cache[path] = path
-        end
         if not filter then
             filter = 'nearest'
         end
@@ -312,11 +307,6 @@ BreitbandGraphics = {
     ---Gets an image's metadata
     ---@param path string The image's absolute path on disk
     get_image_info = function(path)
-        if not BreitbandGraphics.bitmap_cache[path] then
-            print('Loaded image from ' .. path)
-            d2d.load_image(path, path)
-            BreitbandGraphics.bitmap_cache[path] = path
-        end
         return d2d.get_image_info(path)
     end,
 }
