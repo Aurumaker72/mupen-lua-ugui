@@ -38,7 +38,7 @@ emu.atupdatescreen(function()
         for y = 1, 30, 1 do
             Mupen_lua_ugui.button({
                 uid = x * y,
-                is_enabled = true,
+                
                 rectangle = {
                     x = initial_size.width + (x - 1) * 20,
                     y = (y - 1) * 20,

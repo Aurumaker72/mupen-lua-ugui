@@ -37,7 +37,6 @@ emu.atupdatescreen(function()
 
     Mupen_lua_ugui.button({
         uid = 0,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width,
             y = 10,
@@ -63,7 +62,6 @@ emu.atupdatescreen(function()
 
     Mupen_lua_ugui.textbox({
         uid = 2,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width,
             y = 50,
@@ -87,7 +85,6 @@ emu.atupdatescreen(function()
 
     Mupen_lua_ugui.combobox({
         uid = 4,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width,
             y = 90,
@@ -117,7 +114,6 @@ emu.atupdatescreen(function()
 
     value = Mupen_lua_ugui.trackbar({
         uid = 6,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width,
             y = 130,
@@ -142,7 +138,6 @@ emu.atupdatescreen(function()
 
     Mupen_lua_ugui.listbox({
         uid = 8,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width,
             y = 170,
@@ -174,7 +169,6 @@ emu.atupdatescreen(function()
 
     Mupen_lua_ugui.joystick({
         uid = 10,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width,
             y = 210,

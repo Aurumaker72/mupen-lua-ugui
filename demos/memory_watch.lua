@@ -149,7 +149,6 @@ emu.atupdatescreen(function()
 
     address = Mupen_lua_ugui.textbox({
         uid = 0,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width + 5,
             y = 10,
@@ -161,7 +160,6 @@ emu.atupdatescreen(function()
 
     type_index = Mupen_lua_ugui.combobox({
         uid = 1,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width + 105,
             y = 10,
@@ -174,7 +172,6 @@ emu.atupdatescreen(function()
 
     if (Mupen_lua_ugui.button({
             uid = 2,
-            is_enabled = true,
             rectangle = {
                 x = initial_size.width + 5,
                 y = 35,
@@ -202,7 +199,6 @@ emu.atupdatescreen(function()
 
     selected_watch_index = Mupen_lua_ugui.listbox({
         uid = 3,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width + 5,
             y = 70,

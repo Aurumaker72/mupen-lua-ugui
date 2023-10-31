@@ -56,7 +56,6 @@ emu.atupdatescreen(function()
 
     text = Mupen_lua_ugui.textbox({
         uid = 1,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width + 10,
             y = 10,
@@ -93,7 +92,6 @@ emu.atupdatescreen(function()
 
     selected_list_index = Mupen_lua_ugui.listbox({
         uid = 3,
-        is_enabled = true,
         rectangle = {
             x = initial_size.width + 10,
             y = 40,

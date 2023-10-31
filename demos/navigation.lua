@@ -18,7 +18,7 @@ local is_joystick_enabled = true
 pages[1] = function()
     Mupen_lua_ugui.button({
         uid = 0,
-        is_enabled = true,
+        
         rectangle = {
             x = initial_size.width + 5,
             y = 100,
@@ -47,7 +47,7 @@ pages[2] = function()
 
     is_joystick_enabled = Mupen_lua_ugui.toggle_button({
         uid = 2,
-        is_enabled = true,
+        
         rectangle = {
             x = initial_size.width + 5,
             y = 230,
@@ -91,7 +91,7 @@ emu.atupdatescreen(function()
 
     selected_page_index = Mupen_lua_ugui.combobox({
         uid = 6000,
-        is_enabled = true,
+        
         rectangle = {
             x = initial_size.width + 5,
             y = 10,
@@ -104,7 +104,7 @@ emu.atupdatescreen(function()
 
     selected_page_index = Mupen_lua_ugui.carrousel_button({
         uid = 60001,
-        is_enabled = true,
+        
         rectangle = {
             x = initial_size.width + 5,
             y = 40,
