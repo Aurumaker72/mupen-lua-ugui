@@ -24,9 +24,9 @@ Read the [demo scripts](https://github.com/Aurumaker72/mupen-lua-ugui/tree/main/
 
 Cool projects using `mupen-lua-ugui`
 
-- [SM64Lua by the Mupen64 team](https://github.com/Mupen64-Rewrite/SM64Lua)
-- [TASInput Lua](https://github.com/Aurumaker72/tasinput-lua)
+- [SM64Lua Redux](https://github.com/Mupen64-Rewrite/SM64Lua)
 - [mupen-lua-ugui-ext](https://github.com/Aurumaker72/mupen-lua-ugui-ext)
+- [TASInput Lua](https://github.com/Aurumaker72/tasinput-lua)
 
 
 # 📈 Advantages
@@ -49,9 +49,10 @@ Cool projects using `mupen-lua-ugui`
 
 - Stylers
   - Windows 10 (built-in)
-- Modularity
-  - Provide subsystem references in `begin_frame`
+- Flexibility
   - Modify any parts of the framework to your liking
+- User Productivity
+  - Interactions behave exactly like Windows
 - Button
 - TextBox
   - Full-fledged selection and editing system
