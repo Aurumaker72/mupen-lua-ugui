@@ -837,8 +837,16 @@ Mupen_lua_ugui = {
                 item)
         end,
         draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
+            local thumb_color = BreitbandGraphics.repeated_to_color(205)
+            if visual_state == Mupen_lua_ugui.visual_states.hovered then
+                thumb_color = BreitbandGraphics.repeated_to_color(166)
+            elseif visual_state == Mupen_lua_ugui.visual_states.active then
+                thumb_color = BreitbandGraphics.repeated_to_color(96)
+            elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
+                thumb_color = BreitbandGraphics.repeated_to_color(192)
+            end
             BreitbandGraphics.fill_rectangle(container_rectangle, BreitbandGraphics.repeated_to_color(240))
-            BreitbandGraphics.fill_rectangle(thumb_rectangle, BreitbandGraphics.repeated_to_color(204))
+            BreitbandGraphics.fill_rectangle(thumb_rectangle, thumb_color)
         end,
         draw_list = function(control, rectangle, selected_index)
             local visual_state = Mupen_lua_ugui.get_visual_state(control)
@@ -881,34 +889,6 @@ Mupen_lua_ugui = {
                     width = rectangle.width,
                     height = Mupen_lua_ugui.standard_styler.item_height,
                 }, item_visual_state)
-            end
-
-
-            if #control.items * Mupen_lua_ugui.standard_styler.item_height > rectangle.height then
-                -- figure out height of scrollbar
-                local scrollbar_base_height = rectangle.height
-                local content_overflow_ratio = (Mupen_lua_ugui.standard_styler.item_height * #control.items) /
-                    rectangle.height
-                local inverse_content_overflow_ratio = 1 / content_overflow_ratio
-                local scrollbar_height = scrollbar_base_height * inverse_content_overflow_ratio
-
-                -- we center the scrollbar around the translation value, and shrink it accordingly
-                local scrollbar_y = Mupen_lua_ugui.internal.remap(y_translation, 0, 1, 0,
-                    rectangle.height - scrollbar_height)
-
-                local container_rectangle = {
-                    x = rectangle.x + rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-                    y = rectangle.y,
-                    width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-                    height = rectangle.height,
-                }
-                local thumb_rectangle = {
-                    x = rectangle.x + rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-                    y = rectangle.y + scrollbar_y,
-                    width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-                    height = scrollbar_height,
-                }
-                Mupen_lua_ugui.standard_styler.draw_scrollbar(container_rectangle, thumb_rectangle, visual_state)
             end
 
             BreitbandGraphics.pop_clip()
@@ -1598,15 +1578,6 @@ Mupen_lua_ugui = {
                 .y_translation + inc
         end
 
-        if Mupen_lua_ugui.internal.control_data[control.uid].active and overflows and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position, scrollbar_rect) then
-            local v = (Mupen_lua_ugui.internal.input_state.mouse_position.y - control.rectangle.y) /
-                control.rectangle.height
-            Mupen_lua_ugui.internal.control_data[control.uid].y_translation = v
-        end
-
-        Mupen_lua_ugui.internal.control_data[control.uid].y_translation = Mupen_lua_ugui.internal.clamp(
-            Mupen_lua_ugui.internal.control_data[control.uid].y_translation, 0, 1)
-
         if control.topmost then
             Mupen_lua_ugui.internal.late_callbacks[#Mupen_lua_ugui.internal.late_callbacks + 1] = function()
                 Mupen_lua_ugui.standard_styler.draw_listbox(control)
@@ -1615,6 +1586,86 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.standard_styler.draw_listbox(control)
         end
 
+        local content_height = #control.items * Mupen_lua_ugui.standard_styler.item_height
+        if content_height > control.rectangle.height then
+            Mupen_lua_ugui.internal.control_data[control.uid].y_translation = Mupen_lua_ugui.scrollbar({
+                uid = control.uid + 1,
+                is_enabled = control.is_enabled,
+                rectangle = {
+                    x = control.rectangle.x + control.rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
+                    y = control.rectangle.y,
+                    width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
+                    height = control.rectangle.height,
+                },
+                value = Mupen_lua_ugui.internal.control_data[control.uid].y_translation,
+                content_height = content_height,
+            })
+        end
+
         return Mupen_lua_ugui.internal.clamp(selected_index, 1, #control.items)
+    end,
+    ---Places a ScrollBar
+    ---
+    ---Additional fields in the `control` table:
+    ---
+    --- `value` — `number` The items contained in the dropdown
+    --- `content_height` — `number` The relevant content's height
+    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
+    ---@return _ number The new value
+    scrollbar = function(control)
+        if not Mupen_lua_ugui.internal.control_data[control.uid] then
+            Mupen_lua_ugui.internal.control_data[control.uid] = {
+                active = false,
+                start_value = 0,
+            }
+        end
+
+        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+
+        -- if active and user clicks elsewhere, deactivate
+        if Mupen_lua_ugui.internal.control_data[control.uid].active then
+            if not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
+                if Mupen_lua_ugui.internal.is_mouse_just_down() then
+                    -- deactivate, then clear selection
+                    Mupen_lua_ugui.internal.control_data[control.uid].active = false
+                end
+            end
+        end
+
+        -- new activation via direct click
+        if pushed then
+            Mupen_lua_ugui.internal.control_data[control.uid].active = true
+            Mupen_lua_ugui.internal.control_data[control.uid].start_value = control.value
+        end
+
+        -- figure out height of scrollbar
+        local scrollbar_base_height = control.rectangle.height
+        local content_overflow_ratio = control.content_height / control.rectangle.height
+        local inverse_content_overflow_ratio = 1 / content_overflow_ratio
+        local scrollbar_height = scrollbar_base_height * inverse_content_overflow_ratio
+
+        -- we center the scrollbar around the translation value, and shrink it accordingly
+        local scrollbar_y = Mupen_lua_ugui.internal.remap(control.value, 0, 1, 0,
+            control.rectangle.height - scrollbar_height)
+
+        local thumb_rectangle = {
+            x = control.rectangle.x + control.rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
+            y = control.rectangle.y + scrollbar_y,
+            width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
+            height = scrollbar_height,
+        }
+
+        if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false and Mupen_lua_ugui.internal.input_state.is_primary_down then
+            local v_current = (Mupen_lua_ugui.internal.input_state.mouse_position.y - control.rectangle.y) / control.rectangle.height
+            control.value = Mupen_lua_ugui.internal.control_data[control.uid].start_value + (v_current - Mupen_lua_ugui.internal.control_data[control.uid].start_value)
+        end
+
+        local visual_state = Mupen_lua_ugui.get_visual_state(control)
+        if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false and Mupen_lua_ugui.internal.input_state.is_primary_down then
+            visual_state = Mupen_lua_ugui.visual_states.active
+        end
+        Mupen_lua_ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
+
+        return Mupen_lua_ugui.internal.clamp(control.value, 0, 1)
     end,
 }

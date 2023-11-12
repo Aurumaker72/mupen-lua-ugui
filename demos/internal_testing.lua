@@ -4,6 +4,11 @@ local function folder(file)
     return s:gsub(p, '')
 end
 
+local items = {}
+for i = 1, 100, 1 do
+    items[#items+1] = "Item " .. i
+end
+
 local mouse_wheel = 0
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
@@ -42,15 +47,7 @@ emu.atupdatescreen(function()
             width = 90,
             height = 20,
         },
-        items = {
-            'Item A',
-            'Item B',
-            'Item C',
-            'Item D',
-            'Item E',
-            'Item F',
-            'Item G',
-        },
+        items = items,
         selected_index = selected_index,
     })
 
@@ -69,21 +66,14 @@ emu.atupdatescreen(function()
     
     selected_index_2 = Mupen_lua_ugui.listbox({
         uid = 1,
+        is_enabled = true,
         rectangle = {
             x = initial_size.width + 5,
             y = 80,
             width = 150,
             height = 400,
         },
-        items = {
-            'Item A',
-            'Item B',
-            'Item C',
-            'Item D',
-            'Item E',
-            'Item F',
-            'Item G',
-        },
+        items = items,
         selected_index = selected_index_2,
     })
 
