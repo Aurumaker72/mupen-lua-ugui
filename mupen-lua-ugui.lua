@@ -211,7 +211,7 @@ BreitbandGraphics = {
     ---@param font_name string The font name
     ---@param text string The text
     draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
-                         text)
+        text)
         if text == nil then
             text = ''
         end
@@ -256,7 +256,7 @@ BreitbandGraphics = {
         if style.aliased then
             d_text_antialias_mode = 3
         end
-        if type(text) ~= "string" then
+        if type(text) ~= 'string' then
             text = tostring(text)
         end
         local float_color = BreitbandGraphics.color_to_float(color)
@@ -320,18 +320,18 @@ BreitbandGraphics = {
 }
 
 if not d2d then
-    print("BreitbandGraphics: Applying GDI shim. This will degrade visual fidelity and performance.")
+    print('BreitbandGraphics: Applying GDI shim. This will degrade visual fidelity and performance.')
     BreitbandGraphics.get_text_size = function(text, font_size, font_name)
-        wgui.setfont(font_size - 2, font_name, "")
+        wgui.setfont(font_size - 2, font_name, '')
         return wgui.gettextextent(text)
     end
     BreitbandGraphics.draw_rectangle = function(rectangle, color, thickness)
         wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.setbrush("null")
+        wgui.setbrush('null')
         wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end
     BreitbandGraphics.fill_rectangle = function(rectangle, color)
-        wgui.setpen("null")
+        wgui.setpen('null')
         wgui.setbrush(BreitbandGraphics.color_to_hex(color))
         wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end
@@ -343,37 +343,37 @@ if not d2d then
     end
     BreitbandGraphics.draw_ellipse = function(rectangle, color, thickness)
         wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.setbrush("null")
+        wgui.setbrush('null')
         wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end
     BreitbandGraphics.fill_ellipse = function(rectangle, color)
-        wgui.setpen("null")
+        wgui.setpen('null')
         wgui.setbrush(BreitbandGraphics.color_to_hex(color))
         wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
     end
     BreitbandGraphics.draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size,
-                                           font_name,
-                                           text)
+        font_name,
+        text)
         wgui.setcolor(BreitbandGraphics.color_to_hex(color))
-        wgui.setfont(font_size - 2, font_name, "")
-        local flags = "s"
-        if horizontal_alignment == "start" then
-            flags = flags .. "l"
+        wgui.setfont(font_size - 2, font_name, '')
+        local flags = 's'
+        if horizontal_alignment == 'start' then
+            flags = flags .. 'l'
         end
-        if horizontal_alignment == "center" then
-            flags = flags .. "c"
+        if horizontal_alignment == 'center' then
+            flags = flags .. 'c'
         end
-        if horizontal_alignment == "end" then
-            flags = flags .. "r"
+        if horizontal_alignment == 'end' then
+            flags = flags .. 'r'
         end
-        if vertical_alignment == "start" then
-            flags = flags .. "t"
+        if vertical_alignment == 'start' then
+            flags = flags .. 't'
         end
-        if vertical_alignment == "center" then
-            flags = flags .. "v"
+        if vertical_alignment == 'center' then
+            flags = flags .. 'v'
         end
-        if vertical_alignment == "end" then
-            flags = flags .. "b"
+        if vertical_alignment == 'end' then
+            flags = flags .. 'b'
         end
         wgui.drawtext(text, {
             l = rectangle.x,
@@ -384,7 +384,7 @@ if not d2d then
     end
     BreitbandGraphics.draw_line = function(from, to, color, thickness)
         wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.setbrush("null")
+        wgui.setbrush('null')
         wgui.line(from.x, from.y, to.x, to.y)
     end
     BreitbandGraphics.push_clip = function(rectangle)
@@ -425,7 +425,7 @@ Mupen_lua_ugui = {
         previous_input_state = nil,
 
         -- the position of the mouse at the last click
-        mouse_down_position = { x = 0, y = 0 },
+        mouse_down_position = {x = 0, y = 0},
 
         -- uid of the currently pushed control (last mouse down is on it and mouse has not been released)
         pushed_control = nil,
@@ -640,7 +640,8 @@ Mupen_lua_ugui = {
             return Mupen_lua_ugui.visual_states.hovered
         end
 
-        if is_inside and Mupen_lua_ugui.internal.input_state.is_primary_down then
+        if is_inside and Mupen_lua_ugui.internal.input_state.is_primary_down and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position,
+                control.rectangle) then
             return Mupen_lua_ugui.visual_states.active
         end
 
@@ -829,7 +830,7 @@ Mupen_lua_ugui = {
                     y = rectangle.y,
                     width = rectangle.width,
                     height = rectangle.height,
-                }, 'start', 'center', { clip = true },
+                }, 'start', 'center', {clip = true},
                 Mupen_lua_ugui.standard_styler.list_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name,
@@ -923,7 +924,7 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.standard_styler.draw_raised_frame(control, visual_state)
 
             BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-                { clip = true },
+                {clip = true},
                 Mupen_lua_ugui.standard_styler.raised_frame_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name, control.text)
@@ -1001,7 +1002,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                     width = control.rectangle.width - Mupen_lua_ugui.standard_styler.textbox_padding * 2,
                     height = control.rectangle.height,
-                }, 'start', 'start', { clip = true },
+                }, 'start', 'start', {clip = true},
                 Mupen_lua_ugui.standard_styler.edit_frame_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name, control.text)
@@ -1042,7 +1043,7 @@ Mupen_lua_ugui = {
                         y = control.rectangle.y,
                         width = control.rectangle.width - Mupen_lua_ugui.standard_styler.textbox_padding * 2,
                         height = control.rectangle.height,
-                    }, 'start', 'start', { clip = true },
+                    }, 'start', 'start', {clip = true},
                     BreitbandGraphics.invert_color(Mupen_lua_ugui.standard_styler.edit_frame_text_colors
                         [visual_state]),
                     Mupen_lua_ugui.standard_styler.font_size,
@@ -1187,7 +1188,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                     width = control.rectangle.width,
                     height = control.rectangle.height,
-                }, 'start', 'center', { clip = true }, text_color, Mupen_lua_ugui.standard_styler.font_size,
+                }, 'start', 'center', {clip = true}, text_color, Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name,
                 control.items[control.selected_index])
 
@@ -1196,7 +1197,7 @@ Mupen_lua_ugui = {
                     y = control.rectangle.y,
                     width = control.rectangle.width - Mupen_lua_ugui.standard_styler.textbox_padding * 4,
                     height = control.rectangle.height,
-                }, 'end', 'center', { clip = true }, text_color, Mupen_lua_ugui.standard_styler.font_size,
+                }, 'end', 'center', {clip = true}, text_color, Mupen_lua_ugui.standard_styler.font_size,
                 'Segoe UI Mono', 'v')
         end,
 
