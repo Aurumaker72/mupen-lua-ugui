@@ -935,7 +935,7 @@ Mupen_lua_ugui = {
         draw_textbox = function(control)
             local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
-            if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false then
+            if Mupen_lua_ugui.internal.active_control == control.uid and control.is_enabled ~= false then
                 visual_state = Mupen_lua_ugui.visual_states.active
             end
 
@@ -1137,7 +1137,7 @@ Mupen_lua_ugui = {
         draw_trackbar = function(control)
             local visual_state = Mupen_lua_ugui.get_visual_state(control)
 
-            if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false then
+            if Mupen_lua_ugui.internal.active_control == control.uid and control.is_enabled ~= false then
                 visual_state = Mupen_lua_ugui.visual_states.active
             end
 
@@ -1407,20 +1407,7 @@ Mupen_lua_ugui = {
         local pushed = Mupen_lua_ugui.internal.process_push(control)
         local value = control.value
 
-        -- if active and user lets mouse go, deactivate
-        if Mupen_lua_ugui.internal.control_data[control.uid].active then
-            if not Mupen_lua_ugui.internal.input_state.is_primary_down then
-                Mupen_lua_ugui.internal.control_data[control.uid].active = false
-            end
-        end
-
-        -- new activation via direct click
-        if pushed then
-            Mupen_lua_ugui.internal.control_data[control.uid].active = true
-        end
-
-        -- if captured, move that thing
-        if Mupen_lua_ugui.internal.control_data[control.uid].active then
+        if Mupen_lua_ugui.internal.active_control == control.uid then
             if control.rectangle.width > control.rectangle.height then
                 value = Mupen_lua_ugui.internal.clamp(
                     (Mupen_lua_ugui.internal.input_state.mouse_position.x - control.rectangle.x) /
