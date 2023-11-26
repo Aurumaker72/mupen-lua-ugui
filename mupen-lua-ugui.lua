@@ -427,8 +427,8 @@ Mupen_lua_ugui = {
         -- the position of the mouse at the last click
         mouse_down_position = {x = 0, y = 0},
 
-        -- uid of the currently pushed control (last mouse down is on it and mouse has not been released)
-        pushed_control = nil,
+        -- uid of the currently active control
+        active_control = nil,
 
         -- rectangles which are excluded from hittesting (e.g.: the popped up list of a combobox)
         hittest_free_rects = {},
@@ -491,28 +491,22 @@ Mupen_lua_ugui = {
             end
             return keys
         end,
-        is_pushed = function(control)
+        process_push = function(control)
             if control.is_enabled == false then
                 return false
             end
 
-            if not Mupen_lua_ugui.internal.input_state.is_primary_down and Mupen_lua_ugui.internal.pushed_control then
-                Mupen_lua_ugui.internal.pushed_control = nil
-            end
-
             if Mupen_lua_ugui.internal.input_state.is_primary_down and not Mupen_lua_ugui.internal.previous_input_state.is_primary_down then
                 if BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position,
-                        control.rectangle) and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position,
                         control.rectangle) then
                     if not control.topmost and BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, Mupen_lua_ugui.internal.hittest_free_rects) then
                         return false
                     end
 
-                    Mupen_lua_ugui.internal.pushed_control = control.uid
+                    Mupen_lua_ugui.internal.active_control = control.uid
                     return true
                 end
             end
-
             return false
         end,
         get_caret_index = function(text, relative_x)
@@ -616,32 +610,32 @@ Mupen_lua_ugui = {
             return Mupen_lua_ugui.visual_states.disabled
         end
 
-        if Mupen_lua_ugui.internal.pushed_control ~= nil and Mupen_lua_ugui.internal.pushed_control ~= control.uid then
-            return Mupen_lua_ugui.visual_states.normal
+        if Mupen_lua_ugui.internal.active_control ~= nil and Mupen_lua_ugui.internal.active_control == control.uid then
+            return Mupen_lua_ugui.visual_states.active
         end
 
-        local is_inside = BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position,
+        local now_inside = BreitbandGraphics.is_point_inside_rectangle(
+                Mupen_lua_ugui.internal.input_state.mouse_position,
                 control.rectangle)
             and
             not BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position,
                 Mupen_lua_ugui.internal.hittest_free_rects)
 
-        local mouse_down_inside = BreitbandGraphics.is_point_inside_rectangle(
+        local down_inside = BreitbandGraphics.is_point_inside_rectangle(
                 Mupen_lua_ugui.internal.mouse_down_position, control.rectangle)
             and
             not BreitbandGraphics.is_point_inside_any_rectangle(Mupen_lua_ugui.internal.mouse_down_position,
                 Mupen_lua_ugui.internal.hittest_free_rects)
 
-        if is_inside and not Mupen_lua_ugui.internal.input_state.is_primary_down then
+        if now_inside and not Mupen_lua_ugui.internal.input_state.is_primary_down then
             return Mupen_lua_ugui.visual_states.hovered
         end
 
-        if mouse_down_inside and Mupen_lua_ugui.internal.input_state.is_primary_down and not is_inside then
+        if down_inside and Mupen_lua_ugui.internal.input_state.is_primary_down and not now_inside then
             return Mupen_lua_ugui.visual_states.hovered
         end
 
-        if is_inside and Mupen_lua_ugui.internal.input_state.is_primary_down and BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position,
-                control.rectangle) then
+        if now_inside and down_inside and Mupen_lua_ugui.internal.input_state.is_primary_down then
             return Mupen_lua_ugui.visual_states.active
         end
 
@@ -948,7 +942,8 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.standard_styler.draw_edit_frame(control, control.rectangle, visual_state)
 
             local should_visualize_selection = not (Mupen_lua_ugui.internal.control_data[control.uid].selection_start == nil) and
-                not (Mupen_lua_ugui.internal.control_data[control.uid].selection_end == nil) and control.is_enabled ~= false and
+                not (Mupen_lua_ugui.internal.control_data[control.uid].selection_end == nil) and
+                control.is_enabled ~= false and
                 not (Mupen_lua_ugui.internal.control_data[control.uid].selection_start == Mupen_lua_ugui.internal.control_data[control.uid].selection_end)
 
             if should_visualize_selection then
@@ -1209,6 +1204,10 @@ Mupen_lua_ugui = {
 
         Mupen_lua_ugui.internal.late_callbacks = {}
         Mupen_lua_ugui.internal.hittest_free_rects = {}
+
+        if not Mupen_lua_ugui.internal.input_state.is_primary_down then
+            Mupen_lua_ugui.internal.active_control = nil
+        end
     end,
 
     ---Places a Button
@@ -1219,7 +1218,7 @@ Mupen_lua_ugui = {
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
     ---@return _ boolean Whether the button has been pressed this frame
     button = function(control)
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
         Mupen_lua_ugui.standard_styler.draw_button(control)
 
         return pushed
@@ -1233,7 +1232,7 @@ Mupen_lua_ugui = {
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
     ---@return _ boolean Whether the button is checked
     toggle_button = function(control)
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
         Mupen_lua_ugui.standard_styler.draw_togglebutton(control)
 
         if pushed then
@@ -1251,7 +1250,7 @@ Mupen_lua_ugui = {
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
     ---@return _ number The new selected index
     carrousel_button = function(control)
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
         local selected_index = control.selected_index
 
         if pushed then
@@ -1277,31 +1276,24 @@ Mupen_lua_ugui = {
     textbox = function(control)
         if not Mupen_lua_ugui.internal.control_data[control.uid] then
             Mupen_lua_ugui.internal.control_data[control.uid] = {
-                active = false,
                 caret_index = 1,
                 selection_start = nil,
                 selection_end = nil,
             }
         end
 
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
         local text = control.text
 
         -- if active and user clicks elsewhere, deactivate
-        if Mupen_lua_ugui.internal.control_data[control.uid].active then
+        if Mupen_lua_ugui.internal.active_control == control.uid then
             if not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
                 if Mupen_lua_ugui.internal.is_mouse_just_down() then
                     -- deactivate, then clear selection
-                    Mupen_lua_ugui.internal.control_data[control.uid].active = false
                     Mupen_lua_ugui.internal.control_data[control.uid].selection_start = nil
                     Mupen_lua_ugui.internal.control_data[control.uid].selection_end = nil
                 end
             end
-        end
-
-        -- new activation via direct click
-        if pushed then
-            Mupen_lua_ugui.internal.control_data[control.uid].active = true
         end
 
 
@@ -1316,7 +1308,7 @@ Mupen_lua_ugui = {
         end
 
 
-        if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false then
+        if Mupen_lua_ugui.internal.active_control == control.uid and control.is_enabled ~= false then
             local theoretical_caret_index = Mupen_lua_ugui.internal.get_caret_index(text,
                 Mupen_lua_ugui.internal.input_state.mouse_position.x - control.rectangle.x)
 
@@ -1412,7 +1404,7 @@ Mupen_lua_ugui = {
             }
         end
 
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
         local value = control.value
 
         -- if active and user lets mouse go, deactivate
@@ -1519,53 +1511,33 @@ Mupen_lua_ugui = {
     listbox = function(control)
         if not Mupen_lua_ugui.internal.control_data[control.uid] then
             Mupen_lua_ugui.internal.control_data[control.uid] = {
-                active = false,
                 y_translation = 0,
             }
         end
 
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
-        local selected_index = control.selected_index
-        local scrollbar_rect = {
-            x = control.rectangle.x + control.rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-            y = control.rectangle.y,
-            width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-            height = control.rectangle.height,
-        }
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
         local overflows = #control.items * Mupen_lua_ugui.standard_styler.item_height > control.rectangle.height
 
-        -- if active and user lets mouse go, deactivate
-        if Mupen_lua_ugui.internal.control_data[control.uid].active then
-            if not Mupen_lua_ugui.internal.input_state.is_primary_down then
-                Mupen_lua_ugui.internal.control_data[control.uid].active = false
-            end
-        end
-
-        -- new activation via direct click
-        if pushed then
-            Mupen_lua_ugui.internal.control_data[control.uid].active = true
-        end
-
-        -- topmost controls don't care about hittest free rects
         local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
                 Mupen_lua_ugui.internal.input_state.mouse_position, Mupen_lua_ugui.internal.hittest_free_rects) and
             not control.topmost
 
-        if not ignored and Mupen_lua_ugui.internal.control_data[control.uid].active then
-            if not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, scrollbar_rect) and not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.mouse_down_position, scrollbar_rect) then
-                local relative_y = Mupen_lua_ugui.internal.input_state.mouse_position.y - control.rectangle.y
-                local new_index = math.ceil((relative_y + (Mupen_lua_ugui.internal.control_data[control.uid].y_translation *
-                        ((Mupen_lua_ugui.standard_styler.item_height * #control.items) - control.rectangle.height))) /
-                    Mupen_lua_ugui.standard_styler.item_height)
-                -- we only assign the new index if it's within bounds, as
-                -- this emulates windows commctl behaviour
-                if new_index <= #control.items then
-                    selected_index = new_index
-                end
+        if Mupen_lua_ugui.internal.active_control == control.uid and not ignored then
+            local relative_y = Mupen_lua_ugui.internal.input_state.mouse_position.y - control.rectangle.y
+            local new_index = math.ceil((relative_y + (Mupen_lua_ugui.internal.control_data[control.uid].y_translation *
+                    ((Mupen_lua_ugui.standard_styler.item_height * #control.items) - control.rectangle.height))) /
+                Mupen_lua_ugui.standard_styler.item_height)
+            -- we only assign the new index if it's within bounds, as
+            -- this emulates windows commctl behaviour
+            if new_index <= #control.items then
+                control.selected_index = Mupen_lua_ugui.internal.clamp(new_index, 1, #control.items)
             end
         end
 
-        if not ignored and overflows and (BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) or Mupen_lua_ugui.internal.control_data[control.uid].active) then
+        if not ignored
+            and overflows
+            and (BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle)
+                or Mupen_lua_ugui.internal.active_control == control.uid) then
             local inc = 0
             if Mupen_lua_ugui.internal.is_mouse_wheel_up() then
                 inc = -1 / #control.items
@@ -1592,7 +1564,8 @@ Mupen_lua_ugui = {
                 uid = control.uid + 1,
                 is_enabled = control.is_enabled,
                 rectangle = {
-                    x = control.rectangle.x + control.rectangle.width - Mupen_lua_ugui.standard_styler.scrollbar_thickness,
+                    x = control.rectangle.x + control.rectangle.width -
+                        Mupen_lua_ugui.standard_styler.scrollbar_thickness,
                     y = control.rectangle.y,
                     width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
                     height = control.rectangle.height,
@@ -1602,7 +1575,7 @@ Mupen_lua_ugui = {
             })
         end
 
-        return Mupen_lua_ugui.internal.clamp(selected_index, 1, #control.items)
+        return control.selected_index
     end,
     ---Places a ScrollBar
     ---
@@ -1615,26 +1588,24 @@ Mupen_lua_ugui = {
     scrollbar = function(control)
         if not Mupen_lua_ugui.internal.control_data[control.uid] then
             Mupen_lua_ugui.internal.control_data[control.uid] = {
-                active = false,
                 start_value = 0,
             }
         end
 
-        local pushed = Mupen_lua_ugui.internal.is_pushed(control)
+        local pushed = Mupen_lua_ugui.internal.process_push(control)
 
         -- if active and user clicks elsewhere, deactivate
-        if Mupen_lua_ugui.internal.control_data[control.uid].active then
+        if Mupen_lua_ugui.internal.active_control == control.uid then
             if not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
                 if Mupen_lua_ugui.internal.is_mouse_just_down() then
                     -- deactivate, then clear selection
-                    Mupen_lua_ugui.internal.control_data[control.uid].active = false
+                    Mupen_lua_ugui.internal.active_control = nil
                 end
             end
         end
 
         -- new activation via direct click
         if pushed then
-            Mupen_lua_ugui.internal.control_data[control.uid].active = true
             Mupen_lua_ugui.internal.control_data[control.uid].start_value = control.value
         end
 
@@ -1655,13 +1626,15 @@ Mupen_lua_ugui = {
             height = scrollbar_height,
         }
 
-        if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false and Mupen_lua_ugui.internal.input_state.is_primary_down then
-            local v_current = (Mupen_lua_ugui.internal.input_state.mouse_position.y - control.rectangle.y) / control.rectangle.height
-            control.value = Mupen_lua_ugui.internal.control_data[control.uid].start_value + (v_current - Mupen_lua_ugui.internal.control_data[control.uid].start_value)
+        if Mupen_lua_ugui.internal.active_control == control.uid and control.is_enabled ~= false and Mupen_lua_ugui.internal.input_state.is_primary_down then
+            local v_current = (Mupen_lua_ugui.internal.input_state.mouse_position.y - control.rectangle.y) /
+                control.rectangle.height
+            control.value = Mupen_lua_ugui.internal.control_data[control.uid].start_value +
+                (v_current - Mupen_lua_ugui.internal.control_data[control.uid].start_value)
         end
 
         local visual_state = Mupen_lua_ugui.get_visual_state(control)
-        if Mupen_lua_ugui.internal.control_data[control.uid].active and control.is_enabled ~= false and Mupen_lua_ugui.internal.input_state.is_primary_down then
+        if Mupen_lua_ugui.internal.active_control == control.uid and control.is_enabled ~= false and Mupen_lua_ugui.internal.input_state.is_primary_down then
             visual_state = Mupen_lua_ugui.visual_states.active
         end
         Mupen_lua_ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)

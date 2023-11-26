@@ -65,7 +65,7 @@ emu.atupdatescreen(function()
     end
     
     selected_index_2 = Mupen_lua_ugui.listbox({
-        uid = 1,
+        uid = 555,
         is_enabled = true,
         rectangle = {
             x = initial_size.width + 5,
