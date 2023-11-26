@@ -817,14 +817,19 @@ Mupen_lua_ugui = {
             }, tip_color)
         end,
         draw_list_item = function(item, rectangle, visual_state)
-            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1), Mupen_lua_ugui.standard_styler.list_item_back_colors[visual_state])
+            if not item then
+                return
+            end
+            BreitbandGraphics.fill_rectangle(rectangle, Mupen_lua_ugui.standard_styler.list_item_back_colors[visual_state])
 
+            local size = BreitbandGraphics.get_text_size(item, Mupen_lua_ugui.standard_styler.font_size,
+                Mupen_lua_ugui.standard_styler.font_name)
             BreitbandGraphics.draw_text({
                     x = rectangle.x + 2,
                     y = rectangle.y,
-                    width = rectangle.width,
+                    width = size.width * 2,
                     height = rectangle.height,
-                }, 'start', 'center', {clip = true},
+                }, 'start', 'center', {},
                 Mupen_lua_ugui.standard_styler.list_text_colors[visual_state],
                 Mupen_lua_ugui.standard_styler.font_size,
                 Mupen_lua_ugui.standard_styler.font_name,
@@ -834,44 +839,45 @@ Mupen_lua_ugui = {
             BreitbandGraphics.fill_rectangle(container_rectangle, Mupen_lua_ugui.standard_styler.scrollbar_back_colors[visual_state])
             BreitbandGraphics.fill_rectangle(thumb_rectangle, Mupen_lua_ugui.standard_styler.scrollbar_thumb_colors[visual_state])
         end,
-        draw_list = function(control, rectangle, selected_index)
+        draw_list = function(control, rectangle)
             local visual_state = Mupen_lua_ugui.get_visual_state(control)
             Mupen_lua_ugui.standard_styler.draw_list_frame(rectangle, visual_state)
 
+            local content_bounds = Mupen_lua_ugui.standard_styler.get_listbox_content_bounds(control)
             -- item y position:
             -- y = (20 * (i - 1)) - (y_translation * ((20 * #control.items) - control.rectangle.height))
             local y_translation = Mupen_lua_ugui.internal.control_data[control.uid].y_translation and
                 Mupen_lua_ugui.internal.control_data[control.uid].y_translation or 0
 
             local index_begin = (y_translation *
-                    ((Mupen_lua_ugui.standard_styler.item_height * #control.items) - rectangle.height)) /
+                    (content_bounds.height - rectangle.height)) /
                 Mupen_lua_ugui.standard_styler.item_height
 
             local index_end = (rectangle.height + (y_translation *
-                    ((Mupen_lua_ugui.standard_styler.item_height * #control.items) - rectangle.height))) /
+                    (content_bounds.height - rectangle.height))) /
                 Mupen_lua_ugui.standard_styler.item_height
 
-            index_begin = math.max(index_begin, 0)
-            index_end = math.min(index_end, #control.items)
+            index_begin = Mupen_lua_ugui.internal.clamp(math.floor(index_begin), 1, #control.items)
+            index_end = Mupen_lua_ugui.internal.clamp(math.ceil(index_end), 1, #control.items)
 
-            BreitbandGraphics.push_clip(rectangle)
+            BreitbandGraphics.push_clip(BreitbandGraphics.inflate_rectangle(rectangle, -1))
 
-            for i = math.floor(index_begin), math.ceil(index_end), 1 do
-                local y = (Mupen_lua_ugui.standard_styler.item_height * (i - 1)) -
-                    (y_translation * ((Mupen_lua_ugui.standard_styler.item_height * #control.items) - rectangle.height))
+            for i = index_begin, index_end, 1 do
+                local y_offset = (Mupen_lua_ugui.standard_styler.item_height * (i - 1)) -
+                    (y_translation * (content_bounds.height - rectangle.height))
 
                 local item_visual_state = Mupen_lua_ugui.visual_states.normal
                 if control.is_enabled == false then
                     item_visual_state = Mupen_lua_ugui.visual_states.disabled
                 end
 
-                if selected_index == i then
+                if control.selected_index == i then
                     item_visual_state = Mupen_lua_ugui.visual_states.active
                 end
 
                 Mupen_lua_ugui.standard_styler.draw_list_item(control.items[i], {
                     x = rectangle.x,
-                    y = rectangle.y + y,
+                    y = rectangle.y + y_offset,
                     width = rectangle.width,
                     height = Mupen_lua_ugui.standard_styler.item_height,
                 }, item_visual_state)
@@ -1152,7 +1158,16 @@ Mupen_lua_ugui = {
         end,
 
         draw_listbox = function(control)
-            Mupen_lua_ugui.standard_styler.draw_list(control, control.rectangle, control.selected_index)
+            Mupen_lua_ugui.standard_styler.draw_list(control, control.rectangle)
+        end,
+
+        get_listbox_content_bounds = function(control)
+            return {
+                x = 0,
+                y = 0,
+                width = 0,
+                height = Mupen_lua_ugui.standard_styler.item_height * #control.items,
+            }
         end,
     },
 
@@ -1430,11 +1445,12 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.internal.control_data[control.uid].is_open = not Mupen_lua_ugui.internal.control_data
                     [control.uid].is_open
             else
+                local content_bounds = Mupen_lua_ugui.standard_styler.get_listbox_content_bounds(control)
                 if not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
                         width = control.rectangle.width,
-                        height = Mupen_lua_ugui.standard_styler.item_height * #control.items,
+                        height = content_bounds.height,
                     }) then
                     Mupen_lua_ugui.internal.control_data[control.uid].is_open = false
                 end
@@ -1444,11 +1460,13 @@ Mupen_lua_ugui = {
         local selected_index = control.selected_index
 
         if Mupen_lua_ugui.internal.control_data[control.uid].is_open and control.is_enabled ~= false then
+            local content_bounds = Mupen_lua_ugui.standard_styler.get_listbox_content_bounds(control)
+
             local list_rect = {
                 x = control.rectangle.x,
                 y = control.rectangle.y + control.rectangle.height,
                 width = control.rectangle.width,
-                height = Mupen_lua_ugui.standard_styler.item_height * #control.items + 2,
+                height = content_bounds.height,
             }
             Mupen_lua_ugui.internal.hittest_free_rects[#Mupen_lua_ugui.internal.hittest_free_rects + 1] = list_rect
 
@@ -1482,7 +1500,8 @@ Mupen_lua_ugui = {
         end
 
         local pushed = Mupen_lua_ugui.internal.process_push(control)
-        local overflows = #control.items * Mupen_lua_ugui.standard_styler.item_height > control.rectangle.height
+        local content_bounds = Mupen_lua_ugui.standard_styler.get_listbox_content_bounds(control)
+        local y_overflow = content_bounds.height > control.rectangle.height
 
         local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
                 Mupen_lua_ugui.internal.input_state.mouse_position, Mupen_lua_ugui.internal.hittest_free_rects) and
@@ -1501,7 +1520,7 @@ Mupen_lua_ugui = {
         end
 
         if not ignored
-            and overflows
+            and y_overflow
             and (BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle)
                 or Mupen_lua_ugui.internal.active_control == control.uid) then
             local inc = 0
@@ -1524,8 +1543,7 @@ Mupen_lua_ugui = {
             Mupen_lua_ugui.standard_styler.draw_listbox(control)
         end
 
-        local content_height = #control.items * Mupen_lua_ugui.standard_styler.item_height
-        if content_height > control.rectangle.height then
+        if content_bounds.height > control.rectangle.height then
             Mupen_lua_ugui.internal.control_data[control.uid].y_translation = Mupen_lua_ugui.scrollbar({
                 uid = control.uid + 1,
                 is_enabled = control.is_enabled,
@@ -1537,7 +1555,7 @@ Mupen_lua_ugui = {
                     height = control.rectangle.height,
                 },
                 value = Mupen_lua_ugui.internal.control_data[control.uid].y_translation,
-                content_height = content_height,
+                content_height = content_bounds.height,
             })
         end
 
