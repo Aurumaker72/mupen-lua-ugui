@@ -1512,7 +1512,13 @@ Mupen_lua_ugui = {
                 scroll_y = 0,
             }
         end
-
+        if not Mupen_lua_ugui.internal.control_data[_control.uid].scroll_x then
+            Mupen_lua_ugui.internal.control_data[_control.uid].scroll_x = 0
+        end
+        if not Mupen_lua_ugui.internal.control_data[_control.uid].scroll_y then
+            Mupen_lua_ugui.internal.control_data[_control.uid].scroll_y = 0
+        end
+        
         local content_bounds = Mupen_lua_ugui.standard_styler.get_listbox_content_bounds(_control)
         local x_overflow = content_bounds.width > _control.rectangle.width
         local y_overflow = content_bounds.height > _control.rectangle.height

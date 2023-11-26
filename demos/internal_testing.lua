@@ -8,6 +8,7 @@ local items = {}
 for i = 1, 30, 1 do
     items[#items + 1] = 'Item ' .. i
 end
+items[20] = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 
 local mouse_wheel = 0
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
