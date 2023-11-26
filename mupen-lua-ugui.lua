@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.3.2
+-- mupen-lua-ugui 1.4.0
 
 if emu.set_renderer then
     -- Specify D2D renderer
@@ -882,7 +882,7 @@ Mupen_lua_ugui = {
                 Mupen_lua_ugui.standard_styler.draw_list_item(control.items[i], {
                     x = rectangle.x - x_offset,
                     y = rectangle.y + y_offset,
-                    width = content_bounds.width,
+                    width = math.max(content_bounds.width, control.rectangle.width),
                     height = Mupen_lua_ugui.standard_styler.item_height,
                 }, item_visual_state)
             end
@@ -1586,7 +1586,7 @@ Mupen_lua_ugui = {
                     x = control.rectangle.x + control.rectangle.width,
                     y = control.rectangle.y,
                     width = Mupen_lua_ugui.standard_styler.scrollbar_thickness,
-                    height = control.rectangle.height + Mupen_lua_ugui.standard_styler.scrollbar_thickness,
+                    height = control.rectangle.height,
                 },
                 value = Mupen_lua_ugui.internal.control_data[control.uid].scroll_y,
                 ratio = 1 / (content_bounds.height / control.rectangle.height),
