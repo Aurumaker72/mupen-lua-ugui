@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.3.1
+-- mupen-lua-ugui 1.3.2
 
 if emu.set_renderer then
     -- Specify D2D renderer
@@ -656,6 +656,42 @@ Mupen_lua_ugui = {
         font_size = 12,
         scrollbar_thickness = 17,
         font_name = 'MS Shell Dlg 2',
+        raised_frame_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#E1E1E1'),
+            [2] = BreitbandGraphics.hex_to_color('#E5F1FB'),
+            [3] = BreitbandGraphics.hex_to_color('#CCE4F7'),
+            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+        },
+        raised_frame_border_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#ADADAD'),
+            [2] = BreitbandGraphics.hex_to_color('#0078D7'),
+            [3] = BreitbandGraphics.hex_to_color('#005499'),
+            [0] = BreitbandGraphics.hex_to_color('#BFBFBF'),
+        },
+        edit_frame_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+        },
+        edit_frame_border_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+            [2] = BreitbandGraphics.hex_to_color('#171717'),
+            [3] = BreitbandGraphics.hex_to_color('#0078D7'),
+            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+        },
+        list_frame_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+        },
+        list_frame_border_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+            [2] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+            [3] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+            [0] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+        },
         raised_frame_text_colors = {
             [1] = BreitbandGraphics.colors.black,
             [2] = BreitbandGraphics.colors.black,
@@ -674,103 +710,59 @@ Mupen_lua_ugui = {
             [3] = BreitbandGraphics.colors.white,
             [0] = BreitbandGraphics.repeated_to_color(160),
         },
+        list_item_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+            [3] = BreitbandGraphics.hex_to_color('#0078D7'),
+            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+        },
+        joystick_tip_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#FF0000'),
+            [2] = BreitbandGraphics.hex_to_color('#FF0000'),
+            [3] = BreitbandGraphics.hex_to_color('#FF0000'),
+            [0] = BreitbandGraphics.hex_to_color('#FF8080'),
+        },
+        joystick_line_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#0000FF'),
+            [2] = BreitbandGraphics.hex_to_color('#0000FF'),
+            [3] = BreitbandGraphics.hex_to_color('#0000FF'),
+            [0] = BreitbandGraphics.hex_to_color('#8080FF'),
+        },
+        scrollbar_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+            [2] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+            [3] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+            [0] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+        },
+        scrollbar_thumb_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#CDCDCD'),
+            [2] = BreitbandGraphics.hex_to_color('#A6A6A6'),
+            [3] = BreitbandGraphics.hex_to_color('#606060'),
+            [0] = BreitbandGraphics.hex_to_color('#C0C0C0'),
+        },
         draw_raised_frame = function(control, visual_state)
-            local back_color = BreitbandGraphics.repeated_to_color(225)
-            local border_color = BreitbandGraphics.repeated_to_color(173)
-
-            if visual_state == Mupen_lua_ugui.visual_states.active then
-                back_color = {
-                    r = 204,
-                    g = 228,
-                    b = 247,
-                }
-                border_color = {
-                    r = 0,
-                    g = 84,
-                    b = 153,
-                }
-            elseif visual_state == Mupen_lua_ugui.visual_states.hovered then
-                back_color = {
-                    r = 229,
-                    g = 241,
-                    b = 251,
-                }
-                border_color = {
-                    r = 0,
-                    g = 120,
-                    b = 215,
-                }
-            elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                back_color = BreitbandGraphics.repeated_to_color(204)
-                border_color = BreitbandGraphics.repeated_to_color(191)
-            end
-
             BreitbandGraphics.fill_rectangle(control.rectangle,
-                border_color)
+                Mupen_lua_ugui.standard_styler.raised_frame_border_colors[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
-                back_color)
+                Mupen_lua_ugui.standard_styler.raised_frame_back_colors[visual_state])
         end,
         draw_edit_frame = function(control, rectangle, visual_state)
-            local back_color = BreitbandGraphics.colors.white
-            local border_color = BreitbandGraphics.repeated_to_color(122)
-
-
-            if visual_state == Mupen_lua_ugui.visual_states.hovered then
-                border_color = BreitbandGraphics.repeated_to_color(23)
-            elseif visual_state == Mupen_lua_ugui.visual_states.active then
-                border_color = {
-                    r = 0,
-                    g = 84,
-                    b = 153,
-                }
-            elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                back_color = BreitbandGraphics.repeated_to_color(240)
-                border_color = BreitbandGraphics.repeated_to_color(204)
-            end
-            BreitbandGraphics.fill_rectangle(rectangle,
-                border_color)
-            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
-                back_color)
+            BreitbandGraphics.fill_rectangle(control.rectangle,
+                Mupen_lua_ugui.standard_styler.edit_frame_border_colors[visual_state])
+            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
+                Mupen_lua_ugui.standard_styler.edit_frame_back_colors[visual_state])
         end,
         draw_list_frame = function(rectangle, visual_state)
-            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, 1), {
-                r = 130,
-                g = 135,
-                b = 144,
-            })
-            BreitbandGraphics.fill_rectangle(rectangle, {
-                r = 255,
-                g = 255,
-                b = 255,
-            })
+            BreitbandGraphics.fill_rectangle(rectangle,
+                Mupen_lua_ugui.standard_styler.list_frame_border_colors[visual_state])
+            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
+                Mupen_lua_ugui.standard_styler.list_frame_back_colors[visual_state])
         end,
         draw_joystick_inner = function(rectangle, visual_state, position)
             local back_color = BreitbandGraphics.colors.white
             local outline_color = BreitbandGraphics.colors.black
-            local tip_color = {
-                r = 255,
-                g = 0,
-                b = 0,
-            }
-            local line_color = {
-                r = 0,
-                g = 0,
-                b = 255,
-            }
-
-            if visual_state == Mupen_lua_ugui.visual_states.disabled then
-                outline_color = BreitbandGraphics.repeated_to_color(191)
-                tip_color = {
-                    r = 255,
-                    g = 128,
-                    b = 128,
-                }
-                line_color = {
-                    r = 128,
-                    g = 128,
-                    b = 255,
-                }
-            end
+            local tip_color = Mupen_lua_ugui.standard_styler.joystick_tip_colors[visual_state]
+            local line_color = Mupen_lua_ugui.standard_styler.joystick_line_colors[visual_state]
 
             BreitbandGraphics.fill_ellipse(BreitbandGraphics.inflate_rectangle(rectangle, -1),
                 back_color)
@@ -807,21 +799,7 @@ Mupen_lua_ugui = {
             }, tip_color)
         end,
         draw_list_item = function(item, rectangle, visual_state)
-            if visual_state == Mupen_lua_ugui.visual_states.active then
-                local accent_color = {
-                    r = 0,
-                    g = 120,
-                    b = 215,
-                }
-
-                if visual_state == Mupen_lua_ugui.visual_states.disabled then
-                    accent_color = BreitbandGraphics.repeated_to_color(204)
-                end
-
-
-                BreitbandGraphics.fill_rectangle(rectangle, accent_color)
-            end
-
+            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1), Mupen_lua_ugui.standard_styler.list_item_back_colors[visual_state])
 
             BreitbandGraphics.draw_text({
                     x = rectangle.x + 2,
@@ -835,16 +813,8 @@ Mupen_lua_ugui = {
                 item)
         end,
         draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
-            local thumb_color = BreitbandGraphics.repeated_to_color(205)
-            if visual_state == Mupen_lua_ugui.visual_states.hovered then
-                thumb_color = BreitbandGraphics.repeated_to_color(166)
-            elseif visual_state == Mupen_lua_ugui.visual_states.active then
-                thumb_color = BreitbandGraphics.repeated_to_color(96)
-            elseif visual_state == Mupen_lua_ugui.visual_states.disabled then
-                thumb_color = BreitbandGraphics.repeated_to_color(192)
-            end
-            BreitbandGraphics.fill_rectangle(container_rectangle, BreitbandGraphics.repeated_to_color(240))
-            BreitbandGraphics.fill_rectangle(thumb_rectangle, thumb_color)
+            BreitbandGraphics.fill_rectangle(container_rectangle, Mupen_lua_ugui.standard_styler.scrollbar_back_colors[visual_state])
+            BreitbandGraphics.fill_rectangle(thumb_rectangle, Mupen_lua_ugui.standard_styler.scrollbar_thumb_colors[visual_state])
         end,
         draw_list = function(control, rectangle, selected_index)
             local visual_state = Mupen_lua_ugui.get_visual_state(control)
