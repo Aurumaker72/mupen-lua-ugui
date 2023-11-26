@@ -430,6 +430,9 @@ Mupen_lua_ugui = {
         -- uid of the currently active control
         active_control = nil,
 
+        -- whether the active control will be cleared after the mouse is released
+        clear_active_control_after_mouse_up = true,
+
         -- rectangles which are excluded from hittesting (e.g.: the popped up list of a combobox)
         hittest_free_rects = {},
 
@@ -504,6 +507,7 @@ Mupen_lua_ugui = {
                     end
 
                     Mupen_lua_ugui.internal.active_control = control.uid
+                    Mupen_lua_ugui.internal.clear_active_control_after_mouse_up = true
                     return true
                 end
             end
@@ -1205,7 +1209,7 @@ Mupen_lua_ugui = {
         Mupen_lua_ugui.internal.late_callbacks = {}
         Mupen_lua_ugui.internal.hittest_free_rects = {}
 
-        if not Mupen_lua_ugui.internal.input_state.is_primary_down then
+        if not Mupen_lua_ugui.internal.input_state.is_primary_down and Mupen_lua_ugui.internal.clear_active_control_after_mouse_up then
             Mupen_lua_ugui.internal.active_control = nil
         end
     end,
@@ -1285,14 +1289,18 @@ Mupen_lua_ugui = {
         local pushed = Mupen_lua_ugui.internal.process_push(control)
         local text = control.text
 
+        if pushed then
+            Mupen_lua_ugui.internal.clear_active_control_after_mouse_up = false
+        end
+
         -- if active and user clicks elsewhere, deactivate
-        if Mupen_lua_ugui.internal.active_control == control.uid then
-            if not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
-                if Mupen_lua_ugui.internal.is_mouse_just_down() then
-                    -- deactivate, then clear selection
-                    Mupen_lua_ugui.internal.control_data[control.uid].selection_start = nil
-                    Mupen_lua_ugui.internal.control_data[control.uid].selection_end = nil
-                end
+        if Mupen_lua_ugui.internal.active_control == control.uid
+            and not BreitbandGraphics.is_point_inside_rectangle(Mupen_lua_ugui.internal.input_state.mouse_position, control.rectangle) then
+            if Mupen_lua_ugui.internal.is_mouse_just_down() then
+                -- deactivate, then clear selection
+                Mupen_lua_ugui.internal.active_control = nil
+                Mupen_lua_ugui.internal.control_data[control.uid].selection_start = nil
+                Mupen_lua_ugui.internal.control_data[control.uid].selection_end = nil
             end
         end
 

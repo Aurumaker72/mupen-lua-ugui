@@ -43,7 +43,7 @@ emu.atupdatescreen(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame( {
+    Mupen_lua_ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
