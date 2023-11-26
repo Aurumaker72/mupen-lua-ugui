@@ -740,6 +740,24 @@ Mupen_lua_ugui = {
             [3] = BreitbandGraphics.hex_to_color('#606060'),
             [0] = BreitbandGraphics.hex_to_color('#C0C0C0'),
         },
+        trackbar_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+            [2] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+            [3] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+            [0] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+        },
+        trackbar_border_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+            [2] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+            [3] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+            [0] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+        },
+        trackbar_thumb_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#007AD9'),
+            [2] = BreitbandGraphics.hex_to_color('#171717'),
+            [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+        },
         draw_raised_frame = function(control, visual_state)
             BreitbandGraphics.fill_rectangle(control.rectangle,
                 Mupen_lua_ugui.standard_styler.raised_frame_border_colors[visual_state])
@@ -1042,13 +1060,7 @@ Mupen_lua_ugui = {
             })
         end,
         draw_track = function(control, visual_state, is_horizontal)
-            local track_color = {
-                r = 231,
-                g = 234,
-                b = 234,
-            }
             local track_rectangle = {}
-            local track_border_color = BreitbandGraphics.repeated_to_color(214)
             if not is_horizontal then
                 track_rectangle = {
                     x = control.rectangle.x + control.rectangle.width / 2 -
@@ -1068,21 +1080,10 @@ Mupen_lua_ugui = {
             end
 
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(track_rectangle, 1),
-                track_border_color)
-            BreitbandGraphics.fill_rectangle(track_rectangle, track_color)
+                Mupen_lua_ugui.standard_styler.trackbar_border_colors[visual_state])
+            BreitbandGraphics.fill_rectangle(track_rectangle, Mupen_lua_ugui.standard_styler.trackbar_back_colors[visual_state])
         end,
         draw_thumb = function(control, visual_state, is_horizontal, value)
-            local head_color = {
-                r = 0,
-                g = 122,
-                b = 217,
-            }
-            if visual_state == Mupen_lua_ugui.visual_states.hovered then
-                head_color = BreitbandGraphics.repeated_to_color(23)
-            elseif visual_state == Mupen_lua_ugui.visual_states.active or visual_state == Mupen_lua_ugui.visual_states.disabled then
-                head_color = BreitbandGraphics.repeated_to_color(204)
-            end
-
             local head_rectangle = {}
             local effective_bar_height = math.min(
                 (is_horizontal and control.rectangle.height or control.rectangle.width) * 2,
@@ -1106,7 +1107,7 @@ Mupen_lua_ugui = {
                     height = effective_bar_height,
                 }
             end
-            BreitbandGraphics.fill_rectangle(head_rectangle, head_color)
+            BreitbandGraphics.fill_rectangle(head_rectangle, Mupen_lua_ugui.standard_styler.trackbar_thumb_colors[visual_state])
         end,
         draw_trackbar = function(control)
             local visual_state = Mupen_lua_ugui.get_visual_state(control)
