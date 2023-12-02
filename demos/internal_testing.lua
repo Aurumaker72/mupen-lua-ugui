@@ -9,13 +9,13 @@ for i = 1, 30, 1 do
     items[#items + 1] = 'Item ' .. i
 end
 items[20] = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-
 local mouse_wheel = 0
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
 local selected_index = 1
 local selected_index_2 = 1
 local text = 'a'
+
 wgui.resize(initial_size.width + 200, initial_size.height)
 emu.atupdatescreen(function()
     BreitbandGraphics.fill_rectangle({
