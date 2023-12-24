@@ -64,6 +64,7 @@ Cool projects using `mupen-lua-ugui`
 - ListBox
   - Scrolling support
   - Unlimited items with no performance degradation
+- Scrollbar
 
 # 🎨 Graphics
 
