@@ -243,7 +243,7 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     fill_ellipse = function(rectangle, color)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
-        d2d.draw_ellipse(
+        d2d.fill_ellipse(
             rectangle.x + rectangle.width / 2,
             rectangle.y + rectangle.height / 2,
             rectangle.width / 2,
