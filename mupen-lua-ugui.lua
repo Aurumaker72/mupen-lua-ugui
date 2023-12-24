@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.4.0
+-- mupen-lua-ugui 1.5.0
 
 if emu.set_renderer then
     -- Specify D2D renderer
@@ -6,6 +6,26 @@ if emu.set_renderer then
 end
 
 BreitbandGraphics = {
+    brushes = {},
+    images = {},
+
+    internal = {
+        brush_from_color = function(color)
+            local key = (color.r << 24) | (color.g << 16) | (color.b << 8) | (color.a and color.a or 255)
+            if not BreitbandGraphics.brushes[key] then
+                local float_color = BreitbandGraphics.color_to_float(color)
+                BreitbandGraphics.brushes[key] = d2d.create_brush(float_color.r, float_color.g, float_color.b, float_color.a)
+            end
+            return BreitbandGraphics.brushes[key]
+        end,
+        image_from_path = function(path)
+            if not BreitbandGraphics.images[path] then
+                BreitbandGraphics.images[path] = d2d.load_image(path)
+            end
+            return BreitbandGraphics.images[path]
+        end,
+    },
+
     --- Converts a color value to its corresponding hexadecimal representation
     --- @param color table The color value to convert
     --- @return _ string The hexadecimal representation of the color
@@ -137,7 +157,6 @@ BreitbandGraphics = {
         }
     end,
 
-    bitmap_cache = {},
     ---Measures the size of a string
     ---@param text string The string to be measured
     ---@param font_size number The font size
@@ -151,17 +170,26 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param thickness number The outline's thickness
     draw_rectangle = function(rectangle, color, thickness)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.draw_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
-            rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, thickness)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+        d2d.draw_rectangle(
+            rectangle.x,
+            rectangle.y,
+            rectangle.x + rectangle.width,
+            rectangle.y + rectangle.height,
+            thickness,
+            brush)
     end,
     ---Draws a rectangle
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     fill_rectangle = function(rectangle, color)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.fill_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
-            rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+        d2d.draw_rectangle(
+            rectangle.x,
+            rectangle.y,
+            rectangle.x + rectangle.width,
+            rectangle.y + rectangle.height,
+            brush)
     end,
     ---Draws a rounded rectangle's outline
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
@@ -292,10 +320,10 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param filter string The texture filter to be used while drawing the image. `nearest` | `linear`
     draw_image = function(destination_rectangle, source_rectangle, path, color, filter)
-        if not BreitbandGraphics.bitmap_cache[path] then
+        if not BreitbandGraphics.images[path] then
             print('Loaded image from ' .. path)
             d2d.load_image(path, path)
-            BreitbandGraphics.bitmap_cache[path] = path
+            BreitbandGraphics.images[path] = path
         end
         if not filter then
             filter = 'nearest'
@@ -310,107 +338,19 @@ BreitbandGraphics = {
     ---Gets an image's metadata
     ---@param path string The image's absolute path on disk
     get_image_info = function(path)
-        if not BreitbandGraphics.bitmap_cache[path] then
+        if not BreitbandGraphics.images[path] then
             print('Loaded image from ' .. path)
             d2d.load_image(path, path)
-            BreitbandGraphics.bitmap_cache[path] = path
+            BreitbandGraphics.images[path] = path
         end
         return d2d.get_image_info(path)
     end,
+    ---Releases allocated resources
+    ---Must be called before stopping script
+    free = function()
+
+    end,
 }
-
-if not d2d then
-    print('BreitbandGraphics: Applying GDI shim. This will degrade visual fidelity and performance.')
-    BreitbandGraphics.get_text_size = function(text, font_size, font_name)
-        wgui.setfont(font_size - 2, font_name, '')
-        return wgui.gettextextent(text)
-    end
-    BreitbandGraphics.draw_rectangle = function(rectangle, color, thickness)
-        wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.setbrush('null')
-        wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end
-    BreitbandGraphics.fill_rectangle = function(rectangle, color)
-        wgui.setpen('null')
-        wgui.setbrush(BreitbandGraphics.color_to_hex(color))
-        wgui.rect(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end
-    BreitbandGraphics.draw_rounded_rectangle = function(rectangle, color, radii, thickness)
-
-    end
-    BreitbandGraphics.fill_rounded_rectangle = function(rectangle, color, radii)
-
-    end
-    BreitbandGraphics.draw_ellipse = function(rectangle, color, thickness)
-        wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.setbrush('null')
-        wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end
-    BreitbandGraphics.fill_ellipse = function(rectangle, color)
-        wgui.setpen('null')
-        wgui.setbrush(BreitbandGraphics.color_to_hex(color))
-        wgui.ellipse(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height)
-    end
-    BreitbandGraphics.draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size,
-        font_name,
-        text)
-        wgui.setcolor(BreitbandGraphics.color_to_hex(color))
-        wgui.setfont(font_size - 2, font_name, '')
-        local flags = 's'
-        if horizontal_alignment == 'start' then
-            flags = flags .. 'l'
-        end
-        if horizontal_alignment == 'center' then
-            flags = flags .. 'c'
-        end
-        if horizontal_alignment == 'end' then
-            flags = flags .. 'r'
-        end
-        if vertical_alignment == 'start' then
-            flags = flags .. 't'
-        end
-        if vertical_alignment == 'center' then
-            flags = flags .. 'v'
-        end
-        if vertical_alignment == 'end' then
-            flags = flags .. 'b'
-        end
-        wgui.drawtext(text, {
-            l = rectangle.x,
-            t = rectangle.y,
-            w = rectangle.width,
-            h = rectangle.height,
-        }, flags)
-    end
-    BreitbandGraphics.draw_line = function(from, to, color, thickness)
-        wgui.setpen(BreitbandGraphics.color_to_hex(color), thickness)
-        wgui.setbrush('null')
-        wgui.line(from.x, from.y, to.x, to.y)
-    end
-    BreitbandGraphics.push_clip = function(rectangle)
-        -- one-depth clip
-        -- TODO: we can emulate stacked clips but for now this is good
-        wgui.setclip(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
-    end
-    BreitbandGraphics.pop_clip = function()
-        wgui.resetclip()
-    end
-    BreitbandGraphics.draw_image = function(destination_rectangle, source_rectangle, path, color, filter)
-        if not BreitbandGraphics.bitmap_cache[path] then
-            BreitbandGraphics.bitmap_cache[path] = wgui.loadimage(path)
-        end
-        wgui.drawimage(BreitbandGraphics.bitmap_cache[path], destination_rectangle.x, destination_rectangle.y,
-            destination_rectangle.width, destination_rectangle.height,
-            source_rectangle.x, source_rectangle.y, source_rectangle.width, source_rectangle.height, 0)
-    end
-    BreitbandGraphics.get_image_info = function(path)
-        if not BreitbandGraphics.bitmap_cache[path] then
-            BreitbandGraphics.bitmap_cache[path] = wgui.loadimage(path)
-        end
-
-        return wgui.getimageinfo(BreitbandGraphics.bitmap_cache[path])
-    end
-end
 
 Mupen_lua_ugui = {
 
