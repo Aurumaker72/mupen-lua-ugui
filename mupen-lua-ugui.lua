@@ -6,23 +6,24 @@ if emu.set_renderer then
 end
 
 BreitbandGraphics = {
-    brushes = {},
-    images = {},
+
 
     internal = {
+        brushes = {},
+        images = {},
         brush_from_color = function(color)
             local key = (color.r << 24) | (color.g << 16) | (color.b << 8) | (color.a and color.a or 255)
-            if not BreitbandGraphics.brushes[key] then
+            if not BreitbandGraphics.internal.brushes[key] then
                 local float_color = BreitbandGraphics.color_to_float(color)
-                BreitbandGraphics.brushes[key] = d2d.create_brush(float_color.r, float_color.g, float_color.b, float_color.a)
+                BreitbandGraphics.internal.brushes[key] = d2d.create_brush(float_color.r, float_color.g, float_color.b, float_color.a)
             end
-            return BreitbandGraphics.brushes[key]
+            return BreitbandGraphics.internal.brushes[key]
         end,
         image_from_path = function(path)
-            if not BreitbandGraphics.images[path] then
-                BreitbandGraphics.images[path] = d2d.load_image(path)
+            if not BreitbandGraphics.internal.images[path] then
+                BreitbandGraphics.internal.images[path] = d2d.load_image(path)
             end
-            return BreitbandGraphics.images[path]
+            return BreitbandGraphics.internal.images[path]
         end,
     },
 
@@ -184,7 +185,7 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     fill_rectangle = function(rectangle, color)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
-        d2d.draw_rectangle(
+        d2d.fill_rectangle(
             rectangle.x,
             rectangle.y,
             rectangle.x + rectangle.width,
@@ -197,37 +198,57 @@ BreitbandGraphics = {
     ---@param radii table The corner radii as `{x, y}`
     ---@param thickness number The outline's thickness
     draw_rounded_rectangle = function(rectangle, color, radii, thickness)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.draw_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
-            rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0,
-            thickness)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+        d2d.draw_rounded_rectangle(
+            rectangle.x,
+            rectangle.y,
+            rectangle.x + rectangle.width,
+            rectangle.y + rectangle.height,
+            radii.x,
+            radii.y,
+            thickness,
+            brush)
     end,
     ---Fills a rounded rectangle
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param radii table The corner radii as `{x, y}`
     fill_rounded_rectangle = function(rectangle, color, radii)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.fill_rounded_rectangle(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
-            rectangle.y + rectangle.height, radii.x, radii.y, float_color.r, float_color.g, float_color.b, 1.0)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+        d2d.fill_rounded_rectangle(
+            rectangle.x,
+            rectangle.y,
+            rectangle.x + rectangle.width,
+            rectangle.y + rectangle.height,
+            radii.x,
+            radii.y,
+            brush)
     end,
     ---Draws an ellipse's outline
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param thickness number The outline's thickness
     draw_ellipse = function(rectangle, color, thickness)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.draw_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
-            rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0,
-            thickness)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+        d2d.draw_ellipse(
+            rectangle.x + rectangle.width / 2,
+            rectangle.y + rectangle.height / 2,
+            rectangle.width / 2,
+            rectangle.height / 2,
+            thickness,
+            brush)
     end,
     ---Draws an ellipse
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     fill_ellipse = function(rectangle, color)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.fill_ellipse(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height / 2,
-            rectangle.width / 2, rectangle.height / 2, float_color.r, float_color.g, float_color.b, 1.0)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+        d2d.draw_ellipse(
+            rectangle.x + rectangle.width / 2,
+            rectangle.y + rectangle.height / 2,
+            rectangle.width / 2,
+            rectangle.height / 2,
+            brush)
     end,
     ---Draws text
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
@@ -244,6 +265,7 @@ BreitbandGraphics = {
             text = ''
         end
 
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
         local d_horizontal_alignment = 0
         local d_vertical_alignment = 0
         local d_style = 0
@@ -287,11 +309,21 @@ BreitbandGraphics = {
         if type(text) ~= 'string' then
             text = tostring(text)
         end
-        local float_color = BreitbandGraphics.color_to_float(color)
         d2d.set_text_antialias_mode(d_text_antialias_mode)
-        d2d.draw_text(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
-            rectangle.y + rectangle.height, float_color.r, float_color.g, float_color.b, 1.0, text, font_name,
-            font_size, d_weight, d_style, d_horizontal_alignment, d_vertical_alignment, d_options)
+        d2d.draw_text(
+            rectangle.x,
+            rectangle.y,
+            rectangle.x + rectangle.width,
+            rectangle.y + rectangle.height,
+            text,
+            font_name,
+            font_size,
+            d_weight,
+            d_style,
+            d_horizontal_alignment,
+            d_vertical_alignment,
+            d_options,
+            brush)
     end,
     ---Draws a line
     ---@param from table The start point as `{x, y}`
@@ -299,9 +331,15 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param thickness number The line's thickness
     draw_line = function(from, to, color, thickness)
-        local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.draw_line(from.x, from.y, to.x, to.y, float_color.r, float_color.g, float_color.b, 1.0,
-            thickness)
+        local brush = BreitbandGraphics.internal.brush_from_color(color)
+
+        d2d.draw_line(
+            from.x,
+            from.y,
+            to.x,
+            to.y,
+            thickness,
+            brush)
     end,
     ---Pushes a clip layer to the clip stack
     ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
@@ -320,35 +358,41 @@ BreitbandGraphics = {
     ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
     ---@param filter string The texture filter to be used while drawing the image. `nearest` | `linear`
     draw_image = function(destination_rectangle, source_rectangle, path, color, filter)
-        if not BreitbandGraphics.images[path] then
-            print('Loaded image from ' .. path)
-            d2d.load_image(path, path)
-            BreitbandGraphics.images[path] = path
-        end
         if not filter then
             filter = 'nearest'
         end
         local float_color = BreitbandGraphics.color_to_float(color)
-        d2d.draw_image(destination_rectangle.x, destination_rectangle.y,
+        local image = BreitbandGraphics.internal.image_from_path(path)
+        local interpolation = filter == 'nearest' and 0 or 1
+
+        d2d.draw_image(
+            destination_rectangle.x,
+            destination_rectangle.y,
             destination_rectangle.x + destination_rectangle.width,
             destination_rectangle.y + destination_rectangle.height,
-            source_rectangle.x, source_rectangle.y, source_rectangle.x + source_rectangle.width,
-            source_rectangle.y + source_rectangle.height, path, float_color.a, filter == 'nearest' and 0 or 1)
+            source_rectangle.x,
+            source_rectangle.y,
+            source_rectangle.x + source_rectangle.width,
+            source_rectangle.y + source_rectangle.height,
+            float_color.a,
+            interpolation,
+            image)
     end,
     ---Gets an image's metadata
     ---@param path string The image's absolute path on disk
     get_image_info = function(path)
-        if not BreitbandGraphics.images[path] then
-            print('Loaded image from ' .. path)
-            d2d.load_image(path, path)
-            BreitbandGraphics.images[path] = path
-        end
-        return d2d.get_image_info(path)
+        local image = BreitbandGraphics.internal.image_from_path(path)
+        return d2d.get_image_info(image)
     end,
     ---Releases allocated resources
     ---Must be called before stopping script
     free = function()
-
+        for key, value in pairs(BreitbandGraphics.internal.brushes) do
+            d2d.free_brush(value)
+        end
+        for key, value in pairs(BreitbandGraphics.internal.images) do
+            d2d.free_image(value)
+        end
     end,
 }
 
