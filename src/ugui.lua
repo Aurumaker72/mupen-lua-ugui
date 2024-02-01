@@ -5,7 +5,9 @@ local ugui = {}
 -- The control tree
 local tree = {
     uid = -1,
-    type = 'root',
+    type = 'panel',
+    h_align = alignments.fill,
+    v_align = alignments.fill,
     content = {},
 }
 
@@ -15,6 +17,23 @@ local registry = {}
 -- List of invalidated uids
 -- All children of the controls will be repainted too
 local invalidated_uids = {}
+
+---Deep clones an object
+---@param obj any The current object
+---@param seen any|nil The previous object, or nil for the first (obj)
+---@return any A deep clone of the object
+local function deep_clone(obj, seen)
+    if type(obj) ~= 'table' then return obj end
+    if seen and seen[obj] then return seen[obj] end
+    local s = seen or {}
+    local res = setmetatable({}, getmetatable(obj))
+    s[obj] = res
+    for k, v in pairs(obj) do
+        res[deep_clone(k, s)] = deep_clone(
+            v, s)
+    end
+    return res
+end
 
 ---Finds a control in the tree by its uid
 ---@param uid number A unique control identifier
@@ -44,6 +63,7 @@ end
 ---Registers a control template, adding its type to the global registry
 ---@param control table A control
 ugui.register_control = function(control)
+    print('Registering ' .. control.type)
     registry[control.type] = control
 end
 
@@ -92,31 +112,42 @@ ugui.message = function(uid, msg)
     local control = find(uid, tree)
 
     -- First, the template gets the message
-    print('Msg sent to template [' .. msg.type .. '] to ' .. uid)
-    registry[control.type].message(control, msg)
+    if registry[control.type] then
+        print(msg.type .. ' sent to template: ' .. control.type .. ' (' .. uid .. ')')
+        registry[control.type].message(control, msg)
+    end
 
     -- Then, user-provided one (if it exists)
     if control.message then
-        print('Msg sent to user [' .. msg.type .. '] to ' .. uid)
-        control.message(inst, msg)
+        print(msg.type .. ' sent to user: ' .. control.type .. ' (' .. uid .. ')')
+        control.message(msg)
     end
 end
 
 ---Hooks emulator functions and begins operating
 ugui.start = function()
-    local function repaint(node)
+    local last_input = nil
+    local curr_input = nil
 
-    end
+    local start_size = wgui.info()
+    wgui.resize(start_size.width + 200, start_size.height)
 
     emu.atupdatescreen(function()
-        -- TODO
-
+        last_input = curr_input and deep_clone(curr_input) or input.get()
+        curr_input = input.get()
 
         -- Repaint all invalidated controls
         for _, uid in pairs(invalidated_uids) do
-            print('Repainting ' .. uid)
+            ugui.message(uid, {
+                type = messages.paint,
+                rect = {x = start_size.width, y = 0, width = 200, height = start_size.height},
+            })
         end
         invalidated_uids = {}
+    end)
+
+    emu.atstop(function()
+        wgui.resize(wgui.info().width - 200, wgui.info().height)
     end)
 end
 

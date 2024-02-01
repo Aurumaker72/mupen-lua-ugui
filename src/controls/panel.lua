@@ -1,5 +1,5 @@
 return {
-    type = "label",
+    type = "panel",
     message = function (inst, msg)
         if msg.type == messages.measure then
             

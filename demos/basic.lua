@@ -5,13 +5,14 @@ local function folder(file)
 end
 
 dofile(folder('demos\\basic.lua') .. 'src\\bgfx.lua')
-local messages = dofile(folder('demos\\basic.lua') .. 'src\\messages.lua')
-local alignments = dofile(folder('demos\\basic.lua') .. 'src\\alignments.lua')
+messages = dofile(folder('demos\\basic.lua') .. 'src\\messages.lua')
+alignments = dofile(folder('demos\\basic.lua') .. 'src\\alignments.lua')
 local ugui = dofile(folder('demos\\basic.lua') .. 'src\\ugui.lua')
 
+ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\panel.lua'))
 ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label.lua'))
 
--- ugui.start()
+ugui.start()
 
 ugui.add_child(-1, {
     type = 'panel',
