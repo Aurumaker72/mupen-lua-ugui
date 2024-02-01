@@ -5,4 +5,6 @@ return {
     center = 1,
     -- The object is aligned to the end of its container
     ['end'] = 2,
+    -- The object fills its container
+    fill = 3,
 }
