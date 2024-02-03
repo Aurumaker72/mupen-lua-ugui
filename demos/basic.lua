@@ -12,21 +12,36 @@ ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label
 
 ugui.start(function()
     ugui.add_child(-1, {
-        type = 'panel',
-        uid = 1,
+        type = 'stackpanel',
+        uid = 100,
         h_align = ugui.alignments.fill,
         v_align = ugui.alignments.fill,
     })
-    ugui.add_child(1, {
+
+    ugui.add_child(100, {
         type = 'button',
-        uid = 2,
+        uid = 200,
         h_align = ugui.alignments.center,
         v_align = ugui.alignments.center,
     })
-    ugui.add_child(2, {
+    ugui.add_child(200, {
         type = 'label',
-        uid = 3,
+        uid = 201,
         text = 'Hello World',
+        h_align = ugui.alignments.fill,
+        v_align = ugui.alignments.fill,
+    })
+
+    ugui.add_child(100, {
+        type = 'button',
+        uid = 300,
+        h_align = ugui.alignments.center,
+        v_align = ugui.alignments.center,
+    })
+    ugui.add_child(300, {
+        type = 'label',
+        uid = 301,
+        text = 'Goodbye World',
         h_align = ugui.alignments.fill,
         v_align = ugui.alignments.fill,
     })

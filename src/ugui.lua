@@ -71,7 +71,10 @@ local function find(uid, node)
         if child.uid == uid then
             return child
         end
-        return find(uid, child)
+        local result = find(uid, child)
+        if result then
+            return result
+        end
     end
     return nil
 end
@@ -136,29 +139,31 @@ ugui.add_child = function(parent_uid, control)
 
     -- We add the child to its parent's children array
     local parent = find(parent_uid, root_node)
+    if not parent then
+        print('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
+        return
+    end
     parent.children[#parent.children + 1] = control
 
     -- Notify it about existing
-    ugui.message(control.uid, {type = ugui.messages.create})
+    ugui.message(control, {type = ugui.messages.create})
 
     -- We also need to invalidate the parent's layout
     invalidate_layout(parent_uid)
 end
 
----Sends a message to a control
----@param uid number A unique control identifier of the parent
+---Sends a message to a node
+---@param node table A node
 ---@param msg table A message
-ugui.message = function(uid, msg)
-    local control = find(uid, root_node)
-
+ugui.message = function(node, msg)
     -- First, the template gets the message
-    if registry[control.type] then
-        registry[control.type].message(ugui, control, msg)
+    if registry[node.type] then
+        registry[node.type].message(ugui, node, msg)
     end
 
     -- Then, user-provided one (if it exists)
-    if control.message then
-        control.message(ugui, msg)
+    if node.message then
+        node.message(ugui, msg)
     end
 end
 
