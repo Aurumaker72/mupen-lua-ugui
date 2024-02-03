@@ -1,5 +1,6 @@
 -- mupen-lua-ugui retained mode
 -- Aurumaker72 2024
+
 local ugui = {
     messages = {
         -- The control has been created
@@ -9,7 +10,9 @@ local ugui = {
         -- The control needs to be painted
         paint = 2,
         -- The control is being queried for its dimensions
-        measure = 2,
+        measure = 3,
+        -- The control is asked to provide a rectangle[] for its children, or an empty table if no transformations are performed
+        position_children = 4,
     },
     alignments = {
         -- The object is aligned to the start of its container
@@ -20,6 +23,36 @@ local ugui = {
         ['end'] = 2,
         -- The object fills its container
         fill = 3,
+    },
+    util = {
+        ---Reduces an array
+        ---@param list any[] An array
+        ---@param fn function The reduction predicate
+        ---@param init any The initial accumulator value
+        ---@return any The final value of the accumulator
+        reduce = function(list, fn, init)
+            local acc = init
+            for k, v in ipairs(list) do
+                if 1 == k and not init then
+                    acc = v
+                else
+                    acc = fn(acc, v)
+                end
+            end
+            return acc
+        end,
+
+        ---Transforms all items in the collection via the predicate
+        ---@param collection table
+        ---@param predicate function A function which takes a collection element as a parameter and returns the modified element. This function should be pure in regards to the parameter.
+        ---@return table table A collection of the transformed items
+        select = function(collection, predicate)
+            local t = {}
+            for i = 1, #collection, 1 do
+                t[i] = predicate(collection[i])
+            end
+            return t
+        end,
     },
 }
 
@@ -89,13 +122,59 @@ local function iterate(node, predicate)
     end
 end
 
+---Returns the base layout bounds for a node
+---@param node table The node
+---@param parent_rect table The parent's rectangle
+local function get_base_layout_bounds(node, parent_rect)
+    local size = ugui.send_message(node, {type = ugui.messages.measure})
+    local rect = {
+        x = parent_rect.x,
+        y = parent_rect.y,
+        width = size.x,
+        height = size.y,
+    }
+    if node.h_align == ugui.alignments.center then
+        rect.x = parent_rect.x + parent_rect.width / 2 - size.x / 2
+    end
+    if node.h_align == ugui.alignments['end'] then
+        rect.x = parent_rect.x + parent_rect.width - size.x
+    end
+    if node.h_align == ugui.alignments.fill then
+        rect.width = parent_rect.width
+    end
+
+    if node.v_align == ugui.alignments.center then
+        rect.y = parent_rect.y + parent_rect.height / 2 - size.y / 2
+    end
+    if node.v_align == ugui.alignments['end'] then
+        rect.y = parent_rect.y + parent_rect.height - size.y
+    end
+    if node.v_align == ugui.alignments.fill then
+        rect.height = parent_rect.height
+    end
+    return rect
+end
+
 ---Lays out a node and its children
 ---@param node table The node
 ---@param parent_rect table The parent's rectangle
 local function layout_node(node, parent_rect)
-    node.bounds = parent_rect
+    -- Compute layout bounds and apply them
+    node.bounds = get_base_layout_bounds(node, parent_rect)
+
+    -- Do child layout pass
     for _, child in pairs(node.children) do
         layout_node(child, node.bounds)
+    end
+
+
+    -- Layout node pass: let them reposition childrens' bounds after layout is finished
+    local new_child_bounds = ugui.send_message(node, {type = ugui.messages.position_children})
+    if new_child_bounds then
+        for i = 1, #new_child_bounds, 1 do
+            node.children[i].bounds = get_base_layout_bounds(node.children[i], new_child_bounds[i])
+            layout_node(node.children[i], new_child_bounds[i])
+        end
     end
 end
 
@@ -135,7 +214,6 @@ ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
     control.bounds = nil
-    control.invalidated = true
 
     -- We add the child to its parent's children array
     local parent = find(parent_uid, root_node)
@@ -146,7 +224,7 @@ ugui.add_child = function(parent_uid, control)
     parent.children[#parent.children + 1] = control
 
     -- Notify it about existing
-    ugui.message(control, {type = ugui.messages.create})
+    ugui.send_message(control, {type = ugui.messages.create})
 
     -- We also need to invalidate the parent's layout
     invalidate_layout(parent_uid)
@@ -155,16 +233,14 @@ end
 ---Sends a message to a node
 ---@param node table A node
 ---@param msg table A message
-ugui.message = function(node, msg)
-    -- First, the template gets the message
-    if registry[node.type] then
-        registry[node.type].message(ugui, node, msg)
-    end
+ugui.send_message = function(node, msg)
+    -- TODO: If user-provided one exists, it takes priority and user must invoke lower one manually
+    -- if node.message then
+    --     node.message(ugui, msg)
+    --     return
+    -- end
 
-    -- Then, user-provided one (if it exists)
-    if node.message then
-        node.message(ugui, msg)
-    end
+    return registry[node.type].message(ugui, node, msg)
 end
 
 ---Hooks emulator functions and begins operating
@@ -180,9 +256,6 @@ ugui.start = function(start)
     root_node.bounds = {x = start_size.width, y = 0, width = 200, height = start_size.height}
 
     start()
-
-    -- At startup, invalidate root node
-    invalidate_layout(root_node.uid)
 
     emu.atupdatescreen(function()
         last_input = curr_input and deep_clone(curr_input) or input.get()

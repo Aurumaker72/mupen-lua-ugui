@@ -8,7 +8,9 @@ dofile(folder('demos\\basic.lua') .. 'src\\bgfx.lua')
 local ugui = dofile(folder('demos\\basic.lua') .. 'src\\ugui.lua')
 
 ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\panel.lua'))
+ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\stackpanel.lua'))
 ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label.lua'))
+ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\button.lua'))
 
 ugui.start(function()
     ugui.add_child(-1, {
@@ -32,17 +34,17 @@ ugui.start(function()
         v_align = ugui.alignments.fill,
     })
 
-    ugui.add_child(100, {
-        type = 'button',
-        uid = 300,
-        h_align = ugui.alignments.center,
-        v_align = ugui.alignments.center,
-    })
-    ugui.add_child(300, {
-        type = 'label',
-        uid = 301,
-        text = 'Goodbye World',
-        h_align = ugui.alignments.fill,
-        v_align = ugui.alignments.fill,
-    })
+    -- ugui.add_child(100, {
+    --     type = 'button',
+    --     uid = 300,
+    --     h_align = ugui.alignments.center,
+    --     v_align = ugui.alignments.center,
+    -- })
+    -- ugui.add_child(300, {
+    --     type = 'label',
+    --     uid = 301,
+    --     text = 'Goodbye World',
+    --     h_align = ugui.alignments.fill,
+    --     v_align = ugui.alignments.fill,
+    -- })
 end)

@@ -1,5 +1,5 @@
 return {
-    type = 'panel',
+    type = 'button',
     message = function(ugui, inst, msg)
         if msg.type == ugui.messages.measure then
             return ugui.send_message(inst.children[1], {

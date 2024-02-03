@@ -7,7 +7,8 @@ return {
             })
         end
         if msg.type == ugui.messages.measure then
-            return BreitbandGraphics.get_text_size(ugui.get_udata(inst.uid).text, 11, 'Calibri')
+            local size = BreitbandGraphics.get_text_size(ugui.get_udata(inst.uid).text, 11, 'Calibri')
+            return {x = size.width, y = size.height}
         end
         if msg.type == ugui.messages.paint then
             BreitbandGraphics.draw_text(msg.rect, 'center', 'center', {}, BreitbandGraphics.colors.black, 11, 'Calibri', ugui.get_udata(inst.uid).text)
