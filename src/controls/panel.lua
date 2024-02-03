@@ -2,9 +2,7 @@ return {
     type = 'panel',
     message = function(ugui, inst, msg)
         if msg.type == ugui.messages.measure then
-            return ugui.send_message(inst.children[1], {
-                type = ugui.messages.measure,
-            })
+            return ugui.util.measure_by_child(ugui, inst)
         end
         if msg.type == ugui.messages.paint then
         end

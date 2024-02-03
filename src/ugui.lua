@@ -25,6 +25,21 @@ local ugui = {
         fill = 3,
     },
     util = {
+        ---Message helper for measuring size by first child
+        ---@param ugui table A ugui instance
+        ---@param node table A node
+        ---@return table The dimensions
+        measure_by_child = function(ugui, node)
+            -- Control's size is dictated by first child's dimensions
+            if #node.children > 0 then
+                return ugui.send_message(node.children[1], {
+                    type = ugui.messages.measure,
+                })
+            else
+                return {x = 0, y = 0}
+            end
+        end,
+
         ---Reduces an array
         ---@param list any[] An array
         ---@param fn function The reduction predicate
@@ -127,6 +142,7 @@ end
 ---@param parent_rect table The parent's rectangle
 local function get_base_layout_bounds(node, parent_rect)
     local size = ugui.send_message(node, {type = ugui.messages.measure})
+
     local rect = {
         x = parent_rect.x,
         y = parent_rect.y,

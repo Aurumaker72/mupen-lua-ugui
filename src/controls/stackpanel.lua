@@ -6,7 +6,6 @@ return {
                 return {x = 0, y = 0}
             end
 
-
             local child_sizes = {}
             for _, child in pairs(inst.children) do
                 child_sizes[#child_sizes + 1] = ugui.send_message(child, {type = ugui.messages.measure})

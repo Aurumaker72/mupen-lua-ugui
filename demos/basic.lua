@@ -26,6 +26,7 @@ ugui.start(function()
         h_align = ugui.alignments.center,
         v_align = ugui.alignments.center,
     })
+
     ugui.add_child(200, {
         type = 'label',
         uid = 201,
