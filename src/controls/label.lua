@@ -1,11 +1,16 @@
 return {
-    type = "label",
-    message = function (inst, msg)
-        if msg.type == messages.measure then
-            return BreitbandGraphics.get_text_size(inst.text, 11, "Calibri")
+    type = 'label',
+    message = function(ugui, inst, msg)
+        if msg.type == ugui.messages.create then
+            ugui.set_udata(inst.uid, {
+                text = 'Test',
+            })
         end
-        if msg.type == messages.paint then
-            BreitbandGraphics.draw_text(msg.rect, "center", "center", {}, BreitbandGraphics.colors.black, 11, "Calibri", inst.text)
+        if msg.type == ugui.messages.measure then
+            return BreitbandGraphics.get_text_size(ugui.get_udata(inst.uid).text, 11, 'Calibri')
         end
-    end
+        if msg.type == ugui.messages.paint then
+            BreitbandGraphics.draw_text(msg.rect, 'center', 'center', {}, BreitbandGraphics.colors.black, 11, 'Calibri', ugui.get_udata(inst.uid).text)
+        end
+    end,
 }
