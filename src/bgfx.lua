@@ -21,7 +21,12 @@ BreitbandGraphics = {
             return BreitbandGraphics.internal.images[path]
         end,
     },
-
+    ---Whether the point is inside the rectangle
+    ---@param point table A point as `{x,y}`
+    ---@param rect table A rectangle as `{x,y,width,height}`
+    point_in_rect = function (point, rect)
+        return point.x > rect.x and point.x < rect.x + rect.width and point.y > rect.y and point.y < rect.y + rect.height
+    end,
     --- Converts a color value to its corresponding hexadecimal representation
     --- @param color table The color value to convert
     --- @return _ string The hexadecimal representation of the color

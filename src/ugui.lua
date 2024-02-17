@@ -74,16 +74,6 @@ local ugui = {
     },
 }
 
--- The message handler which runs before controls get to process a message
-local function default_message_handler(ugui, inst, msg)
-    if msg.type == ugui.messages.prop_changed then
-        if msg.key == 'h_align' or msg.key == 'v_align' then
-            ugui.invalidate_layout(inst.uid)
-            ugui.invalidate_visuals(inst.uid)
-        end
-    end
-end
-
 -- The control tree
 local root_node = {}
 
@@ -143,6 +133,34 @@ local function iterate(node, predicate)
     for key, value in pairs(node.children) do
         iterate(value, predicate)
     end
+end
+
+-- The message handler which runs before controls get to process a message
+local function default_message_handler(ugui, inst, msg)
+    if msg.type == ugui.messages.prop_changed then
+        if msg.key == 'h_align' or msg.key == 'v_align' then
+            ugui.invalidate_layout(inst.uid)
+            ugui.invalidate_visuals(inst.uid)
+        end
+    end
+end
+
+local function node_at_point(point, node)
+    if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 then
+        return node
+    end
+    for _, child in pairs(node.children) do
+        local result = node_at_point(point, child)
+        if result then
+            return result
+        end
+    end
+
+    if BreitbandGraphics.point_in_rect(point, node.bounds) then
+        return node
+    end
+
+    return nil
 end
 
 ---Returns the base layout bounds for a node
@@ -288,6 +306,7 @@ ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
     control.props = control.props and control.props or {}
+    control.hittest = control.hittest and control.hittest or true
     control.bounds = nil
     control.invalidated_visual = true
 
@@ -341,6 +360,9 @@ ugui.start = function(width, start)
         last_input = curr_input and deep_clone(curr_input) or input.get()
         curr_input = input.get()
 
+        local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}
+        local last_mouse_point = {x = last_input.xmouse, y = last_input.ymouse}
+
         for _, uid in pairs(layout_queue) do
             layout_node(find(uid, root_node))
         end
@@ -360,6 +382,11 @@ ugui.start = function(width, start)
         -- iterate(root_node, function(node)
         --     ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
         -- end)
+
+        local a = node_at_point(mouse_point, root_node)
+        if a then
+            print(a.type .. ' ' .. a.uid)
+        end
     end)
 
     emu.atstop(function()
