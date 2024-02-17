@@ -16,12 +16,6 @@ local raised_frame_border_colors = {
     [3] = BreitbandGraphics.hex_to_color('#005499'),
     [0] = BreitbandGraphics.hex_to_color('#BFBFBF'),
 }
-local raised_frame_text_colors = {
-    [1] = BreitbandGraphics.colors.black,
-    [2] = BreitbandGraphics.colors.black,
-    [3] = BreitbandGraphics.colors.black,
-    [0] = BreitbandGraphics.repeated_to_color(160),
-}
 
 return {
     type = 'button',
@@ -39,7 +33,8 @@ return {
         end
         if msg.type == ugui.messages.paint then
             local state = ugui.get_prop(inst.uid, 'state')
-            BreitbandGraphics.fill_rectangle(msg.rect, raised_frame_back_colors[state])
+            BreitbandGraphics.fill_rectangle(msg.rect, raised_frame_border_colors[state])
+            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(msg.rect, -1), raised_frame_back_colors[state])
         end
         if msg.type == ugui.messages.mouse_enter then
             ugui.set_prop(inst.uid, 'state', states.hover)
