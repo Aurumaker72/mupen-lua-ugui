@@ -16,36 +16,46 @@ ugui.start(function()
     ugui.add_child(nil, {
         type = 'stackpanel',
         uid = -1,
-        h_align = ugui.alignments.fill,
-        v_align = ugui.alignments.fill,
+        props = {
+            h_align = ugui.alignments.fill,
+            v_align = ugui.alignments.fill,
+        },
     })
 
     ugui.add_child(-1, {
         type = 'button',
         uid = 200,
-        h_align = ugui.alignments.center,
-        v_align = ugui.alignments.center,
+        props = {
+            h_align = ugui.alignments.center,
+            v_align = ugui.alignments.center,
+        },
     })
 
     ugui.add_child(200, {
         type = 'label',
         uid = 201,
-        text = 'Hello World',
-        h_align = ugui.alignments.fill,
-        v_align = ugui.alignments.fill,
+        props = {
+            text = 'Hello World',
+            h_align = ugui.alignments.fill,
+            v_align = ugui.alignments.fill,
+        },
     })
 
     ugui.add_child(-1, {
         type = 'button',
         uid = 300,
-        h_align = ugui.alignments.center,
-        v_align = ugui.alignments.center,
+        props = {
+            h_align = ugui.alignments.center,
+            v_align = ugui.alignments.center,
+        },
     })
     ugui.add_child(300, {
         type = 'label',
         uid = 301,
-        text = 'Goodbye World',
-        h_align = ugui.alignments.fill,
-        v_align = ugui.alignments.fill,
+        props = {
+            text = 'Goodbye World',
+            h_align = ugui.alignments.fill,
+            v_align = ugui.alignments.fill,
+        },
     })
 end)

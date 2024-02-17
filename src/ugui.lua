@@ -146,23 +146,24 @@ ugui.get_base_layout_bounds = function(node)
         width = size.x,
         height = size.y,
     }
-    if node.h_align == ugui.alignments.center then
+
+    if node.props.h_align == ugui.alignments.center then
         rect.x = node.parent_bounds.x + node.parent_bounds.width / 2 - size.x / 2
     end
-    if node.h_align == ugui.alignments['end'] then
+    if node.props.h_align == ugui.alignments['end'] then
         rect.x = node.parent_bounds.x + node.parent_bounds.width - size.x
     end
-    if node.h_align == ugui.alignments.fill then
+    if node.props.h_align == ugui.alignments.fill then
         rect.width = node.parent_bounds.width
     end
 
-    if node.v_align == ugui.alignments.center then
+    if node.props.v_align == ugui.alignments.center then
         rect.y = node.parent_bounds.y + node.parent_bounds.height / 2 - size.y / 2
     end
-    if node.v_align == ugui.alignments['end'] then
+    if node.props.v_align == ugui.alignments['end'] then
         rect.y = node.parent_bounds.y + node.parent_bounds.height - size.y
     end
-    if node.v_align == ugui.alignments.fill then
+    if node.props.v_align == ugui.alignments.fill then
         rect.height = node.parent_bounds.height
     end
     return rect
@@ -257,7 +258,7 @@ end
 ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
-    control.props = {}
+    control.props = control.props and control.props or {}
     control.bounds = nil
     control.invalidated_visual = true
 
