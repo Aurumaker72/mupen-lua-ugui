@@ -12,13 +12,14 @@ ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\stac
 ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label.lua'))
 ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\button.lua'))
 
-ugui.start(function()
+ugui.start(300, function()
     ugui.add_child(nil, {
         type = 'stackpanel',
         uid = -1,
         props = {
             h_align = ugui.alignments.fill,
             v_align = ugui.alignments.fill,
+            vertical = true,
         },
     })
 

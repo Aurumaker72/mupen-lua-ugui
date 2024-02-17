@@ -188,7 +188,7 @@ local function layout_node(node)
 
     if not node.parent_bounds then
         -- Fallback: this is probably the root control, give it the screen
-        node.parent_bounds = {x = start_size.width, y = 0, width = 200, height = start_size.height}
+        node.parent_bounds = {x = start_size.width, y = 0, width = wgui.info().width - start_size.width, height = start_size.height}
     end
 
     -- Compute layout bounds and apply them
@@ -326,13 +326,14 @@ ugui.send_message = function(node, msg)
 end
 
 ---Hooks emulator functions and begins operating
+---@param width number The width of the expanded area
 ---@param start function The function to be called upon starting
-ugui.start = function(start)
+ugui.start = function(width, start)
     local last_input = nil
     local curr_input = nil
 
     start_size = wgui.info()
-    wgui.resize(start_size.width + 200, start_size.height)
+    wgui.resize(start_size.width + width, start_size.height)
 
     start()
 
@@ -362,7 +363,7 @@ ugui.start = function(start)
     end)
 
     emu.atstop(function()
-        wgui.resize(wgui.info().width - 200, wgui.info().height)
+        wgui.resize(wgui.info().width - width, wgui.info().height)
     end)
 end
 
