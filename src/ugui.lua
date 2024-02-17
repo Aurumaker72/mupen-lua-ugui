@@ -85,7 +85,7 @@ local ugui = {
 }
 
 -- The control tree
-local root_node = {}
+local root_node = nil
 
 -- Map of control types to templates
 local registry = {}
@@ -156,6 +156,9 @@ local function default_message_handler(ugui, inst, msg)
 end
 
 local function node_at_point(point, node)
+    if not node then
+        return nil
+    end
     if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 and node.props.hittest then
         return node
     end
