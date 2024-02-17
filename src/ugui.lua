@@ -80,9 +80,11 @@ local root_node = {}
 -- Map of control types to templates
 local registry = {}
 
--- List of invalidated uids
--- All children of the controls will be repainted too
+-- List of layout invalidated uids. Respective controls' children are implicitly contained as well.
 local layout_queue = {}
+
+-- List of paint invalidated uids. Respective controls' children are implicitly contained as well.
+local paint_queue = {}
 
 -- Window size upon script start
 local start_size = nil
@@ -198,10 +200,30 @@ local function layout_node(node)
     end
 end
 
+---Paints a node and its children
+---@param node table The node
+local function paint_node(node)
+    if not node.invalidated_visual then
+        return
+    end
+
+    iterate(node, function(x)
+        print('Painting ' .. x.type)
+        ugui.send_message(x, {type = ugui.messages.paint, rect = x.bounds})
+        x.invalidated_visual = false
+    end)
+end
+
 ---Invalidates a control's layout along with its children
 ---@param uid number A unique control identifier
 local function invalidate_layout(uid)
     layout_queue[#layout_queue + 1] = uid
+end
+
+---Invalidates a control's visuals along with its children
+---@param uid number A unique control identifier
+local function invalidate_visuals(uid)
+    paint_queue[#paint_queue + 1] = uid
 end
 
 ---Registers a control template, adding its type to the global registry
@@ -237,6 +259,7 @@ ugui.add_child = function(parent_uid, control)
     control.children = {}
     control.props = {}
     control.bounds = nil
+    control.invalidated_visual = true
 
     if parent_uid then
         -- We add the child to its parent's children array
@@ -254,8 +277,9 @@ ugui.add_child = function(parent_uid, control)
     -- Notify it about existing
     ugui.send_message(control, {type = ugui.messages.create})
 
-    -- We also need to invalidate the parent's layout
+    -- We also need to invalidate the parent completely
     invalidate_layout(parent_uid and parent_uid or control.uid)
+    invalidate_visuals(parent_uid and parent_uid or control.uid)
 end
 
 ---Sends a message to a node
@@ -286,11 +310,15 @@ ugui.start = function(start)
         last_input = curr_input and deep_clone(curr_input) or input.get()
         curr_input = input.get()
 
-        -- Relayout all invalidated controls
         for _, uid in pairs(layout_queue) do
             layout_node(find(uid, root_node))
         end
         layout_queue = {}
+
+        for _, uid in pairs(paint_queue) do
+            paint_node(find(uid, root_node))
+        end
+        paint_queue = {}
 
         -- Paint bounding boxes of all controls (debug)
         -- iterate(root_node, function(node)
@@ -298,9 +326,9 @@ ugui.start = function(start)
         -- end)
 
         -- Paint all controls every time (debug)
-        iterate(root_node, function(node)
-            ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
-        end)
+        -- iterate(root_node, function(node)
+        --     ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
+        -- end)
     end)
 
     emu.atstop(function()
