@@ -13,14 +13,14 @@ ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label
 ugui.register_control(dofile(folder('demos\\basic.lua') .. 'src\\controls\\button.lua'))
 
 ugui.start(function()
-    ugui.add_child(-1, {
+    ugui.add_child(nil, {
         type = 'stackpanel',
-        uid = 100,
+        uid = -1,
         h_align = ugui.alignments.fill,
         v_align = ugui.alignments.fill,
     })
 
-    ugui.add_child(100, {
+    ugui.add_child(-1, {
         type = 'button',
         uid = 200,
         h_align = ugui.alignments.center,
@@ -35,7 +35,7 @@ ugui.start(function()
         v_align = ugui.alignments.fill,
     })
 
-    ugui.add_child(100, {
+    ugui.add_child(-1, {
         type = 'button',
         uid = 300,
         h_align = ugui.alignments.center,

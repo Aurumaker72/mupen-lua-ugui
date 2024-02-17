@@ -11,7 +11,7 @@ local ugui = {
         paint = 2,
         -- The control is being queried for its dimensions
         measure = 3,
-        -- The control is asked to provide a rectangle[] for its children base bounds (which they are subsequently allowed to position themselves in), 
+        -- The control is asked to provide a rectangle[] for its children base bounds (which they are subsequently allowed to position themselves in),
         -- or an empty table if no transformations are performed
         get_base_child_bounds = 4,
         -- The control had a property modified
@@ -75,14 +75,7 @@ local ugui = {
 }
 
 -- The control tree
-local root_node = {
-    uid = -1,
-    type = 'panel',
-    h_align = ugui.alignments.fill,
-    v_align = ugui.alignments.fill,
-    bounds = {},
-    children = {},
-}
+local root_node = {}
 
 -- Map of control types to templates
 local registry = {}
@@ -144,7 +137,7 @@ end
 ---@param node table The node
 ugui.get_base_layout_bounds = function(node)
     local size = ugui.send_message(node, {type = ugui.messages.measure})
-    
+
     local rect = {
         x = node.parent_bounds.x,
         y = node.parent_bounds.y,
@@ -180,10 +173,12 @@ local function layout_node(node)
     -- But when you invalidate the button node, they think the parent size is the regular stackpanel bounds, not the item
     -- I'm not quite sure how to solve this besides remembering parent bounds in a dictionary
 
-    -- Compute layout bounds and apply them
     if not node.parent_bounds then
-        node.parent_bounds = deep_clone(root_node.bounds)
+        -- Fallback: this is probably the root control, give it the screen
+        node.parent_bounds = {x = start_size.width, y = 0, width = 200, height = start_size.height}
     end
+
+    -- Compute layout bounds and apply them
     node.bounds = ugui.get_base_layout_bounds(node)
 
     -- Layout node pass: let them reposition childrens' bounds after layout is finished
@@ -230,34 +225,37 @@ end
 ugui.set_prop = function(uid, key, value)
     local node = find(uid, root_node)
     node.props[key] = value
-    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value })
+    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value})
 end
 
 ---Appends a child to a control
 ---The control will be clobbered
----@param parent_uid number A unique control identifier of the parent
+---@param parent_uid number|nil A unique control identifier of the parent, or nil if the control is the root control
 ---@param control table A control
 ugui.add_child = function(parent_uid, control)
-    print('Adding ' .. control.type .. ' (' .. control.uid .. ') to ' .. parent_uid)
-
     -- Initialize default properties
     control.children = {}
     control.props = {}
     control.bounds = nil
 
-    -- We add the child to its parent's children array
-    local parent = find(parent_uid, root_node)
-    if not parent then
-        print('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
-        return
+    if parent_uid then
+        -- We add the child to its parent's children array
+        local parent = find(parent_uid, root_node)
+        if not parent then
+            print('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
+            return
+        end
+        parent.children[#parent.children + 1] = control
+    else
+        control.uid = -1
+        root_node = deep_clone(control)
     end
-    parent.children[#parent.children + 1] = control
 
     -- Notify it about existing
     ugui.send_message(control, {type = ugui.messages.create})
 
     -- We also need to invalidate the parent's layout
-    invalidate_layout(parent_uid)
+    invalidate_layout(parent_uid and parent_uid or control.uid)
 end
 
 ---Sends a message to a node
@@ -282,9 +280,6 @@ ugui.start = function(start)
     start_size = wgui.info()
     wgui.resize(start_size.width + 200, start_size.height)
 
-    -- Fill out root node bounds
-    root_node.bounds = {x = start_size.width, y = 0, width = 200, height = start_size.height}
-
     start()
 
     emu.atupdatescreen(function()
@@ -298,8 +293,13 @@ ugui.start = function(start)
         layout_queue = {}
 
         -- Paint bounding boxes of all controls (debug)
+        -- iterate(root_node, function(node)
+        --     BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
+        -- end)
+
+        -- Paint all controls every time (debug)
         iterate(root_node, function(node)
-            BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
+            ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
         end)
     end)
 
