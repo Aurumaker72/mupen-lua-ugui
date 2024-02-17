@@ -16,6 +16,16 @@ local ugui = {
         get_base_child_bounds = 4,
         -- The control had a property modified
         prop_changed = 5,
+        -- The mouse has entered the control's area
+        mouse_enter = 6,
+        -- The mouse has left the control's area
+        mouse_leave = 7,
+        -- The mouse is moving inside the control's area
+        mouse_move = 8,
+        -- The left mouse button has been pressed inside the control's area
+        lmb_down = 9,
+        -- The left mouse button has been released inside the control's area
+        lmb_up = 10,
     },
     alignments = {
         -- The object is aligned to the start of its container
@@ -146,7 +156,7 @@ local function default_message_handler(ugui, inst, msg)
 end
 
 local function node_at_point(point, node)
-    if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 then
+    if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 and node.props.hittest then
         return node
     end
     for _, child in pairs(node.children) do
@@ -156,7 +166,7 @@ local function node_at_point(point, node)
         end
     end
 
-    if BreitbandGraphics.point_in_rect(point, node.bounds) then
+    if BreitbandGraphics.point_in_rect(point, node.bounds) and node.props.hittest then
         return node
     end
 
@@ -281,7 +291,7 @@ end
 ---@param value any The property's new value
 ugui.init_prop = function(uid, key, value)
     local node = find(uid, root_node)
-    if node.props[key] then
+    if type(node.props[key]) ~= "nil" then
         return
     end
     node.props[key] = value
@@ -306,7 +316,6 @@ ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
     control.props = control.props and control.props or {}
-    control.hittest = control.hittest and control.hittest or true
     control.bounds = nil
     control.invalidated_visual = true
 
@@ -320,11 +329,15 @@ ugui.add_child = function(parent_uid, control)
         parent.children[#parent.children + 1] = control
     else
         control.uid = -1
-        root_node = deep_clone(control)
+        root_node = control
     end
 
     -- Notify it about existing
     ugui.send_message(control, {type = ugui.messages.create})
+
+    ugui.init_prop(control.uid, 'visible', true)
+    ugui.init_prop(control.uid, 'enabled', true)
+    ugui.init_prop(control.uid, 'hittest', true)
 
     -- We also need to invalidate the parent completely
     invalidate_layout(parent_uid and parent_uid or control.uid)
@@ -383,9 +396,16 @@ ugui.start = function(width, start)
         --     ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
         -- end)
 
-        local a = node_at_point(mouse_point, root_node)
-        if a then
-            print(a.type .. ' ' .. a.uid)
+        local node_at_mouse = node_at_point(mouse_point, root_node)
+        local node_at_last_mouse = node_at_point(last_mouse_point, root_node)
+
+        if node_at_mouse ~= node_at_last_mouse then
+            if node_at_mouse then
+                ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_enter})
+            end
+            if node_at_last_mouse then
+                ugui.send_message(node_at_last_mouse, {type = ugui.messages.mouse_leave})
+            end
         end
     end)
 
