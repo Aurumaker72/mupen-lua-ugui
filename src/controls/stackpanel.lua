@@ -32,7 +32,7 @@ return {
         if msg.type == ugui.messages.get_base_child_bounds then
             local bounds = {}
             local size_accumulator = 0
-            if ugui.get_prop(inst.uid, 'horizontal') then
+            if ugui.get_prop(inst.uid, 'vertical') then
                 for _, child in pairs(inst.children) do
                     local child_height = ugui.send_message(child, {type = ugui.messages.measure}).y
                     local item_rect = {
