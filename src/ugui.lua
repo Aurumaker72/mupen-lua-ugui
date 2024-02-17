@@ -14,6 +14,8 @@ local ugui = {
         -- The control is asked to provide a rectangle[] for its children base bounds (which they are subsequently allowed to position themselves in), 
         -- or an empty table if no transformations are performed
         get_base_child_bounds = 4,
+        -- The control had a property modified
+        prop_changed = 5,
     },
     alignments = {
         -- The object is aligned to the start of its container
@@ -213,18 +215,22 @@ ugui.register_control = function(control)
     registry[control.type] = control
 end
 
----Gets the userdata of a control
+---Gets a control property's value
 ---@param uid number A unique control identifier
----@return any
-ugui.get_udata = function(uid)
-    return find(uid, root_node).udata
+---@param key string The property key
+---@return any|nil
+ugui.get_prop = function(uid, key)
+    return find(uid, root_node).props[key]
 end
 
----Sets the userdata of a control
+---Sets a control property's value
 ---@param uid number A unique control identifier
----@param data any The user data
-ugui.set_udata = function(uid, data)
-    find(uid, root_node).udata = data
+---@param key string The property key
+---@param value any The property's new value
+ugui.set_prop = function(uid, key, value)
+    local node = find(uid, root_node)
+    node.props[key] = value
+    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value })
 end
 
 ---Appends a child to a control
@@ -236,6 +242,7 @@ ugui.add_child = function(parent_uid, control)
 
     -- Initialize default properties
     control.children = {}
+    control.props = {}
     control.bounds = nil
 
     -- We add the child to its parent's children array
