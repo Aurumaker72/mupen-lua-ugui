@@ -19,17 +19,18 @@ return {
                 y = ugui.util.reduce(heights, function(x, y) return x + y end, 0),
             }
         end
-        if msg.type == ugui.messages.position_children then
+        if msg.type == ugui.messages.get_base_child_bounds then
             local bounds = {}
             local current_height = 0
             for _, child in pairs(inst.children) do
                 local child_height = ugui.send_message(child, {type = ugui.messages.measure}).y
-                bounds[#bounds + 1] = {
-                    x = child.bounds.x,
-                    y = child.bounds.y + current_height,
-                    width = child.bounds.width,
+                local item_rect = {
+                    x = inst.bounds.x,
+                    y = inst.bounds.y + current_height,
+                    width = inst.bounds.width,
                     height = child_height,
                 }
+                bounds[#bounds + 1] = item_rect
                 current_height = current_height + child_height
             end
             return bounds

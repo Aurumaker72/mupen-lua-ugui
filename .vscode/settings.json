@@ -37,5 +37,10 @@
         "never_indent_comment_on_if_branch": "false",
         "line_space_after_comment": "4"
     },
-    "Lua.diagnostics.globals": ["wgui", "d2d", "emu"]
+    "Lua.diagnostics.globals": [
+        "wgui",
+        "d2d",
+        "emu"
+    ],
+    "Lua.completion.autoRequire": false
 }

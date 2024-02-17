@@ -35,17 +35,17 @@ ugui.start(function()
         v_align = ugui.alignments.fill,
     })
 
-    -- ugui.add_child(100, {
-    --     type = 'button',
-    --     uid = 300,
-    --     h_align = ugui.alignments.center,
-    --     v_align = ugui.alignments.center,
-    -- })
-    -- ugui.add_child(300, {
-    --     type = 'label',
-    --     uid = 301,
-    --     text = 'Goodbye World',
-    --     h_align = ugui.alignments.fill,
-    --     v_align = ugui.alignments.fill,
-    -- })
+    ugui.add_child(100, {
+        type = 'button',
+        uid = 300,
+        h_align = ugui.alignments.center,
+        v_align = ugui.alignments.center,
+    })
+    ugui.add_child(300, {
+        type = 'label',
+        uid = 301,
+        text = 'Goodbye World',
+        h_align = ugui.alignments.fill,
+        v_align = ugui.alignments.fill,
+    })
 end)

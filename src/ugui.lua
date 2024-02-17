@@ -11,8 +11,9 @@ local ugui = {
         paint = 2,
         -- The control is being queried for its dimensions
         measure = 3,
-        -- The control is asked to provide a rectangle[] for its children, or an empty table if no transformations are performed
-        position_children = 4,
+        -- The control is asked to provide a rectangle[] for its children base bounds (which they are subsequently allowed to position themselves in), 
+        -- or an empty table if no transformations are performed
+        get_base_child_bounds = 4,
     },
     alignments = {
         -- The object is aligned to the start of its container
@@ -139,57 +140,63 @@ end
 
 ---Returns the base layout bounds for a node
 ---@param node table The node
----@param parent_rect table The parent's rectangle
-local function get_base_layout_bounds(node, parent_rect)
+ugui.get_base_layout_bounds = function(node)
     local size = ugui.send_message(node, {type = ugui.messages.measure})
-
+    
     local rect = {
-        x = parent_rect.x,
-        y = parent_rect.y,
+        x = node.parent_bounds.x,
+        y = node.parent_bounds.y,
         width = size.x,
         height = size.y,
     }
     if node.h_align == ugui.alignments.center then
-        rect.x = parent_rect.x + parent_rect.width / 2 - size.x / 2
+        rect.x = node.parent_bounds.x + node.parent_bounds.width / 2 - size.x / 2
     end
     if node.h_align == ugui.alignments['end'] then
-        rect.x = parent_rect.x + parent_rect.width - size.x
+        rect.x = node.parent_bounds.x + node.parent_bounds.width - size.x
     end
     if node.h_align == ugui.alignments.fill then
-        rect.width = parent_rect.width
+        rect.width = node.parent_bounds.width
     end
 
     if node.v_align == ugui.alignments.center then
-        rect.y = parent_rect.y + parent_rect.height / 2 - size.y / 2
+        rect.y = node.parent_bounds.y + node.parent_bounds.height / 2 - size.y / 2
     end
     if node.v_align == ugui.alignments['end'] then
-        rect.y = parent_rect.y + parent_rect.height - size.y
+        rect.y = node.parent_bounds.y + node.parent_bounds.height - size.y
     end
     if node.v_align == ugui.alignments.fill then
-        rect.height = parent_rect.height
+        rect.height = node.parent_bounds.height
     end
     return rect
 end
 
 ---Lays out a node and its children
 ---@param node table The node
----@param parent_rect table The parent's rectangle
-local function layout_node(node, parent_rect)
+local function layout_node(node)
+    -- When invalidating the layout of the root node, you'll correctly lay out the button since the stackpanel is computed first and they are aware of the correct bound parent size
+    -- But when you invalidate the button node, they think the parent size is the regular stackpanel bounds, not the item
+    -- I'm not quite sure how to solve this besides remembering parent bounds in a dictionary
+
     -- Compute layout bounds and apply them
-    node.bounds = get_base_layout_bounds(node, parent_rect)
-
-    -- Do child layout pass
-    for _, child in pairs(node.children) do
-        layout_node(child, node.bounds)
+    if not node.parent_bounds then
+        node.parent_bounds = deep_clone(root_node.bounds)
     end
-
+    node.bounds = ugui.get_base_layout_bounds(node)
 
     -- Layout node pass: let them reposition childrens' bounds after layout is finished
-    local new_child_bounds = ugui.send_message(node, {type = ugui.messages.position_children})
+    local new_child_bounds = ugui.send_message(node, {type = ugui.messages.get_base_child_bounds})
     if new_child_bounds then
-        for i = 1, #new_child_bounds, 1 do
-            node.children[i].bounds = get_base_layout_bounds(node.children[i], new_child_bounds[i])
-            layout_node(node.children[i], new_child_bounds[i])
+        -- Control provides individual parent bounds per child!
+        for i, child in pairs(node.children) do
+            child.parent_bounds = deep_clone(new_child_bounds[i])
+            layout_node(child)
+        end
+    else
+        -- Do child layout pass
+        for _, child in pairs(node.children) do
+            child.parent_bounds = deep_clone(node.bounds)
+            layout_node(child)
         end
     end
 end
@@ -279,7 +286,7 @@ ugui.start = function(start)
 
         -- Relayout all invalidated controls
         for _, uid in pairs(layout_queue) do
-            layout_node(find(uid, root_node), root_node.bounds)
+            layout_node(find(uid, root_node))
         end
         layout_queue = {}
 
