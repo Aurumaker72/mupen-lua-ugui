@@ -2,7 +2,7 @@ return {
     type = 'panel',
     message = function(ugui, inst, msg)
         if msg.type == ugui.messages.create then
-            ugui.set_prop(inst.uid, 'color', BreitbandGraphics.hex_to_color('#EEEEEE'))
+            ugui.init_prop(inst.uid, 'color', BreitbandGraphics.hex_to_color('#F0F0F0'))
         end
         if msg.type == ugui.messages.measure then
             return ugui.util.measure_by_child(ugui, inst)

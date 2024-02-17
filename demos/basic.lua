@@ -38,6 +38,7 @@ ugui.start(function()
             text = 'Hello World',
             h_align = ugui.alignments.fill,
             v_align = ugui.alignments.fill,
+            size = 28,
         },
     })
 

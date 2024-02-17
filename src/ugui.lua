@@ -257,6 +257,19 @@ ugui.get_prop = function(uid, key)
     return find(uid, root_node).props[key]
 end
 
+---Sets a control property's value, only if uninitialized
+---@param uid number A unique control identifier
+---@param key string The property key
+---@param value any The property's new value
+ugui.init_prop = function(uid, key, value)
+    local node = find(uid, root_node)
+    if node.props[key] then
+        return
+    end
+    node.props[key] = value
+    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value})
+end
+
 ---Sets a control property's value
 ---@param uid number A unique control identifier
 ---@param key string The property key
