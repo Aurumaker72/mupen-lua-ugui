@@ -42,22 +42,25 @@ ugui.start(300, function()
             size = 28,
         },
     })
+    for i = 1, 20, 1 do
+        ugui.add_child(-1, {
+            type = 'button',
+            uid = i * 100,
+            props = {
+                h_align = ugui.alignments.center,
+                v_align = ugui.alignments.center,
+            },
+        })
+        ugui.add_child(i * 100, {
+            type = 'label',
+            uid = (i * 100) + 1,
+            props = {
+                text = 'Goodbye World',
+                h_align = ugui.alignments.fill,
+                v_align = ugui.alignments.fill,
+            },
+        })
+    end
 
-    ugui.add_child(-1, {
-        type = 'button',
-        uid = 300,
-        props = {
-            h_align = ugui.alignments.center,
-            v_align = ugui.alignments.center,
-        },
-    })
-    ugui.add_child(300, {
-        type = 'label',
-        uid = 301,
-        props = {
-            text = 'Goodbye World',
-            h_align = ugui.alignments.fill,
-            v_align = ugui.alignments.fill,
-        },
-    })
+    
 end)

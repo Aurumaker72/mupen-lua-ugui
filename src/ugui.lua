@@ -204,7 +204,12 @@ ugui.get_base_layout_bounds = function(node)
     if node.props.v_align == ugui.alignments.fill then
         rect.height = node.parent_bounds.height
     end
-    return rect
+    return {
+        x = math.ceil(rect.x),
+        y = math.ceil(rect.y),
+        width = math.ceil(rect.width),
+        height = math.ceil(rect.height),
+    }
 end
 
 ---Lays out a node and its children
@@ -247,7 +252,7 @@ local function paint_node(node)
     end
 
     iterate(node, function(x)
-        print('Painting ' .. x.type)
+        -- print('Painting ' .. x.type)
         ugui.send_message(x, {type = ugui.messages.paint, rect = x.bounds})
         x.invalidated_visual = false
     end)
@@ -255,13 +260,14 @@ end
 
 ---Invalidates a control's layout along with its children
 ---@param uid number A unique control identifier
-local function invalidate_layout(uid)
+ugui.invalidate_layout = function(uid)
     layout_queue[#layout_queue + 1] = uid
 end
 
 ---Invalidates a control's visuals along with its children
 ---@param uid number A unique control identifier
-local function invalidate_visuals(uid)
+ugui.invalidate_visuals = function(uid)
+    find(uid, root_node).invalidated_visual = true
     paint_queue[#paint_queue + 1] = uid
 end
 
@@ -291,7 +297,7 @@ end
 ---@param value any The property's new value
 ugui.init_prop = function(uid, key, value)
     local node = find(uid, root_node)
-    if type(node.props[key]) ~= "nil" then
+    if type(node.props[key]) ~= 'nil' then
         return
     end
     node.props[key] = value
@@ -340,8 +346,8 @@ ugui.add_child = function(parent_uid, control)
     ugui.init_prop(control.uid, 'hittest', true)
 
     -- We also need to invalidate the parent completely
-    invalidate_layout(parent_uid and parent_uid or control.uid)
-    invalidate_visuals(parent_uid and parent_uid or control.uid)
+    ugui.invalidate_layout(parent_uid and parent_uid or control.uid)
+    ugui.invalidate_visuals(parent_uid and parent_uid or control.uid)
 end
 
 ---Sends a message to a node
