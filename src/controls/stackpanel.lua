@@ -35,8 +35,7 @@ return {
             end
             return bounds
         end
-        if msg.type == ugui.messages.paint then
 
-        end
+        return ugui.get_registered_template('panel').message(ugui, inst, msg)
     end,
 }

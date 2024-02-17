@@ -239,8 +239,14 @@ end
 
 ---Registers a control template, adding its type to the global registry
 ---@param control table A control
-ugui.register_control = function(control)
+ugui.register_template = function(control)
     registry[control.type] = control
+end
+
+---Returns a template from the global registry
+---@param type string The template type
+ugui.get_registered_template = function(type)
+    return registry[type]
 end
 
 ---Gets a control property's value
