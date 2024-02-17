@@ -74,6 +74,16 @@ local ugui = {
     },
 }
 
+-- The message handler which runs before controls get to process a message
+local function default_message_handler(ugui, inst, msg)
+    if msg.type == ugui.messages.prop_changed then
+        if msg.key == 'h_align' or msg.key == 'v_align' then
+            ugui.invalidate_layout(inst.uid)
+            ugui.invalidate_visuals(inst.uid)
+        end
+    end
+end
+
 -- The control tree
 local root_node = {}
 
@@ -292,7 +302,7 @@ ugui.send_message = function(node, msg)
     --     node.message(ugui, msg)
     --     return
     -- end
-
+    default_message_handler(ugui, node, msg)
     return registry[node.type].message(ugui, node, msg)
 end
 

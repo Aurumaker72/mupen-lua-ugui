@@ -5,7 +5,7 @@ return {
             return ugui.util.measure_by_child(ugui, inst)
         end
         if msg.type == ugui.messages.paint then
-            BreitbandGraphics.fill_rectangle(msg.rect, BreitbandGraphics.colors.red)
+            BreitbandGraphics.draw_rectangle(msg.rect, BreitbandGraphics.colors.red, 1)
         end
     end,
 }
