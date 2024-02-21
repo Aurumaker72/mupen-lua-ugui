@@ -22,6 +22,7 @@ return {
     message = function(ugui, inst, msg)
         if msg.type == ugui.messages.create then
             ugui.init_prop(inst.uid, 'state', states.normal)
+            ugui.init_prop(inst.uid, 'padding', {x = 10, y = 6})
         end
         if msg.type == ugui.messages.measure then
             return ugui.util.measure_by_child(ugui, inst)

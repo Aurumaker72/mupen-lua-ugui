@@ -352,7 +352,6 @@ ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
     control.props = control.props and control.props or {}
-    control.padding = control.padding and control.padding or {x = 0, y = 0}
     control.bounds = nil
     control.invalidated_visual = true
 
@@ -374,6 +373,7 @@ ugui.add_child = function(parent_uid, control)
     ugui.init_prop(control.uid, 'visible', true)
     ugui.init_prop(control.uid, 'enabled', true)
     ugui.init_prop(control.uid, 'hittest', true)
+    ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
 
     -- We also need to invalidate the parent completely
     ugui.invalidate_layout(parent_uid and parent_uid or control.uid)
@@ -389,8 +389,18 @@ ugui.send_message = function(node, msg)
     --     node.message(ugui, msg)
     --     return
     -- end
+    
     ugui.internal.default_message_handler(ugui, node, msg)
-    return registry[node.type].message(ugui, node, msg)
+
+    local result = registry[node.type].message(ugui, node, msg)
+
+    -- Message interception: we add padding to measurements
+    if msg.type == ugui.messages.measure then
+        result.x = result.x + node.props.padding.x
+        result.y = result.y + node.props.padding.y
+    end
+
+    return result
 end
 
 ---Captures the mouse, which causes the specified control to exclusively receive mouse events
