@@ -177,7 +177,9 @@ local function iterate(node, predicate)
     end
 end
 
-ugui.start(300, function()
+ugui.start({
+    width = 300,
+}, function()
     make_uids(tree, 0, nil)
 
     iterate(tree, function(node)

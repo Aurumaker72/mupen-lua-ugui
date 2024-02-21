@@ -38,10 +38,30 @@ return {
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(msg.rect, -1), raised_frame_back_colors[state])
         end
         if msg.type == ugui.messages.mouse_enter then
-            ugui.set_prop(inst.uid, 'state', states.hover)
+            if ugui.get_prop(inst.uid, 'state') == states.hover then
+                ugui.set_prop(inst.uid, 'state', states.active)
+            else
+                ugui.set_prop(inst.uid, 'state', states.hover)
+            end
         end
         if msg.type == ugui.messages.mouse_leave then
-            ugui.set_prop(inst.uid, 'state', states.normal)
+            if ugui.get_prop(inst.uid, 'state') == states.active then
+                ugui.set_prop(inst.uid, 'state', states.hover)
+            else
+                ugui.set_prop(inst.uid, 'state', states.normal)
+            end
+        end
+        if msg.type == ugui.messages.lmb_down then
+            ugui.set_prop(inst.uid, 'state', states.active)
+            ugui.capture_mouse(inst.uid)
+        end
+        if msg.type == ugui.messages.lmb_up then
+            if ugui.get_prop(inst.uid, 'state') == states.hover then
+                ugui.set_prop(inst.uid, 'state', states.normal)
+            else
+                ugui.set_prop(inst.uid, 'state', states.hover)
+            end
+            ugui.release_mouse()
         end
     end,
 }

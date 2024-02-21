@@ -119,9 +119,12 @@ local ugui = {
         end,
 
         ---Finds a control in the root_node by its uid
-        ---@param uid number A unique control identifier
+        ---@param uid number|nil A unique control identifier
         ---@param node table The node to begin the search from
         find = function(uid, node)
+            if uid == nil then
+                return nil
+            end
             local function find_impl(uid, node)
                 if uid == node.uid then
                     return node
@@ -185,6 +188,14 @@ local ugui = {
     },
 }
 
+---Paints the bounding boxes of a node's children
+---@param root table A node
+function ugui.internal.paint_bounding_boxes(root)
+    ugui.util.iterate(root, function(node)
+        BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
+    end)
+end
+
 -- The control tree
 local root_node = nil
 
@@ -202,6 +213,10 @@ local start_size = nil
 
 -- Uid of the node capturing the mouse
 local mouse_capturing_uid = nil
+
+local last_input = nil
+local curr_input = nil
+local last_lmb_down_pos = {x = 0, y = 0}
 
 ---Returns the base layout bounds for a node
 ---@param node table The node
@@ -389,7 +404,7 @@ ugui.send_message = function(node, msg)
     --     node.message(ugui, msg)
     --     return
     -- end
-    
+
     ugui.internal.default_message_handler(ugui, node, msg)
 
     local result = registry[node.type].message(ugui, node, msg)
@@ -418,15 +433,17 @@ ugui.release_mouse = function()
     mouse_capturing_uid = nil
 end
 
----Hooks emulator functions and begins operating
----@param width number The width of the expanded area
----@param start function The function to be called upon starting
-ugui.start = function(width, start)
-    local last_input = nil
-    local curr_input = nil
+---Gets the current mouse position
+ugui.get_mouse_position = function()
+    return {x = curr_input.xmouse, y = curr_input.ymouse}
+end
 
+---Hooks emulator functions and begins operating
+---@param params table The start parameters
+---@param start function The function to be called upon starting
+ugui.start = function(params, start)
     start_size = wgui.info()
-    wgui.resize(start_size.width + width, start_size.height)
+    wgui.resize(start_size.width + params.width, start_size.height)
 
     start()
 
@@ -447,31 +464,62 @@ ugui.start = function(width, start)
         end
         paint_queue = {}
 
-        -- Paint bounding boxes of all controls (debug)
-        -- iterate(root_node, function(node)
-        --     BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
-        -- end)
-
-        -- Paint all controls every time (debug)
-        -- iterate(root_node, function(node)
-        --     ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
-        -- end)
-
         local node_at_mouse = ugui.internal.node_at_point(mouse_point, root_node)
         local node_at_last_mouse = ugui.internal.node_at_point(last_mouse_point, root_node)
+        local node_at_lmb_down = ugui.internal.node_at_point(last_lmb_down_pos, root_node)
 
-        if node_at_mouse ~= node_at_last_mouse then
-            if node_at_mouse then
-                ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_enter})
+        if curr_input.leftclick and not last_input.leftclick then
+            last_lmb_down_pos = {x = curr_input.xmouse, y = curr_input.ymouse}
+        end
+
+
+        -- WM_MOUSEMOVE
+        if mouse_point.x ~= last_mouse_point.x or mouse_point.y ~= last_mouse_point.y then
+            local capturing_node = ugui.util.find(mouse_capturing_uid, root_node)
+
+            -- If we have a captured control, it gets special treatment
+            if capturing_node then
+                --  1. Send MouseMove unconditionall
+                ugui.send_message(capturing_node, {type = ugui.messages.mouse_move})
+                --  2. Send MouseEnter/Leave based solely off of its bounds
+                if BreitbandGraphics.point_in_rect(mouse_point, capturing_node.bounds) and not BreitbandGraphics.point_in_rect(last_mouse_point, capturing_node.bounds) then
+                    ugui.send_message(capturing_node, {type = ugui.messages.mouse_enter})
+                end
+                if not BreitbandGraphics.point_in_rect(mouse_point, capturing_node.bounds) and BreitbandGraphics.point_in_rect(last_mouse_point, capturing_node.bounds) then
+                    ugui.send_message(capturing_node, {type = ugui.messages.mouse_leave})
+                end
+            else
+                -- We have no captured control, so it's safe to regularly send MouseMove to the window under the mouse
+                if node_at_mouse then
+                    ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_move})
+
+                    if node_at_last_mouse then
+                        if node_at_last_mouse.uid ~= node_at_mouse.uid then
+                            ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_enter})
+                            ugui.send_message(node_at_last_mouse, {type = ugui.messages.mouse_leave})
+                        end
+                    end
+                end
             end
-            if node_at_last_mouse then
-                ugui.send_message(node_at_last_mouse, {type = ugui.messages.mouse_leave})
+        end
+
+        -- WM_LBUTTONDOWN
+        if curr_input.leftclick and not last_input.leftclick then
+            if node_at_mouse then
+                ugui.send_message(node_at_mouse, {type = ugui.messages.lmb_down})
+            end
+        end
+
+        -- WM_LBUTTONUP
+        if not curr_input.leftclick and last_input.leftclick then
+            if node_at_lmb_down then
+                ugui.send_message(node_at_lmb_down, {type = ugui.messages.lmb_up})
             end
         end
     end)
 
     emu.atstop(function()
-        wgui.resize(wgui.info().width - width, wgui.info().height)
+        wgui.resize(wgui.info().width - params.width, wgui.info().height)
     end)
 end
 
