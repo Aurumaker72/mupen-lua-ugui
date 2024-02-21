@@ -65,7 +65,6 @@ local tree = {
     props = {
         h_align = ugui.alignments.fill,
         v_align = ugui.alignments.fill,
-        vertical = true,
     },
     children = {
         {
@@ -90,7 +89,7 @@ local tree = {
             props = {
                 h_align = ugui.alignments.center,
                 v_align = ugui.alignments.fill,
-                vertical = false,
+                horizontal = true,
             },
             children = {
                 {

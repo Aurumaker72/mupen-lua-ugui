@@ -325,6 +325,7 @@ ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
     control.props = control.props and control.props or {}
+    control.padding = control.padding and control.padding or { x = 0, y = 0 }
     control.bounds = nil
     control.invalidated_visual = true
 
