@@ -12,55 +12,91 @@ ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\stac
 ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label.lua'))
 ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\button.lua'))
 
-ugui.start(300, function()
-    ugui.add_child(nil, {
-        type = 'stackpanel',
-        uid = -1,
-        props = {
-            h_align = ugui.alignments.fill,
-            v_align = ugui.alignments.fill,
-            vertical = true,
-        },
-    })
 
-    ugui.add_child(-1, {
-        type = 'button',
-        uid = 200,
-        props = {
-            h_align = ugui.alignments.center,
-            v_align = ugui.alignments.center,
-        },
-    })
+-- local tree = {
+--     type = 'stackpanel',
+--     props = {
+--         h_align = ugui.alignments.fill,
+--         v_align = ugui.alignments.fill,
+--         vertical = true,
+--     },
+--     children = {
+--         {
+--             type = 'button',
+--             props = {
+--                 h_align = ugui.alignments.center,
+--                 v_align = ugui.alignments.center,
+--             },
+--             children = {
+--                 {
+--                     type = 'label',
+--                     props = {
+--                         text = 'Hello World',
+--                         h_align = ugui.alignments.fill,
+--                         v_align = ugui.alignments.fill,
+--                         size = 28,
+--                     },
+--                 },
+--             },
+--         },
+--         {
+--             type = 'button',
+--             props = {
+--                 h_align = ugui.alignments.center,
+--                 v_align = ugui.alignments.center,
+--             },
+--             children = {
+--                 {
+--                     type = 'label',
+--                     props = {
+--                         text = 'Hello World',
+--                         h_align = ugui.alignments.fill,
+--                         v_align = ugui.alignments.fill,
+--                         size = 28,
+--                     },
+--                 },
+--             },
+--         },
+--     },
+-- }
 
-    ugui.add_child(200, {
-        type = 'label',
-        uid = 201,
-        props = {
-            text = 'Hello World',
-            h_align = ugui.alignments.fill,
-            v_align = ugui.alignments.fill,
-            size = 28,
-        },
-    })
-    for i = 1, 20, 1 do
-        ugui.add_child(-1, {
+local tree = {
+    type = 'stackpanel',
+    props = {
+        h_align = ugui.alignments.fill,
+        v_align = ugui.alignments.fill,
+        vertical = true,
+    },
+    children = {
+        {
             type = 'button',
-            uid = i * 100,
             props = {
                 h_align = ugui.alignments.center,
                 v_align = ugui.alignments.center,
             },
-        })
-        ugui.add_child(i * 100, {
-            type = 'label',
-            uid = (i * 100) + 1,
-            props = {
-                text = 'Goodbye World',
-                h_align = ugui.alignments.fill,
-                v_align = ugui.alignments.fill,
-            },
-        })
-    end
+            children = {},
+        },
+    },
+}
 
-    
+local uid_gen = 0
+
+local function build_from_tree(node, parent_uid)
+    uid_gen = uid_gen + 1
+
+    ugui.add_child(parent_uid, {
+        type = node.type,
+        uid = uid_gen,
+        props = node.props,
+    })
+
+    if node.children then
+        for _, child in pairs(node.children) do
+            build_from_tree(child, uid_gen)
+        end
+    end
+end
+
+ugui.start(300, function()
+    build_from_tree(tree, nil)
 end)

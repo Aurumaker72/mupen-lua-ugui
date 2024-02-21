@@ -337,7 +337,6 @@ ugui.add_child = function(parent_uid, control)
         end
         parent.children[#parent.children + 1] = control
     else
-        control.uid = -1
         root_node = control
     end
 
