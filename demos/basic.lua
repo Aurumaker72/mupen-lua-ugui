@@ -74,29 +74,118 @@ local tree = {
                 h_align = ugui.alignments.center,
                 v_align = ugui.alignments.center,
             },
-            children = {},
+            children = {
+                {
+                    type = 'label',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.center,
+                        text = 'Hello World!',
+                    },
+                },
+            },
+        },
+        {
+            type = 'stackpanel',
+            props = {
+                h_align = ugui.alignments.center,
+                v_align = ugui.alignments.fill,
+                vertical = false,
+            },
+            children = {
+                {
+                    type = 'button',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.center,
+                    },
+                    children = {
+                        {
+                            type = 'label',
+                            props = {
+                                h_align = ugui.alignments.center,
+                                v_align = ugui.alignments.center,
+                                text = 'Goodbye World!',
+                            },
+                        },
+                    },
+                },
+                {
+                    type = 'button',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.center,
+                    },
+                    children = {
+                        {
+                            type = 'label',
+                            props = {
+                                h_align = ugui.alignments.center,
+                                v_align = ugui.alignments.center,
+                                text = 'Goodbye World!',
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        {
+            type = 'button',
+            props = {
+                h_align = ugui.alignments.center,
+                v_align = ugui.alignments.center,
+            },
+            children = {
+                {
+                    type = 'label',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.center,
+                        text = 'Goodbye World!',
+                    },
+                },
+            },
         },
     },
 }
 
-local uid_gen = 0
+local used_uids = {}
 
-local function build_from_tree(node, parent_uid)
-    uid_gen = uid_gen + 1
+local function make_uids(node, current_uid, parent_uid)
+    node.uid = current_uid
+    node.parent_uid = parent_uid
 
-    ugui.add_child(parent_uid, {
-        type = node.type,
-        uid = uid_gen,
-        props = node.props,
-    })
+    if not node.children then
+        node.children = {}
+    end
 
-    if node.children then
-        for _, child in pairs(node.children) do
-            build_from_tree(child, uid_gen)
-        end
+    node.uid = math.random(0, 100000)
+    while used_uids[node.uid] do
+        node.uid = math.random(0, 100000)
+    end
+
+    used_uids[node.uid] = true
+
+    for _, child in pairs(node.children) do
+        make_uids(child, current_uid, node.uid)
+    end
+end
+
+local function iterate(node, predicate)
+    predicate(node)
+    for key, value in pairs(node.children) do
+        iterate(value, predicate)
     end
 end
 
 ugui.start(300, function()
-    build_from_tree(tree, nil)
+    make_uids(tree, 0, nil)
+
+    iterate(tree, function(node)
+        ugui.add_child(node.parent_uid, {
+            type = node.type,
+            uid = node.uid,
+            props = node.props,
+        })
+    end)
 end)
