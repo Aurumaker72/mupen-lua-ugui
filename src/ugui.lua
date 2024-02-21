@@ -2,6 +2,7 @@
 -- Aurumaker72 2024
 
 local ugui = {
+    _version = '0.0.1',
     messages = {
         -- The control has been created
         create = 0,
@@ -81,6 +82,106 @@ local ugui = {
             end
             return t
         end,
+
+        ---Deep clones an object
+        ---@param obj any The current object
+        ---@param seen any|nil The previous object, or nil for the first (obj)
+        ---@return any A deep clone of the object
+        deep_clone = function(obj, seen)
+            local function deep_clone_impl(obj, seen)
+                if type(obj) ~= 'table' then return obj end
+                if seen and seen[obj] then return seen[obj] end
+                local s = seen or {}
+                local res = setmetatable({}, getmetatable(obj))
+                s[obj] = res
+                for k, v in pairs(obj) do
+                    res[deep_clone_impl(k, s)] = deep_clone_impl(
+                        v, s)
+                end
+                return res
+            end
+
+            return deep_clone_impl(obj, seen)
+        end,
+
+        ---Traverses all nodes under a node
+        ---@param node table The node to begin the iteration from
+        ---@param predicate function A function which accepts a node
+        iterate = function(node, predicate)
+            local function iterate_impl(node, predicate)
+                predicate(node)
+                for key, value in pairs(node.children) do
+                    iterate_impl(value, predicate)
+                end
+            end
+
+            iterate_impl(node, predicate)
+        end,
+
+        ---Finds a control in the root_node by its uid
+        ---@param uid number A unique control identifier
+        ---@param node table The node to begin the search from
+        find = function(uid, node)
+            local function find_impl(uid, node)
+                if uid == node.uid then
+                    return node
+                end
+                for _, child in pairs(node.children) do
+                    if child.uid == uid then
+                        return child
+                    end
+                    local result = find_impl(uid, child)
+                    if result then
+                        return result
+                    end
+                end
+                return nil
+            end
+
+            return find_impl(uid, node)
+        end,
+    },
+    internal = {
+        ---Performs default message processing
+        ---@param ugui table The related ugui context
+        ---@param inst table The control instance
+        ---@param msg table The message
+        default_message_handler = function(ugui, inst, msg)
+            if msg.type == ugui.messages.prop_changed then
+                if msg.key == 'h_align' or msg.key == 'v_align' then
+                    ugui.invalidate_layout(inst.uid)
+                    ugui.invalidate_visuals(inst.uid)
+                end
+            end
+        end,
+
+        ---Finds the topmost node at the specified point
+        ---@param point table The point to search at
+        ---@return table|nil The node at the specified point, or null
+        node_at_point = function(point, node)
+            function node_at_point_impl(point, node)
+                if not node then
+                    return nil
+                end
+                if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 and node.props.hittest then
+                    return node
+                end
+                for _, child in pairs(node.children) do
+                    local result = node_at_point_impl(point, child)
+                    if result then
+                        return result
+                    end
+                end
+
+                if BreitbandGraphics.point_in_rect(point, node.bounds) and node.props.hittest then
+                    return node
+                end
+
+                return nil
+            end
+
+            return node_at_point_impl(point, node)
+        end,
     },
 }
 
@@ -99,82 +200,8 @@ local paint_queue = {}
 -- Window size upon script start
 local start_size = nil
 
----Deep clones an object
----@param obj any The current object
----@param seen any|nil The previous object, or nil for the first (obj)
----@return any A deep clone of the object
-local function deep_clone(obj, seen)
-    if type(obj) ~= 'table' then return obj end
-    if seen and seen[obj] then return seen[obj] end
-    local s = seen or {}
-    local res = setmetatable({}, getmetatable(obj))
-    s[obj] = res
-    for k, v in pairs(obj) do
-        res[deep_clone(k, s)] = deep_clone(
-            v, s)
-    end
-    return res
-end
-
----Finds a control in the root_node by its uid
----@param uid number A unique control identifier
----@param node table The node to begin the search from
-local function find(uid, node)
-    if uid == node.uid then
-        return node
-    end
-    for _, child in pairs(node.children) do
-        if child.uid == uid then
-            return child
-        end
-        local result = find(uid, child)
-        if result then
-            return result
-        end
-    end
-    return nil
-end
-
----Traverses all nodes under a node
----@param node table The node to begin the iteration from
----@param predicate function A function which accepts a node
-local function iterate(node, predicate)
-    predicate(node)
-    for key, value in pairs(node.children) do
-        iterate(value, predicate)
-    end
-end
-
--- The message handler which runs before controls get to process a message
-local function default_message_handler(ugui, inst, msg)
-    if msg.type == ugui.messages.prop_changed then
-        if msg.key == 'h_align' or msg.key == 'v_align' then
-            ugui.invalidate_layout(inst.uid)
-            ugui.invalidate_visuals(inst.uid)
-        end
-    end
-end
-
-local function node_at_point(point, node)
-    if not node then
-        return nil
-    end
-    if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 and node.props.hittest then
-        return node
-    end
-    for _, child in pairs(node.children) do
-        local result = node_at_point(point, child)
-        if result then
-            return result
-        end
-    end
-
-    if BreitbandGraphics.point_in_rect(point, node.bounds) and node.props.hittest then
-        return node
-    end
-
-    return nil
-end
+-- Uid of the node capturing the mouse
+local mouse_capturing_uid = nil
 
 ---Returns the base layout bounds for a node
 ---@param node table The node
@@ -235,13 +262,13 @@ local function layout_node(node)
     if new_child_bounds then
         -- Control provides individual parent bounds per child!
         for i, child in pairs(node.children) do
-            child.parent_bounds = deep_clone(new_child_bounds[i])
+            child.parent_bounds = ugui.util.deep_clone(new_child_bounds[i])
             layout_node(child)
         end
     else
         -- Do child layout pass
         for _, child in pairs(node.children) do
-            child.parent_bounds = deep_clone(node.bounds)
+            child.parent_bounds = ugui.util.deep_clone(node.bounds)
             layout_node(child)
         end
     end
@@ -254,7 +281,7 @@ local function paint_node(node)
         return
     end
 
-    iterate(node, function(x)
+    ugui.util.iterate(node, function(x)
         -- print('Painting ' .. x.type)
         ugui.send_message(x, {type = ugui.messages.paint, rect = x.bounds})
         x.invalidated_visual = false
@@ -270,7 +297,7 @@ end
 ---Invalidates a control's visuals along with its children
 ---@param uid number A unique control identifier
 ugui.invalidate_visuals = function(uid)
-    find(uid, root_node).invalidated_visual = true
+    ugui.util.find(uid, root_node).invalidated_visual = true
     paint_queue[#paint_queue + 1] = uid
 end
 
@@ -291,7 +318,7 @@ end
 ---@param key string The property key
 ---@return any|nil
 ugui.get_prop = function(uid, key)
-    return find(uid, root_node).props[key]
+    return ugui.util.find(uid, root_node).props[key]
 end
 
 ---Sets a control property's value, only if uninitialized
@@ -299,7 +326,7 @@ end
 ---@param key string The property key
 ---@param value any The property's new value
 ugui.init_prop = function(uid, key, value)
-    local node = find(uid, root_node)
+    local node = ugui.util.find(uid, root_node)
     if type(node.props[key]) ~= 'nil' then
         return
     end
@@ -312,7 +339,7 @@ end
 ---@param key string The property key
 ---@param value any The property's new value
 ugui.set_prop = function(uid, key, value)
-    local node = find(uid, root_node)
+    local node = ugui.util.find(uid, root_node)
     node.props[key] = value
     ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value})
 end
@@ -325,13 +352,13 @@ ugui.add_child = function(parent_uid, control)
     -- Initialize default properties
     control.children = {}
     control.props = control.props and control.props or {}
-    control.padding = control.padding and control.padding or { x = 0, y = 0 }
+    control.padding = control.padding and control.padding or {x = 0, y = 0}
     control.bounds = nil
     control.invalidated_visual = true
 
     if parent_uid then
         -- We add the child to its parent's children array
-        local parent = find(parent_uid, root_node)
+        local parent = ugui.util.find(parent_uid, root_node)
         if not parent then
             print('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
             return
@@ -362,8 +389,23 @@ ugui.send_message = function(node, msg)
     --     node.message(ugui, msg)
     --     return
     -- end
-    default_message_handler(ugui, node, msg)
+    ugui.internal.default_message_handler(ugui, node, msg)
     return registry[node.type].message(ugui, node, msg)
+end
+
+---Captures the mouse, which causes the specified control to exclusively receive mouse events
+---@param uid number A unique control identifier
+ugui.capture_mouse = function(uid)
+    if mouse_capturing_uid then
+        print("Can't capture the mouse, as it's already being captured.")
+        return
+    end
+    mouse_capturing_uid = uid
+end
+
+---Releases the mouse capture, restoring normal mouse event propagation
+ugui.release_mouse = function()
+    mouse_capturing_uid = nil
 end
 
 ---Hooks emulator functions and begins operating
@@ -379,19 +421,19 @@ ugui.start = function(width, start)
     start()
 
     emu.atupdatescreen(function()
-        last_input = curr_input and deep_clone(curr_input) or input.get()
+        last_input = curr_input and ugui.util.deep_clone(curr_input) or input.get()
         curr_input = input.get()
 
         local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}
         local last_mouse_point = {x = last_input.xmouse, y = last_input.ymouse}
 
         for _, uid in pairs(layout_queue) do
-            layout_node(find(uid, root_node))
+            layout_node(ugui.util.find(uid, root_node))
         end
         layout_queue = {}
 
         for _, uid in pairs(paint_queue) do
-            paint_node(find(uid, root_node))
+            paint_node(ugui.util.find(uid, root_node))
         end
         paint_queue = {}
 
@@ -405,8 +447,8 @@ ugui.start = function(width, start)
         --     ugui.send_message(node, {type = ugui.messages.paint, rect = node.bounds})
         -- end)
 
-        local node_at_mouse = node_at_point(mouse_point, root_node)
-        local node_at_last_mouse = node_at_point(last_mouse_point, root_node)
+        local node_at_mouse = ugui.internal.node_at_point(mouse_point, root_node)
+        local node_at_last_mouse = ugui.internal.node_at_point(last_mouse_point, root_node)
 
         if node_at_mouse ~= node_at_last_mouse then
             if node_at_mouse then
