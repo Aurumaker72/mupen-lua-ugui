@@ -82,7 +82,7 @@ Cool projects using `mupen-lua-ugui`
   BreitbandGraphics
 </h1>
 <p align="center">
-  Powerful abstraction layer over Mupen Lua Direct2D APIs
+  Powerful abstraction layer over Mupen Lua drawing APIs
 </p>
 
 `mupen-lua-ugui` uses `BreitbandGraphics` for rendering.
