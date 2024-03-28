@@ -32,7 +32,7 @@ Cool projects using `mupen-lua-ugui`
 # 📈 Advantages
 
 - Easy Usage
-  - Include only one file
+  - Immediate-mode control spawning API
 - Flexible
   - Add or extend controls
   - Add or extend stylers
@@ -49,10 +49,13 @@ Cool projects using `mupen-lua-ugui`
 
 - Stylers
   - Windows 10 (built-in)
+  - Nineslice (built-in)
 - Flexibility
   - Modify any parts of the framework to your liking
 - User Productivity
-  - Interactions behave exactly like Windows
+  - Interactions emulate commctl behaviour to ensure consistency
+- Performance
+  - Graphics caching extension
 - Button
 - TextBox
   - Full-fledged selection and editing system
@@ -65,6 +68,10 @@ Cool projects using `mupen-lua-ugui`
   - Scrolling support
   - Unlimited items with no performance degradation
 - Scrollbar
+- Spinner
+- TabControl
+- NumberBox
+- TreeView
 
 # 🎨 Graphics
 
@@ -75,7 +82,7 @@ Cool projects using `mupen-lua-ugui`
   BreitbandGraphics
 </h1>
 <p align="center">
-  Powerful abstraction layer over Mupen Lua Direct2D APIs
+  Powerful abstraction layer over Mupen Lua drawing APIs
 </p>
 
 `mupen-lua-ugui` uses `BreitbandGraphics` for rendering.
