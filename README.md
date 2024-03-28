@@ -49,10 +49,13 @@ Cool projects using `mupen-lua-ugui`
 
 - Stylers
   - Windows 10 (built-in)
+  - Nineslice (built-in)
 - Flexibility
   - Modify any parts of the framework to your liking
 - User Productivity
-  - Interactions behave exactly like Windows
+  - Interactions emulate commctl behaviour to ensure consistency
+- Performance
+  - Graphics caching extension
 - Button
 - TextBox
   - Full-fledged selection and editing system
@@ -65,6 +68,10 @@ Cool projects using `mupen-lua-ugui`
   - Scrolling support
   - Unlimited items with no performance degradation
 - Scrollbar
+- Spinner
+- TabControl
+- NumberBox
+- TreeView
 
 # 🎨 Graphics
 
