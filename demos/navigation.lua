@@ -18,7 +18,7 @@ local is_joystick_enabled = true
 pages[1] = function()
     Mupen_lua_ugui.button({
         uid = 0,
-        
+
         rectangle = {
             x = initial_size.width + 5,
             y = 100,
@@ -43,11 +43,12 @@ pages[2] = function()
             x = (math.sin(os.clock() * 2) + 1) / 2,
             y = (math.cos(os.clock() * 2) + 1) / 2,
         },
+        mag = 0,
     })
 
     is_joystick_enabled = Mupen_lua_ugui.toggle_button({
         uid = 2,
-        
+
         rectangle = {
             x = initial_size.width + 5,
             y = 230,
@@ -91,7 +92,7 @@ emu.atdrawd2d(function()
 
     selected_page_index = Mupen_lua_ugui.combobox({
         uid = 6000,
-        
+
         rectangle = {
             x = initial_size.width + 5,
             y = 10,
@@ -104,7 +105,7 @@ emu.atdrawd2d(function()
 
     selected_page_index = Mupen_lua_ugui.carrousel_button({
         uid = 60001,
-        
+
         rectangle = {
             x = initial_size.width + 5,
             y = 40,

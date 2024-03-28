@@ -179,6 +179,7 @@ emu.atdrawd2d(function()
             x = 0,
             y = 0.5,
         },
+        mag = 0,
     })
 
     Mupen_lua_ugui.joystick({
@@ -194,6 +195,7 @@ emu.atdrawd2d(function()
             x = 1,
             y = 0.5,
         },
+        mag = 0,
     })
 
 
