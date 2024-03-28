@@ -1,4 +1,5 @@
 -- mupen-lua-ugui 1.6.0
+-- https://github.com/Aurumaker72/mupen-lua-ugui
 
 if emu.set_renderer then
     -- Specify D2D renderer
