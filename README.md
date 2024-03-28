@@ -32,7 +32,7 @@ Cool projects using `mupen-lua-ugui`
 # 📈 Advantages
 
 - Easy Usage
-  - Include only one file
+  - Immediate-mode control spawning API
 - Flexible
   - Add or extend controls
   - Add or extend stylers
