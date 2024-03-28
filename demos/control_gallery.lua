@@ -11,7 +11,7 @@ local initial_size = wgui.info()
 local value = 0
 wgui.resize(initial_size.width + 200, initial_size.height)
 
-emu.atupdatescreen(function()
+emu.atdrawd2d(function()
     BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
         y = 0,

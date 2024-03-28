@@ -123,7 +123,7 @@ local function update_values()
     end
 end
 
-emu.atupdatescreen(function()
+emu.atdrawd2d(function()
     BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
         y = 0,

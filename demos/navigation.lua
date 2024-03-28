@@ -59,7 +59,7 @@ pages[2] = function()
     })
 end
 
-emu.atupdatescreen(function()
+emu.atdrawd2d(function()
     BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
         y = 0,

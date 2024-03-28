@@ -30,7 +30,7 @@ local function get_safe_selected_list_index()
     return i
 end
 
-emu.atupdatescreen(function()
+emu.atdrawd2d(function()
     BreitbandGraphics.fill_rectangle({
         x = initial_size.width,
         y = 0,
