@@ -77,6 +77,7 @@ emu.atdrawd2d(function()
         },
         items = items,
         selected_index = selected_index_2,
+        horizontal_scroll = false
     })
 
     text = Mupen_lua_ugui.textbox({
