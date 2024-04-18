@@ -447,7 +447,7 @@ ugui.start = function(params, start)
 
     start()
 
-    emu.atupdatescreen(function()
+    emu.atdrawd2d(function()
         last_input = curr_input and ugui.util.deep_clone(curr_input) or input.get()
         curr_input = input.get()
 
