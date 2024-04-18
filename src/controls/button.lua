@@ -23,6 +23,10 @@ return {
         if msg.type == ugui.messages.create then
             ugui.init_prop(inst.uid, 'state', states.normal)
             ugui.init_prop(inst.uid, 'padding', {x = 10, y = 6})
+            ugui.init_prop(inst.uid, 'click', function()
+                print(math.random())
+                ugui.set_prop(inst.uid, 'disabled', not ugui.get_prop(inst.uid, 'disabled'))
+            end)
         end
         if msg.type == ugui.messages.measure then
             return ugui.util.measure_by_child(ugui, inst)
@@ -34,6 +38,11 @@ return {
         end
         if msg.type == ugui.messages.paint then
             local state = ugui.get_prop(inst.uid, 'state')
+
+            if ugui.get_prop(inst.uid, 'disabled') == true then
+                state = states.disabled
+            end
+
             BreitbandGraphics.fill_rectangle(msg.rect, raised_frame_border_colors[state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(msg.rect, -1), raised_frame_back_colors[state])
         end
@@ -54,6 +63,7 @@ return {
         if msg.type == ugui.messages.lmb_down then
             ugui.set_prop(inst.uid, 'state', states.active)
             ugui.capture_mouse(inst.uid)
+            ugui.get_prop(inst.uid, 'click')()
         end
         if msg.type == ugui.messages.lmb_up then
             if ugui.get_prop(inst.uid, 'state') == states.hover then

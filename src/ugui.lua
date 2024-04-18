@@ -118,6 +118,22 @@ local ugui = {
             iterate_impl(node, predicate)
         end,
 
+        ---Traverses all nodes under a node, without calling the predicate for the node itself
+        ---@param node table The node to begin the iteration from
+        ---@param predicate function A function which accepts a node
+        iterate_exclusive = function(node, predicate)
+            local function iterate_exclusive_impl(x, predicate)
+                predicate(x)
+                for _, child in pairs(x.children) do
+                    iterate_exclusive_impl(child, predicate)
+                end
+            end
+
+            for _, child in pairs(node.children) do
+                iterate_exclusive_impl(child, predicate)
+            end
+        end,
+
         ---Finds a control in the root_node by its uid
         ---@param uid number|nil A unique control identifier
         ---@param node table The node to begin the search from
@@ -145,19 +161,6 @@ local ugui = {
         end,
     },
     internal = {
-        ---Performs default message processing
-        ---@param ugui table The related ugui context
-        ---@param inst table The control instance
-        ---@param msg table The message
-        default_message_handler = function(ugui, inst, msg)
-            if msg.type == ugui.messages.prop_changed then
-                if msg.key == 'h_align' or msg.key == 'v_align' then
-                    ugui.invalidate_layout(inst.uid)
-                    ugui.invalidate_visuals(inst.uid)
-                end
-            end
-        end,
-
         ---Finds the topmost node at the specified point
         ---@param point table The point to search at
         ---@return table|nil The node at the specified point, or null
@@ -188,14 +191,6 @@ local ugui = {
     },
 }
 
----Paints the bounding boxes of a node's children
----@param root table A node
-function ugui.internal.paint_bounding_boxes(root)
-    ugui.util.iterate(root, function(node)
-        BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
-    end)
-end
-
 -- The control tree
 local root_node = nil
 
@@ -217,6 +212,32 @@ local mouse_capturing_uid = nil
 local last_input = nil
 local curr_input = nil
 local last_lmb_down_pos = {x = 0, y = 0}
+
+---Paints the bounding boxes of a node's children
+---@param root table A node
+function ugui.internal.paint_bounding_boxes(root)
+    ugui.util.iterate(root, function(node)
+        BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
+    end)
+end
+
+---Traverses all nodes above a node in bottom-up order
+---@param node table The node to begin the iteration from
+---@param predicate function A function which accepts a node
+function ugui.util.iterate_upwards(node, predicate)
+    local function iterate_upwards_impl(x, predicate)
+        if predicate(x) then
+            return
+        end
+        local parent = ugui.util.find(x.parent_uid, root_node)
+        if not parent then
+            return
+        end
+        iterate_upwards_impl(parent, predicate)
+    end
+
+    iterate_upwards_impl(node, predicate)
+end
 
 ---Returns the base layout bounds for a node
 ---@param node table The node
@@ -333,7 +354,21 @@ end
 ---@param key string The property key
 ---@return any|nil
 ugui.get_prop = function(uid, key)
-    return ugui.util.find(uid, root_node).props[key]
+    local node = ugui.util.find(uid, root_node)
+    local value = node.props[key]
+
+    if key == 'disabled' then
+        -- Special handling for disabled prop: children of disabled controls get "disabled" as well
+        -- The library lies to external callers, but keeps the raw state private
+        ugui.util.iterate_upwards(node, function(x)
+            if x.props.disabled then
+                value = true
+                return true
+            end
+        end)
+    end
+
+    return value
 end
 
 ---Sets a control property's value, only if uninitialized
@@ -369,6 +404,7 @@ ugui.add_child = function(parent_uid, control)
     control.props = control.props and control.props or {}
     control.bounds = nil
     control.invalidated_visual = true
+    control.parent_uid = parent_uid
 
     if parent_uid then
         -- We add the child to its parent's children array
@@ -391,7 +427,11 @@ ugui.add_child = function(parent_uid, control)
     -- clickthrough: bool - Node isn't considered during hittesting and thus cant be clicked on, hovered, pushed, etc...
     -- padding: point - Space to add implicitly during control measurement
     ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
-    
+
+    for key, value in pairs(control.props) do
+        ugui.send_message(control, {type = ugui.messages.prop_changed, key = key, value = value})
+    end
+
     -- We also need to invalidate the parent completely
     ugui.invalidate_layout(parent_uid and parent_uid or control.uid)
     ugui.invalidate_visuals(parent_uid and parent_uid or control.uid)
@@ -402,12 +442,12 @@ end
 ---@param msg table A message
 ugui.send_message = function(node, msg)
     -- TODO: If user-provided one exists, it takes priority and user must invoke lower one manually
-    -- if node.message then
-    --     node.message(ugui, msg)
+    -- if node.props.message_override then
+    --     node.props.message_override(ugui, node, msg)
     --     return
     -- end
 
-    ugui.internal.default_message_handler(ugui, node, msg)
+    ugui.default_message_handler(ugui, node, msg)
 
     local result = registry[node.type].message(ugui, node, msg)
 
@@ -438,6 +478,19 @@ end
 ---Gets the current mouse position
 ugui.get_mouse_position = function()
     return {x = curr_input.xmouse, y = curr_input.ymouse}
+end
+
+---Performs default message processing
+---@param ugui table The related ugui context
+---@param inst table The control instance
+---@param msg table The message
+function ugui.default_message_handler(ugui, inst, msg)
+    if msg.type == ugui.messages.prop_changed then
+        if msg.key == 'h_align' or msg.key == 'v_align' or msg.key == 'disabled' or msg.key == 'hidden' or msg.key == 'padding' then
+            ugui.invalidate_layout(inst.uid)
+            ugui.invalidate_visuals(inst.uid)
+        end
+    end
 end
 
 ---Hooks emulator functions and begins operating
