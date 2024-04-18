@@ -490,6 +490,18 @@ ugui.start = function(params, start)
                 end
             else
                 -- We have no captured control, so it's safe to regularly send MouseMove to the window under the mouse
+
+
+                -- Going off-screen
+                if not node_at_mouse and node_at_last_mouse then
+                    ugui.send_message(node_at_last_mouse, {type = ugui.messages.mouse_leave})
+                end
+
+                -- Returning from off-screen
+                if node_at_mouse and not node_at_last_mouse then
+                    ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_enter})
+                end
+
                 if node_at_mouse then
                     ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_move})
 
