@@ -2,7 +2,7 @@ return {
     type = 'label',
     message = function(ugui, inst, msg)
         if msg.type == ugui.messages.create then
-            ugui.init_prop(inst.uid, 'hittest', false)
+            ugui.init_prop(inst.uid, 'clickthrough', true)
             ugui.init_prop(inst.uid, 'text', '')
             ugui.init_prop(inst.uid, 'font', 'MS Sans Serif')
             ugui.init_prop(inst.uid, 'color', BreitbandGraphics.hex_to_color('#000000'))

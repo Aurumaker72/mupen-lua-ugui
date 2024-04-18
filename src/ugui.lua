@@ -166,7 +166,7 @@ local ugui = {
                 if not node then
                     return nil
                 end
-                if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 and node.props.hittest then
+                if BreitbandGraphics.point_in_rect(point, node.bounds) and #node.children == 0 and not node.props.clickthrough then
                     return node
                 end
                 for _, child in pairs(node.children) do
@@ -176,7 +176,7 @@ local ugui = {
                     end
                 end
 
-                if BreitbandGraphics.point_in_rect(point, node.bounds) and node.props.hittest then
+                if BreitbandGraphics.point_in_rect(point, node.bounds) and not node.props.clickthrough then
                     return node
                 end
 
@@ -385,11 +385,13 @@ ugui.add_child = function(parent_uid, control)
     -- Notify it about existing
     ugui.send_message(control, {type = ugui.messages.create})
 
-    ugui.init_prop(control.uid, 'visible', true)
-    ugui.init_prop(control.uid, 'enabled', true)
-    ugui.init_prop(control.uid, 'hittest', true)
+    -- Standard props:
+    -- hidden: bool - Node doesn't receive input or paint events.
+    -- disabled: bool - Node doesn't receive input events.
+    -- clickthrough: bool - Node isn't considered during hittesting and thus cant be clicked on, hovered, pushed, etc...
+    -- padding: point - Space to add implicitly during control measurement
     ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
-
+    
     -- We also need to invalidate the parent completely
     ugui.invalidate_layout(parent_uid and parent_uid or control.uid)
     ugui.invalidate_visuals(parent_uid and parent_uid or control.uid)

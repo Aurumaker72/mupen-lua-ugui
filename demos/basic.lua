@@ -97,6 +97,7 @@ local tree = {
                     props = {
                         h_align = ugui.alignments.center,
                         v_align = ugui.alignments.center,
+                        disabled = true,
                     },
                     children = {
                         {
@@ -104,7 +105,7 @@ local tree = {
                             props = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
-                                text = 'Goodbye World!',
+                                text = 'I am disabled',
                             },
                         },
                     },
