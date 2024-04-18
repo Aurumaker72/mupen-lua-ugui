@@ -155,7 +155,32 @@ local tree = {
                                     props = {
                                         h_align = ugui.alignments.center,
                                         v_align = ugui.alignments.center,
-                                        text = 'I am disabled',
+                                        text = 'in a stackpanel!',
+                                    },
+                                },
+                                {
+                                    type = 'button',
+                                    props = {
+                                        h_align = ugui.alignments.center,
+                                        v_align = ugui.alignments.center,
+                                    },
+                                    children = {
+                                        {
+                                            type = 'label',
+                                            props = {
+                                                h_align = ugui.alignments.center,
+                                                v_align = ugui.alignments.center,
+                                                text = 'build nested layouts',
+                                            },
+                                        },
+                                    },
+                                },
+                                {
+                                    type = 'label',
+                                    props = {
+                                        h_align = ugui.alignments.center,
+                                        v_align = ugui.alignments.center,
+                                        text = 'woah!',
                                     },
                                 },
                             },
