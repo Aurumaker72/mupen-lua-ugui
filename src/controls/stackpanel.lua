@@ -2,6 +2,7 @@ return {
     type = 'stackpanel',
     message = function(ugui, inst, msg)
         if msg.type == ugui.messages.create then
+            ugui.init_prop(inst.uid, 'clickthrough', true)
             ugui.init_prop(inst.uid, 'horizontal', false)
         end
         if msg.type == ugui.messages.measure then
@@ -60,7 +61,5 @@ return {
 
             return bounds
         end
-
-        return ugui.get_registered_template('panel').message(ugui, inst, msg)
     end,
 }

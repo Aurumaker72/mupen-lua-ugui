@@ -61,55 +61,19 @@ ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\butt
 -- }
 
 local tree = {
-    type = 'stackpanel',
+    type = 'panel',
     props = {
         h_align = ugui.alignments.fill,
         v_align = ugui.alignments.fill,
     },
     children = {
         {
-            type = 'button',
-            props = {
-                h_align = ugui.alignments.center,
-                v_align = ugui.alignments.center,
-            },
-            children = {
-                {
-                    type = 'label',
-                    props = {
-                        h_align = ugui.alignments.center,
-                        v_align = ugui.alignments.center,
-                        text = 'Hello World!',
-                    },
-                },
-            },
-        },
-        {
             type = 'stackpanel',
             props = {
-                h_align = ugui.alignments.center,
+                h_align = ugui.alignments.fill,
                 v_align = ugui.alignments.fill,
-                horizontal = true,
             },
             children = {
-                {
-                    type = 'button',
-                    props = {
-                        h_align = ugui.alignments.center,
-                        v_align = ugui.alignments.center,
-                        disabled = true,
-                    },
-                    children = {
-                        {
-                            type = 'label',
-                            props = {
-                                h_align = ugui.alignments.center,
-                                v_align = ugui.alignments.center,
-                                text = 'I am disabled',
-                            },
-                        },
-                    },
-                },
                 {
                     type = 'button',
                     props = {
@@ -122,26 +86,80 @@ local tree = {
                             props = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
-                                text = 'Goodbye World!',
+                                text = 'Hello World!',
                             },
                         },
                     },
                 },
-            },
-        },
-        {
-            type = 'button',
-            props = {
-                h_align = ugui.alignments.center,
-                v_align = ugui.alignments.center,
-            },
-            children = {
                 {
-                    type = 'label',
+                    type = 'stackpanel',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.fill,
+                        horizontal = true,
+                    },
+                    children = {
+                        {
+                            type = 'button',
+                            props = {
+                                h_align = ugui.alignments.center,
+                                v_align = ugui.alignments.center,
+                                disabled = true,
+                            },
+                            children = {
+                                {
+                                    type = 'label',
+                                    props = {
+                                        h_align = ugui.alignments.center,
+                                        v_align = ugui.alignments.center,
+                                        text = 'I am disabled',
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            type = 'button',
+                            props = {
+                                h_align = ugui.alignments.center,
+                                v_align = ugui.alignments.center,
+                            },
+                            children = {
+                                {
+                                    type = 'label',
+                                    props = {
+                                        h_align = ugui.alignments.center,
+                                        v_align = ugui.alignments.center,
+                                        text = 'Goodbye World!',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                {
+                    type = 'button',
                     props = {
                         h_align = ugui.alignments.center,
                         v_align = ugui.alignments.center,
-                        text = 'Goodbye World!',
+                    },
+                    children = {
+                        {
+                            type = 'stackpanel',
+                            props = {
+                                h_align = ugui.alignments.center,
+                                v_align = ugui.alignments.center,
+                            },
+                            children = {
+                                {
+                                    type = 'label',
+                                    props = {
+                                        h_align = ugui.alignments.center,
+                                        v_align = ugui.alignments.center,
+                                        text = 'I am disabled',
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
