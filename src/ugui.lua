@@ -200,8 +200,10 @@ local registry = {}
 -- List of layout invalidated uids. Respective controls' children are implicitly contained as well.
 local layout_queue = {}
 
--- List of paint invalidated uids. Respective controls' children are implicitly contained as well.
-local paint_queue = {}
+-- List of visually invalidated controls.
+-- We store uids and not rects, because we might not have computed the bounds yet when invalidating the visuals.
+-- However, layout is guaranteed to have been processed when dirty rects are being repainted, so we pull those at the repaint phase.
+local dirty_uids = {}
 
 -- Window size upon script start
 local start_size = nil
@@ -323,18 +325,48 @@ local function layout_node(node)
     end
 end
 
----Paints a node and its children
----@param node table The node
-local function paint_node(node)
-    if not node.invalidated_visual then
+---Processes the dirty rectangle queue
+local function process_dirty_rects()
+    if #dirty_uids == 0 then
         return
     end
 
-    ugui.util.iterate(node, function(x)
-        -- print('Painting ' .. x.type)
-        ugui.send_message(x, {type = ugui.messages.paint, rect = x.bounds})
-        x.invalidated_visual = false
-    end)
+    -- Iterate through each control and see if it intersects the dirty rect. If so, repaint it.
+    -- We need to store a list of the intersecting controls, as they need to be repainted in reverse order, not top-to-bottom.
+    for _, uid in pairs(dirty_uids) do
+        local affected_nodes = {}
+        local rect = ugui.util.find(uid, root_node).bounds
+
+        ugui.util.iterate(root_node, function(x)
+            if BreitbandGraphics.rectangles_intersect(x.bounds, rect) then
+                affected_nodes[#affected_nodes + 1] = x
+            end
+        end)
+
+        print(string.format('[paint] painting %s controls', #affected_nodes))
+        
+        -- We need to clip drawing to the affected rect, as we'd clobber other graphics otherwise
+        BreitbandGraphics.push_clip(rect)
+        for i = 1, #affected_nodes, 1 do
+            ugui.send_message(affected_nodes[i], {type = ugui.messages.paint, rect = affected_nodes[i].bounds})
+        end
+        BreitbandGraphics.pop_clip()
+    end
+
+
+    dirty_uids = {}
+end
+
+---Processes all pending layout operations
+local function process_layout()
+    if #layout_queue == 0 then
+        return
+    end
+    print(string.format('[layout] Performing %s node layouts...', #layout_queue))
+    for _, uid in pairs(layout_queue) do
+        layout_node(ugui.util.find(uid, root_node))
+    end
+    layout_queue = {}
 end
 
 ---Invalidates a control's layout along with its children
@@ -343,11 +375,10 @@ ugui.invalidate_layout = function(uid)
     layout_queue[#layout_queue + 1] = uid
 end
 
----Invalidates a control's visuals along with its children
+---Invalidates a control's visuals
 ---@param uid number A unique control identifier
 ugui.invalidate_visuals = function(uid)
-    ugui.util.find(uid, root_node).invalidated_visual = true
-    paint_queue[#paint_queue + 1] = uid
+    dirty_uids[#dirty_uids + 1] = uid
 end
 
 ---Registers a control template, adding its type to the global registry
@@ -549,15 +580,8 @@ ugui.start = function(params, start)
         local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}
         local last_mouse_point = {x = last_input.xmouse, y = last_input.ymouse}
 
-        for _, uid in pairs(layout_queue) do
-            layout_node(ugui.util.find(uid, root_node))
-        end
-        layout_queue = {}
-
-        for _, uid in pairs(paint_queue) do
-            paint_node(ugui.util.find(uid, root_node))
-        end
-        paint_queue = {}
+        process_layout()
+        process_dirty_rects()
 
         local node_at_mouse = ugui.internal.node_at_point(mouse_point, root_node)
         local node_at_last_mouse = ugui.internal.node_at_point(last_mouse_point, root_node)
