@@ -159,6 +159,11 @@ local ugui = {
 
             return find_impl(uid, node)
         end,
+
+        ---Logs a string to the output console
+        ---@param text string The string to log
+        log = function (text)
+        end
     },
     internal = {
         ---Finds the topmost node at the specified point
@@ -190,6 +195,10 @@ local ugui = {
         end,
     },
 }
+
+if false then
+    ugui.util.log = print
+end
 
 -- The control tree
 local root_node = nil
@@ -343,8 +352,8 @@ local function process_dirty_rects()
             end
         end)
 
-        print(string.format('[paint] painting %s controls', #affected_nodes))
-        
+        ugui.util.log(string.format('[paint] painting %s controls', #affected_nodes))
+
         -- We need to clip drawing to the affected rect, as we'd clobber other graphics otherwise
         BreitbandGraphics.push_clip(rect)
         for i = 1, #affected_nodes, 1 do
@@ -362,7 +371,7 @@ local function process_layout()
     if #layout_queue == 0 then
         return
     end
-    print(string.format('[layout] Performing %s node layouts...', #layout_queue))
+    ugui.util.log(string.format('[layout] Performing %s node layouts...', #layout_queue))
     for _, uid in pairs(layout_queue) do
         layout_node(ugui.util.find(uid, root_node))
     end
@@ -463,7 +472,7 @@ ugui.add_child = function(parent_uid, control)
         -- We add the child to its parent's children array
         local parent = ugui.util.find(parent_uid, root_node)
         if not parent then
-            print('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
+            ugui.util.log('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
             return
         end
         parent.children[#parent.children + 1] = control
@@ -535,7 +544,7 @@ end
 ---@param uid number A unique control identifier
 ugui.capture_mouse = function(uid)
     if mouse_capturing_uid then
-        print("Can't capture the mouse, as it's already being captured.")
+        ugui.util.log("Can't capture the mouse, as it's already being captured.")
         return
     end
     mouse_capturing_uid = uid
@@ -562,6 +571,57 @@ function ugui.default_message_handler(ugui, inst, msg)
             ugui.invalidate_visuals(inst.uid)
         end
     end
+end
+
+---Builds a node hierarchy from a simplified tree and places it into to the scene 
+---@param tree table A tree of nodes
+function ugui.util.build_hierarchy_from_simple_tree(tree)
+    local used_uids = {}
+
+    local function make_uids(node, current_uid, parent_uid)
+        local override_uid = false
+        if node.uid then
+            current_uid = node.uid
+            override_uid = true
+        end
+
+        node.uid = current_uid
+        node.parent_uid = parent_uid
+
+        if not node.children then
+            node.children = {}
+        end
+
+        if not override_uid then
+            node.uid = math.random(0, 100000)
+            while used_uids[node.uid] do
+                node.uid = math.random(0, 100000)
+            end
+        end
+
+        used_uids[node.uid] = true
+
+        for _, child in pairs(node.children) do
+            make_uids(child, current_uid, node.uid)
+        end
+    end
+
+    local function iterate(node, predicate)
+        predicate(node)
+        for key, value in pairs(node.children) do
+            iterate(value, predicate)
+        end
+    end
+
+    make_uids(tree, 0, nil)
+
+    iterate(tree, function(node)
+        ugui.add_child(node.parent_uid, {
+            type = node.type,
+            uid = node.uid,
+            props = node.props,
+        })
+    end)
 end
 
 ---Hooks emulator functions and begins operating
