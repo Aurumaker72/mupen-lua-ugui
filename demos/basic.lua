@@ -79,6 +79,10 @@ local tree = {
                     props = {
                         h_align = ugui.alignments.center,
                         v_align = ugui.alignments.center,
+                        checkable = true,
+                        click = function(ugui, inst)
+                            ugui.set_prop(2, 'disabled', ugui.get_prop(inst.uid, 'checked'))
+                        end,
                     },
                     children = {
                         {
@@ -86,7 +90,7 @@ local tree = {
                             props = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
-                                text = 'Hello World!',
+                                text = 'Disable others',
                             },
                         },
                     },
@@ -101,10 +105,10 @@ local tree = {
                     children = {
                         {
                             type = 'button',
+                            uid = 2,
                             props = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
-                                disabled = true,
                             },
                             children = {
                                 {
@@ -112,7 +116,7 @@ local tree = {
                                     props = {
                                         h_align = ugui.alignments.center,
                                         v_align = ugui.alignments.center,
-                                        text = 'I am disabled',
+                                        text = 'Can be disabled',
                                     },
                                 },
                             },
@@ -195,6 +199,12 @@ local tree = {
 local used_uids = {}
 
 local function make_uids(node, current_uid, parent_uid)
+    local override_uid = false
+    if node.uid then
+        current_uid = node.uid
+        override_uid = true
+    end
+
     node.uid = current_uid
     node.parent_uid = parent_uid
 
@@ -202,9 +212,11 @@ local function make_uids(node, current_uid, parent_uid)
         node.children = {}
     end
 
-    node.uid = math.random(0, 100000)
-    while used_uids[node.uid] do
+    if not override_uid then
         node.uid = math.random(0, 100000)
+        while used_uids[node.uid] do
+            node.uid = math.random(0, 100000)
+        end
     end
 
     used_uids[node.uid] = true

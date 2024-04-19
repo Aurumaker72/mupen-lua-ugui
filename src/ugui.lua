@@ -239,6 +239,19 @@ function ugui.util.iterate_upwards(node, predicate)
     iterate_upwards_impl(node, predicate)
 end
 
+--- Whether a node is a child of another node
+---@param node table The parent node
+---@param child_uid number The child node's identifier
+function ugui.util.is_child_of(node, child_uid)
+    local child = ugui.util.find(child_uid, node)
+    return child ~= nil
+end
+
+---Gets the root node. Writing to it externally will probably break the library.
+function ugui.util.get_root_node()
+    return root_node
+end
+
 ---Returns the base layout bounds for a node
 ---@param node table The node
 ugui.get_base_layout_bounds = function(node)
@@ -355,6 +368,9 @@ end
 ---@return any|nil
 ugui.get_prop = function(uid, key)
     local node = ugui.util.find(uid, root_node)
+    if not node then
+        return nil
+    end
     local value = node.props[key]
 
     if key == 'disabled' then
@@ -377,11 +393,14 @@ end
 ---@param value any The property's new value
 ugui.init_prop = function(uid, key, value)
     local node = ugui.util.find(uid, root_node)
+    if not node then
+        return false
+    end
     if type(node.props[key]) ~= 'nil' then
         return
     end
     node.props[key] = value
-    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value})
+    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key})
 end
 
 ---Sets a control property's value
@@ -390,8 +409,11 @@ end
 ---@param value any The property's new value
 ugui.set_prop = function(uid, key, value)
     local node = ugui.util.find(uid, root_node)
+    if not node then
+        return false
+    end
     node.props[key] = value
-    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key, value = value})
+    ugui.send_message(node, {type = ugui.messages.prop_changed, key = key})
 end
 
 ---Appends a child to a control
@@ -429,7 +451,7 @@ ugui.add_child = function(parent_uid, control)
     ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
 
     for key, value in pairs(control.props) do
-        ugui.send_message(control, {type = ugui.messages.prop_changed, key = key, value = value})
+        ugui.send_message(control, {type = ugui.messages.prop_changed, key = key})
     end
 
     -- We also need to invalidate the parent completely
@@ -441,15 +463,33 @@ end
 ---@param node table A node
 ---@param msg table A message
 ugui.send_message = function(node, msg)
-    -- TODO: If user-provided one exists, it takes priority and user must invoke lower one manually
-    -- if node.props.message_override then
-    --     node.props.message_override(ugui, node, msg)
-    --     return
-    -- end
-
     ugui.default_message_handler(ugui, node, msg)
 
-    local result = registry[node.type].message(ugui, node, msg)
+    -- Message interception: input events are dumped for disabled controls
+    if msg.type == ugui.messages.mouse_enter
+        or msg.type == ugui.messages.mouse_leave
+        or msg.type == ugui.messages.mouse_move
+        or msg.type == ugui.messages.lmb_down
+        or msg.type == ugui.messages.lmb_up then
+        if ugui.get_prop(node.uid, 'disabled') then
+            -- FIXME: We assume input events have no return value, which should be fine?
+            return nil
+        end
+    end
+
+    -- If user-provided message handler exists, it takes priority and is called before the registry one
+    local result = nil
+    if node.props.process_message then
+        result = node.props.process_message(ugui, node, msg)
+
+        -- If no value is provided, we try with the registry one,
+        -- since no value could mean either that messgae doesnt have a return value, or it just wasnt handled
+        if not result then
+            result = registry[node.type].message(ugui, node, msg)
+        end
+    else
+        result = registry[node.type].message(ugui, node, msg)
+    end
 
     -- Message interception: we add padding to measurements
     if msg.type == ugui.messages.measure then

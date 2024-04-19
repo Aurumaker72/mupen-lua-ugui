@@ -23,9 +23,16 @@ return {
         if msg.type == ugui.messages.create then
             ugui.init_prop(inst.uid, 'state', states.normal)
             ugui.init_prop(inst.uid, 'padding', {x = 10, y = 6})
-            ugui.init_prop(inst.uid, 'click', function()
-                print(math.random())
-                ugui.set_prop(inst.uid, 'disabled', not ugui.get_prop(inst.uid, 'disabled'))
+
+            -- Custom props
+
+            -- Whether the button can be toggled on and off (togglebutton)
+            ugui.init_prop(inst.uid, 'checkable', nil)
+            -- Whether the button is currently checked, only applies if checkable is true
+            ugui.init_prop(inst.uid, 'checked', nil)
+            -- The click callback
+            ugui.init_prop(inst.uid, 'click', function(ugui, inst)
+
             end)
         end
         if msg.type == ugui.messages.measure then
@@ -38,6 +45,10 @@ return {
         end
         if msg.type == ugui.messages.paint then
             local state = ugui.get_prop(inst.uid, 'state')
+
+            if ugui.get_prop(inst.uid, 'checkable') == true and ugui.get_prop(inst.uid, 'checked') == true then
+                state = states.active
+            end
 
             if ugui.get_prop(inst.uid, 'disabled') == true then
                 state = states.disabled
@@ -63,7 +74,10 @@ return {
         if msg.type == ugui.messages.lmb_down then
             ugui.set_prop(inst.uid, 'state', states.active)
             ugui.capture_mouse(inst.uid)
-            ugui.get_prop(inst.uid, 'click')()
+            if ugui.get_prop(inst.uid, 'checkable') == true then
+                ugui.set_prop(inst.uid, 'checked', not ugui.get_prop(inst.uid, 'checked'))
+            end
+            ugui.get_prop(inst.uid, 'click')(ugui, inst)
         end
         if msg.type == ugui.messages.lmb_up then
             if ugui.get_prop(inst.uid, 'state') == states.hover then
