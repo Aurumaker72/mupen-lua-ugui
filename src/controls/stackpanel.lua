@@ -30,7 +30,7 @@ return {
                 }
             end
         end
-        if msg.type == ugui.messages.get_base_child_bounds then
+        if msg.type == ugui.messages.arrange then
             local bounds = {}
             local size_accumulator = 0
             if ugui.get_prop(inst.uid, 'horizontal') then

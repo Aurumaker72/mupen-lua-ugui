@@ -34,6 +34,8 @@ local tree = {
                         checkable = true,
                         click = function(ugui, inst)
                             ugui.set_prop(2, 'disabled', ugui.get_prop(inst.uid, 'checked'))
+                            ugui.set_prop(3, 'hidden', ugui.get_prop(inst.uid, 'checked'))
+                            ugui.set_prop(4, 'hidden', ugui.get_prop(inst.uid, 'checked'))
                         end,
                     },
                     children = {
@@ -42,7 +44,7 @@ local tree = {
                             props = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
-                                text = 'Disable others',
+                                text = 'Change others',
                             },
                         },
                     },
@@ -50,7 +52,7 @@ local tree = {
                 {
                     type = 'stackpanel',
                     props = {
-                        h_align = ugui.alignments.center,
+                        h_align = ugui.alignments['end'],
                         v_align = ugui.alignments.fill,
                         horizontal = true,
                     },
@@ -75,6 +77,7 @@ local tree = {
                         },
                         {
                             type = 'button',
+                            uid = 3,
                             props = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
@@ -85,7 +88,7 @@ local tree = {
                                     props = {
                                         h_align = ugui.alignments.center,
                                         v_align = ugui.alignments.center,
-                                        text = 'Goodbye World!',
+                                        text = 'i can disappear, ooooohhhh',
                                     },
                                 },
                             },
@@ -116,6 +119,7 @@ local tree = {
                                 },
                                 {
                                     type = 'button',
+                                    uid = 4,
                                     props = {
                                         h_align = ugui.alignments.center,
                                         v_align = ugui.alignments.center,

@@ -14,7 +14,7 @@ local ugui = {
         measure = 3,
         -- The control is asked to provide a rectangle[] for its children base bounds (which they are subsequently allowed to position themselves in),
         -- or an empty table if no transformations are performed
-        get_base_child_bounds = 4,
+        arrange = 4,
         -- The control had a property modified
         prop_changed = 5,
         -- The mouse has entered the control's area
@@ -162,8 +162,8 @@ local ugui = {
 
         ---Logs a string to the output console
         ---@param text string The string to log
-        log = function (text)
-        end
+        log = function(text)
+        end,
     },
     internal = {
         ---Finds the topmost node at the specified point
@@ -196,7 +196,7 @@ local ugui = {
     },
 }
 
-if false then
+if true then
     ugui.util.log = print
 end
 
@@ -213,6 +213,9 @@ local layout_queue = {}
 -- We store uids and not rects, because we might not have computed the bounds yet when invalidating the visuals.
 -- However, layout is guaranteed to have been processed when dirty rects are being repainted, so we pull those at the repaint phase.
 local dirty_uids = {}
+
+-- Same as dirty_uids but may contain explicitly added rectangles
+local dirty_rects = {}
 
 -- Window size upon script start
 local start_size = nil
@@ -318,7 +321,7 @@ local function layout_node(node)
     node.bounds = ugui.get_base_layout_bounds(node)
 
     -- Layout node pass: let them reposition childrens' bounds after layout is finished
-    local new_child_bounds = ugui.send_message(node, {type = ugui.messages.get_base_child_bounds})
+    local new_child_bounds = ugui.send_message(node, {type = ugui.messages.arrange})
     if new_child_bounds then
         -- Control provides individual parent bounds per child!
         for i, child in pairs(node.children) do
@@ -336,33 +339,34 @@ end
 
 ---Processes the dirty rectangle queue
 local function process_dirty_rects()
-    if #dirty_uids == 0 then
-        return
+    for _, uid in pairs(dirty_uids) do
+        dirty_rects[#dirty_rects + 1] = ugui.util.find(uid, root_node).bounds
     end
 
     -- Iterate through each control and see if it intersects the dirty rect. If so, repaint it.
-    -- We need to store a list of the intersecting controls, as they need to be repainted in reverse order, not top-to-bottom.
-    for _, uid in pairs(dirty_uids) do
-        local affected_nodes = {}
-        local rect = ugui.util.find(uid, root_node).bounds
+    for _, dirty_rect in pairs(dirty_rects) do
+        local intersecting_nodes = {}
 
         ugui.util.iterate(root_node, function(x)
-            if BreitbandGraphics.rectangles_intersect(x.bounds, rect) then
-                affected_nodes[#affected_nodes + 1] = x
+            if BreitbandGraphics.rectangles_intersect(x.bounds, dirty_rect) then
+                intersecting_nodes[#intersecting_nodes + 1] = x
             end
         end)
 
-        ugui.util.log(string.format('[paint] painting %s controls', #affected_nodes))
+        ugui.util.log(string.format('[paint] painting %s controls', #intersecting_nodes))
 
         -- We need to clip drawing to the affected rect, as we'd clobber other graphics otherwise
-        BreitbandGraphics.push_clip(rect)
-        for i = 1, #affected_nodes, 1 do
-            ugui.send_message(affected_nodes[i], {type = ugui.messages.paint, rect = affected_nodes[i].bounds})
+        BreitbandGraphics.push_clip(dirty_rect)
+        for i = 1, #intersecting_nodes, 1 do
+            if ugui.get_prop(intersecting_nodes[i].uid, 'hidden') ~= true then
+                ugui.send_message(intersecting_nodes[i], {type = ugui.messages.paint, rect = intersecting_nodes[i].bounds})
+            end
         end
         BreitbandGraphics.pop_clip()
     end
 
 
+    dirty_rects = {}
     dirty_uids = {}
 end
 
@@ -390,6 +394,12 @@ ugui.invalidate_visuals = function(uid)
     dirty_uids[#dirty_uids + 1] = uid
 end
 
+---Invalidates a rectangle
+---@param rect table A rectangle
+ugui.invalidate_rect = function(rect)
+    dirty_rects[#dirty_rects + 1] = rect
+end
+
 ---Registers a control template, adding its type to the global registry
 ---@param control table A control
 ugui.register_template = function(control)
@@ -413,15 +423,33 @@ ugui.get_prop = function(uid, key)
     end
     local value = node.props[key]
 
-    if key == 'disabled' then
-        -- Special handling for disabled prop: children of disabled controls get "disabled" as well
-        -- The library lies to external callers, but keeps the raw state private
+    local function get_parent_inherited_prop(key)
+        local ret = false
         ugui.util.iterate_upwards(node, function(x)
-            if x.props.disabled then
-                value = true
+            if x.props[key] == true then
+                ret = true
                 return true
             end
         end)
+        return ret
+    end
+
+    if key == 'disabled' then
+        -- Special handling for disabled prop: children of disabled controls get "disabled" as well
+        -- The library lies to external callers, but keeps the raw state private
+        local inherited = get_parent_inherited_prop('disabled')
+        if inherited then
+            return inherited
+        end
+    end
+
+    if key == 'hidden' then
+        -- Special handling for hidden prop: children of hidden controls get "hidden" as well
+        -- The library lies to external callers, but keeps the raw state private
+        local inherited = get_parent_inherited_prop('hidden')
+        if inherited then
+            return inherited
+        end
     end
 
     return value
@@ -484,13 +512,13 @@ ugui.add_child = function(parent_uid, control)
     ugui.send_message(control, {type = ugui.messages.create})
 
     -- Standard props:
-    -- hidden: bool - Node doesn't receive input or paint events.
+    -- hidden: bool - Node doesn't receive input events, isn't visible and is exempt from layout.
     -- disabled: bool - Node doesn't receive input events.
     -- clickthrough: bool - Node isn't considered during hittesting and thus cant be clicked on, hovered, pushed, etc...
     -- padding: point - Space to add implicitly during control measurement
     ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
 
-    for key, value in pairs(control.props) do
+    for key, _ in pairs(control.props) do
         ugui.send_message(control, {type = ugui.messages.prop_changed, key = key})
     end
 
@@ -505,13 +533,13 @@ end
 ugui.send_message = function(node, msg)
     ugui.default_message_handler(ugui, node, msg)
 
-    -- Message interception: input events are dumped for disabled controls
+    -- Message interception: input events are dumped for disabled and hidden controls
     if msg.type == ugui.messages.mouse_enter
         or msg.type == ugui.messages.mouse_leave
         or msg.type == ugui.messages.mouse_move
         or msg.type == ugui.messages.lmb_down
         or msg.type == ugui.messages.lmb_up then
-        if ugui.get_prop(node.uid, 'disabled') then
+        if ugui.get_prop(node.uid, 'disabled') or ugui.get_prop(node.uid, 'hidden') then
             -- FIXME: We assume input events have no return value, which should be fine?
             return nil
         end
@@ -531,11 +559,19 @@ ugui.send_message = function(node, msg)
         result = registry[node.type].message(ugui, node, msg)
     end
 
-    -- Message interception: we add padding to measurements
+    -- Message hacking
     if msg.type == ugui.messages.measure then
-        result.x = result.x + node.props.padding.x
-        result.y = result.y + node.props.padding.y
+        if ugui.get_prop(node.uid, 'hidden') == true then
+            -- Hidden controls don't have a size (exempt from layout)
+            result.x = 0
+            result.y = 0
+        else
+            -- Normal controls get padding added to measurement
+            result.x = result.x + node.props.padding.x
+            result.y = result.y + node.props.padding.y
+        end
     end
+
 
     return result
 end
@@ -566,14 +602,22 @@ end
 ---@param msg table The message
 function ugui.default_message_handler(ugui, inst, msg)
     if msg.type == ugui.messages.prop_changed then
-        if msg.key == 'h_align' or msg.key == 'v_align' or msg.key == 'disabled' or msg.key == 'hidden' or msg.key == 'padding' then
+        if msg.key == 'hidden' then
+
+            -- Invalidate the grandparent in layout and visually
+            local grandparent = ugui.util.find(ugui.util.find(inst.parent_uid, root_node).parent_uid, root_node)
+            
+            ugui.invalidate_layout(grandparent.uid)
+            ugui.invalidate_visuals(grandparent.uid)
+        end
+        if msg.key == 'h_align' or msg.key == 'v_align' or msg.key == 'disabled' or msg.key == 'padding' then
             ugui.invalidate_layout(inst.uid)
             ugui.invalidate_visuals(inst.uid)
         end
     end
 end
 
----Builds a node hierarchy from a simplified tree and places it into to the scene 
+---Builds a node hierarchy from a simplified tree and places it into to the scene
 ---@param tree table A tree of nodes
 function ugui.util.build_hierarchy_from_simple_tree(tree)
     local used_uids = {}
@@ -636,6 +680,11 @@ ugui.start = function(params, start)
     emu.atdrawd2d(function()
         last_input = curr_input and ugui.util.deep_clone(curr_input) or input.get()
         curr_input = input.get()
+
+        if curr_input['Q'] then
+            ugui.invalidate_layout(root_node.uid)
+            ugui.invalidate_visuals(root_node.uid)
+        end
 
         local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}
         local last_mouse_point = {x = last_input.xmouse, y = last_input.ymouse}
