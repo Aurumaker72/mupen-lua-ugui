@@ -14,17 +14,9 @@ ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\butt
 
 local tree = {
     type = 'panel',
-    props = {
-        h_align = ugui.alignments.fill,
-        v_align = ugui.alignments.fill,
-    },
     children = {
         {
             type = 'stackpanel',
-            props = {
-                h_align = ugui.alignments.fill,
-                v_align = ugui.alignments.fill,
-            },
             children = {
                 {
                     type = 'button',
@@ -53,7 +45,6 @@ local tree = {
                     type = 'stackpanel',
                     props = {
                         h_align = ugui.alignments['end'],
-                        v_align = ugui.alignments.fill,
                         horizontal = true,
                     },
                     children = {

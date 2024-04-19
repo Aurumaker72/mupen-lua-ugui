@@ -512,10 +512,14 @@ ugui.add_child = function(parent_uid, control)
     ugui.send_message(control, {type = ugui.messages.create})
 
     -- Standard props:
+    -- h_align: ugui.alignments - The horizontal alignment inside the parent, defaults to fill (WPF)
+    -- v_align: ugui.alignments - The vertical alignment inside the parent, defaults to fill (WPF)
     -- hidden: bool - Node doesn't receive input events, isn't visible and is exempt from layout.
     -- disabled: bool - Node doesn't receive input events.
     -- clickthrough: bool - Node isn't considered during hittesting and thus cant be clicked on, hovered, pushed, etc...
     -- padding: point - Space to add implicitly during control measurement
+    ugui.init_prop(control.uid, 'h_align', ugui.alignments.fill)
+    ugui.init_prop(control.uid, 'v_align', ugui.alignments.fill)
     ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
 
     for key, _ in pairs(control.props) do
