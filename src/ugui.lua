@@ -196,7 +196,7 @@ local ugui = {
     },
 }
 
-if true then
+if false then
     ugui.util.log = print
 end
 
@@ -233,6 +233,12 @@ function ugui.internal.paint_bounding_boxes(root)
     ugui.util.iterate(root, function(node)
         BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
     end)
+end
+
+---Sums an array of numbers
+---@param list number[] An array of numbers
+function ugui.util.sum(list)
+    return ugui.util.reduce(list, function(x, y) return x + y end, 0)
 end
 
 ---Traverses all nodes above a node in bottom-up order
@@ -607,10 +613,9 @@ end
 function ugui.default_message_handler(ugui, inst, msg)
     if msg.type == ugui.messages.prop_changed then
         if msg.key == 'hidden' then
-
             -- Invalidate the grandparent in layout and visually
             local grandparent = ugui.util.find(ugui.util.find(inst.parent_uid, root_node).parent_uid, root_node)
-            
+
             ugui.invalidate_layout(grandparent.uid)
             ugui.invalidate_visuals(grandparent.uid)
         end
@@ -688,6 +693,10 @@ ugui.start = function(params, start)
         if curr_input['Q'] then
             ugui.invalidate_layout(root_node.uid)
             ugui.invalidate_visuals(root_node.uid)
+        end
+
+        if curr_input['E'] then
+            ugui.internal.paint_bounding_boxes(root_node)
         end
 
         local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}

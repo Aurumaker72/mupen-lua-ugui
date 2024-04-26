@@ -4,13 +4,13 @@ local function folder(file)
     return s:gsub(p, '')
 end
 
-dofile(folder('demos\\basic.lua') .. 'src\\bgfx.lua')
-local ugui = dofile(folder('demos\\basic.lua') .. 'src\\ugui.lua')
+dofile(folder('demos\\stackpanels.lua') .. 'src\\bgfx.lua')
+local ugui = dofile(folder('demos\\stackpanels.lua') .. 'src\\ugui.lua')
 
-ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\panel.lua'))
-ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\stackpanel.lua'))
-ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\label.lua'))
-ugui.register_template(dofile(folder('demos\\basic.lua') .. 'src\\controls\\button.lua'))
+ugui.register_template(dofile(folder('demos\\stackpanels.lua') .. 'src\\controls\\panel.lua'))
+ugui.register_template(dofile(folder('demos\\stackpanels.lua') .. 'src\\controls\\stackpanel.lua'))
+ugui.register_template(dofile(folder('demos\\stackpanels.lua') .. 'src\\controls\\label.lua'))
+ugui.register_template(dofile(folder('demos\\stackpanels.lua') .. 'src\\controls\\button.lua'))
 
 local tree = {
     type = 'panel',
