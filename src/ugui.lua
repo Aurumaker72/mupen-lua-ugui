@@ -771,6 +771,7 @@ ugui.start = function(params, start)
                 -- If we release the mouse while outside of the captured control, we might be over another control by now
                 -- That means it has to receive mouse_enter message
                 if node_at_mouse and node_at_mouse.uid ~= node_at_lmb_down.uid then
+                    ugui.send_message(node_at_lmb_down, {type = ugui.messages.mouse_leave})
                     ugui.send_message(node_at_mouse, {type = ugui.messages.mouse_enter})
                 end
             end
