@@ -223,6 +223,9 @@ local start_size = nil
 -- Uid of the node capturing the mouse
 local mouse_capturing_uid = nil
 
+-- Uids known to be used in the scene
+local used_uids = {}
+
 local last_input = nil
 local curr_input = nil
 local last_lmb_down_pos = {x = 0, y = 0}
@@ -231,7 +234,7 @@ local last_lmb_down_pos = {x = 0, y = 0}
 ---@param root table A node
 function ugui.internal.paint_bounding_boxes(root)
     ugui.util.iterate(root, function(node)
-        BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 1)
+        BreitbandGraphics.draw_rectangle(BreitbandGraphics.inflate_rectangle(node.bounds, -1), BreitbandGraphics.colors.red, 0.1)
     end)
 end
 
@@ -627,13 +630,15 @@ function ugui.default_message_handler(ugui, inst, msg)
 end
 
 ---Builds a node hierarchy from a simplified tree and places it into to the scene
+---@param parent_uid number|nil The tree's parent node, or nil if it's the root
 ---@param tree table A tree of nodes
-function ugui.util.build_hierarchy_from_simple_tree(tree)
-    local used_uids = {}
-
+function ugui.util.add_from_tree(parent_uid, tree)
     local function make_uids(node, current_uid, parent_uid)
         local override_uid = false
         if node.uid then
+            if used_uids[node.uid] then
+                ugui.util.log('Control added from tree with uid that shadows an existing one!')
+            end
             current_uid = node.uid
             override_uid = true
         end
@@ -641,15 +646,18 @@ function ugui.util.build_hierarchy_from_simple_tree(tree)
         node.uid = current_uid
         node.parent_uid = parent_uid
 
+        if node.child then
+            node.children = {node.child}
+        end
+
         if not node.children then
             node.children = {}
         end
 
         if not override_uid then
-            node.uid = math.random(0, 100000)
-            while used_uids[node.uid] do
-                node.uid = math.random(0, 100000)
-            end
+            repeat
+                node.uid = os.clock()
+            until not used_uids[node.uid]
         end
 
         used_uids[node.uid] = true
@@ -666,7 +674,7 @@ function ugui.util.build_hierarchy_from_simple_tree(tree)
         end
     end
 
-    make_uids(tree, 0, nil)
+    make_uids(tree, 0, parent_uid)
 
     iterate(tree, function(node)
         ugui.add_child(node.parent_uid, {

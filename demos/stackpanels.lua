@@ -17,6 +17,7 @@ local tree = {
     children = {
         {
             type = 'stackpanel',
+            uid = 50,
             children = {
                 {
                     type = 'button',
@@ -30,14 +31,12 @@ local tree = {
                             ugui.set_prop(4, 'hidden', ugui.get_prop(inst.uid, 'checked'))
                         end,
                     },
-                    children = {
-                        {
-                            type = 'label',
-                            props = {
-                                h_align = ugui.alignments.center,
-                                v_align = ugui.alignments.center,
-                                text = 'Change others',
-                            },
+                    child = {
+                        type = 'label',
+                        props = {
+                            h_align = ugui.alignments.center,
+                            v_align = ugui.alignments.center,
+                            text = 'Change others',
                         },
                     },
                 },
@@ -55,14 +54,12 @@ local tree = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
                             },
-                            children = {
-                                {
-                                    type = 'label',
-                                    props = {
-                                        h_align = ugui.alignments.center,
-                                        v_align = ugui.alignments.center,
-                                        text = 'Can be disabled',
-                                    },
+                            child = {
+                                type = 'label',
+                                props = {
+                                    h_align = ugui.alignments.center,
+                                    v_align = ugui.alignments.center,
+                                    text = 'Can be disabled',
                                 },
                             },
                         },
@@ -73,14 +70,12 @@ local tree = {
                                 h_align = ugui.alignments.center,
                                 v_align = ugui.alignments.center,
                             },
-                            children = {
-                                {
-                                    type = 'label',
-                                    props = {
-                                        h_align = ugui.alignments.center,
-                                        v_align = ugui.alignments.center,
-                                        text = 'i can disappear, ooooohhhh',
-                                    },
+                            child = {
+                                type = 'label',
+                                props = {
+                                    h_align = ugui.alignments.center,
+                                    v_align = ugui.alignments.center,
+                                    text = 'i can disappear, ooooohhhh',
                                 },
                             },
                         },
@@ -115,14 +110,12 @@ local tree = {
                                         h_align = ugui.alignments.center,
                                         v_align = ugui.alignments.center,
                                     },
-                                    children = {
-                                        {
-                                            type = 'label',
-                                            props = {
-                                                h_align = ugui.alignments.center,
-                                                v_align = ugui.alignments.center,
-                                                text = 'build nested layouts',
-                                            },
+                                    child = {
+                                        type = 'label',
+                                        props = {
+                                            h_align = ugui.alignments.center,
+                                            v_align = ugui.alignments.center,
+                                            text = 'build nested layouts',
                                         },
                                     },
                                 },
@@ -138,6 +131,51 @@ local tree = {
                         },
                     },
                 },
+                {
+                    type = 'button',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.center,
+                        click = function(ugui, inst)
+                            ugui.util.add_from_tree(50, {
+                                type = 'button',
+                                children = {
+                                    {
+                                        type = 'label',
+                                        props = {
+                                            h_align = ugui.alignments.center,
+                                            v_align = ugui.alignments.center,
+                                            text = 'dynamic creation',
+                                        },
+                                    },
+                                },
+                            })
+                        end,
+                    },
+                    child = {
+                        type = 'label',
+                        props = {
+                            h_align = ugui.alignments.center,
+                            v_align = ugui.alignments.center,
+                            text = 'Add',
+                        },
+                    },
+                },
+                {
+                    type = 'button',
+                    props = {
+                        h_align = ugui.alignments.center,
+                        v_align = ugui.alignments.center,
+                    },
+                    child = {
+                        type = 'label',
+                        props = {
+                            h_align = ugui.alignments.center,
+                            v_align = ugui.alignments.center,
+                            text = 'Remove',
+                        },
+                    },
+                },
             },
         },
     },
@@ -148,5 +186,5 @@ local tree = {
 ugui.start({
     width = 300,
 }, function()
-    ugui.util.build_hierarchy_from_simple_tree(tree)
+    ugui.util.add_from_tree(nil, tree)
 end)

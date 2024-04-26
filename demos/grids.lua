@@ -77,5 +77,5 @@ local tree = {
 ugui.start({
     width = 300,
 }, function()
-    ugui.util.build_hierarchy_from_simple_tree(tree)
+    ugui.util.add_from_tree(nil, tree)
 end)
