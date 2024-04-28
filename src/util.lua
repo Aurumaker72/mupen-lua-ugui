@@ -176,6 +176,50 @@ util.paint_bounding_boxes = function(root)
     end)
 end
 
+---Sums an array of numbers
+---@param list number[] An array of numbers
+function util.sum(list)
+    return util.reduce(list, function(x, y) return x + y end, 0)
+end
+
+
+---Traverses all nodes above a node in bottom-up order
+---@param ugui table The related ugui context
+---@param node table The node to begin the iteration from
+---@param predicate function A function which accepts a node
+function util.iterate_upwards(ugui, node, predicate)
+    local function iterate_upwards_impl(x, predicate)
+        if predicate(x) then
+            return
+        end
+        local parent = util.find(x.parent_uid, ugui.get_root_node())
+        if not parent then
+            return
+        end
+        iterate_upwards_impl(parent, predicate)
+    end
+
+    iterate_upwards_impl(node, predicate)
+end
+
+--- Whether a node is a child of another node
+---@param node table The parent node
+---@param child_uid number The child node's identifier
+function util.is_child_of(node, child_uid)
+    local child = util.find(child_uid, node)
+    return child ~= nil
+end
+
+---Gets a node's children
+---@param ugui table The related ugui context
+---@param uid number A unique control identifier
+function util.get_child_uids(ugui, uid)
+    local node = util.find(uid, ugui.get_root_node())
+    return util.select(node.children, function(x)
+        return x.uid
+    end)
+end
+
 if false then
     util.log = print
 end

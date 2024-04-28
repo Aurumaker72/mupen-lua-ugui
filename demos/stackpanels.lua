@@ -167,7 +167,7 @@ local tree = {
                         h_align = ugui.alignments.center,
                         v_align = ugui.alignments.center,
                         click = function(ugui, inst)
-                            local children = ugui.util.get_child_uids(50)
+                            local children = ugui.util.get_child_uids(ugui, 50)
                             ugui.remove_node(children[#children])
                         end,
                     },

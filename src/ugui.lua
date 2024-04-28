@@ -45,7 +45,6 @@ local ugui = {
     },
 }
 
-ugui.util = dofile(folder('ugui.lua') .. 'util.lua')
 
 -- The control tree
 local root_node = nil
@@ -80,51 +79,13 @@ local last_input = nil
 local curr_input = nil
 local last_lmb_down_pos = {x = 0, y = 0}
 
----Sums an array of numbers
----@param list number[] An array of numbers
-function ugui.util.sum(list)
-    return ugui.util.reduce(list, function(x, y) return x + y end, 0)
-end
-
----Traverses all nodes above a node in bottom-up order
----@param node table The node to begin the iteration from
----@param predicate function A function which accepts a node
-function ugui.util.iterate_upwards(node, predicate)
-    local function iterate_upwards_impl(x, predicate)
-        if predicate(x) then
-            return
-        end
-        local parent = ugui.util.find(x.parent_uid, root_node)
-        if not parent then
-            return
-        end
-        iterate_upwards_impl(parent, predicate)
-    end
-
-    iterate_upwards_impl(node, predicate)
-end
-
---- Whether a node is a child of another node
----@param node table The parent node
----@param child_uid number The child node's identifier
-function ugui.util.is_child_of(node, child_uid)
-    local child = ugui.util.find(child_uid, node)
-    return child ~= nil
-end
-
----Gets the root node. Writing to it externally will probably break the library.
-function ugui.util.get_root_node()
+---Gets the root node.
+---Do not mutate it.
+function ugui.get_root_node()
     return root_node
 end
 
----Gets a node's children
----@param uid number A unique control identifier
-function ugui.util.get_child_uids(uid)
-    local node = ugui.util.find(uid, root_node)
-    return ugui.util.select(node.children, function(x)
-        return x.uid
-    end)
-end
+ugui.util = dofile(folder('ugui.lua') .. 'util.lua')
 
 ---Returns the base layout bounds for a node
 ---@param node table The node
@@ -318,7 +279,7 @@ ugui.get_prop = function(uid, key)
 
     local function get_parent_inherited_prop(key)
         local ret = false
-        ugui.util.iterate_upwards(node, function(x)
+        ugui.util.iterate_upwards(ugui, node, function(x)
             if x.props[key] == true then
                 ret = true
                 return true
