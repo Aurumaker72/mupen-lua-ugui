@@ -77,5 +77,5 @@ local tree = {
 ugui.start({
     width = 300,
 }, function()
-    ugui.util.add_from_tree(nil, tree)
+    ugui.add_from_tree(nil, tree)
 end)

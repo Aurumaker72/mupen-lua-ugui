@@ -137,7 +137,7 @@ local tree = {
                         h_align = ugui.alignments.center,
                         v_align = ugui.alignments.center,
                         click = function(ugui, inst)
-                            ugui.util.add_from_tree(50, {
+                            ugui.add_from_tree(50, {
                                 type = 'button',
                                 children = {
                                     {
@@ -190,5 +190,5 @@ local tree = {
 ugui.start({
     width = 300,
 }, function()
-    ugui.util.add_from_tree(nil, tree)
+    ugui.add_from_tree(nil, tree)
 end)
