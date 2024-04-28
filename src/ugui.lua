@@ -87,9 +87,10 @@ end
 
 ugui.util = dofile(folder('ugui.lua') .. 'util.lua')
 
+
 ---Returns the base layout bounds for a node
 ---@param node table The node
-ugui.get_base_layout_bounds = function(node)
+local function get_base_layout_bounds(node)
     local size = ugui.send_message(node, {type = ugui.messages.measure})
 
     local rect = {
@@ -139,7 +140,7 @@ local function layout_node(node)
     end
 
     -- Compute layout bounds and apply them
-    node.bounds = ugui.get_base_layout_bounds(node)
+    node.bounds = get_base_layout_bounds(node)
 
     -- Layout node pass: let them reposition childrens' bounds after layout is finished
     local new_child_bounds = ugui.send_message(node, {type = ugui.messages.arrange})
@@ -235,6 +236,29 @@ local function process_deletion()
 
     deletion_queue = {}
 end
+
+---Performs default message processing
+---@param ugui table The related ugui context
+---@param inst table The control instance
+---@param msg table The message
+local function default_message_handler(ugui, inst, msg)
+    if msg.type == ugui.messages.prop_changed then
+        if msg.key == 'hidden' then
+            -- Invalidate the grandparent(!!!) in layout and visually
+            local grandparent = ugui.util.find(ugui.util.find(inst.parent_uid, root_node).parent_uid, root_node)
+
+            ugui.invalidate_layout(grandparent.uid)
+            ugui.invalidate_visuals(grandparent.uid)
+        end
+        if msg.key == 'h_align' or msg.key == 'v_align' or msg.key == 'disabled' or msg.key == 'padding' then
+            ugui.invalidate_layout(inst.uid)
+            ugui.invalidate_visuals(inst.uid)
+        end
+    end
+end
+
+
+--#region Public API
 
 ---Invalidates a control's layout along with its children
 ---@param uid number A unique control identifier
@@ -339,31 +363,30 @@ ugui.set_prop = function(uid, key, value)
 end
 
 ---Appends a child to a control
----The control will be clobbered
----@param parent_uid number|nil A unique control identifier of the parent, or nil if the control is the root control
----@param control table A control
-ugui.add_child = function(parent_uid, control)
+---@param parent_uid number|nil A unique node identifier of the parent, or nil if it's the root node
+---@param node table A node
+ugui.add_node = function(parent_uid, node)
     -- Initialize default properties
-    control.children = {}
-    control.props = control.props and control.props or {}
-    control.bounds = nil
-    control.invalidated_visual = true
-    control.parent_uid = parent_uid
+    node.children = {}
+    node.props = node.props and node.props or {}
+    node.bounds = nil
+    node.invalidated_visual = true
+    node.parent_uid = parent_uid
 
     if parent_uid then
         -- We add the child to its parent's children array
         local parent = ugui.util.find(parent_uid, root_node)
         if not parent then
-            ugui.util.log('Control ' .. control.type .. ' has no parent with uid ' .. parent_uid)
+            ugui.util.log('Control ' .. node.type .. ' has no parent with uid ' .. parent_uid)
             return
         end
-        parent.children[#parent.children + 1] = control
+        parent.children[#parent.children + 1] = node
     else
-        root_node = control
+        root_node = node
     end
 
     -- Notify it about existing
-    ugui.send_message(control, {type = ugui.messages.create})
+    ugui.send_message(node, {type = ugui.messages.create})
 
     -- Standard props:
     -- h_align: ugui.alignments - The horizontal alignment inside the parent, defaults to fill (WPF)
@@ -372,17 +395,17 @@ ugui.add_child = function(parent_uid, control)
     -- disabled: bool - Node doesn't receive input events.
     -- clickthrough: bool - Node isn't considered during hittesting and thus cant be clicked on, hovered, pushed, etc...
     -- padding: point - Space to add implicitly during control measurement
-    ugui.init_prop(control.uid, 'h_align', ugui.alignments.fill)
-    ugui.init_prop(control.uid, 'v_align', ugui.alignments.fill)
-    ugui.init_prop(control.uid, 'padding', {x = 0, y = 0})
+    ugui.init_prop(node.uid, 'h_align', ugui.alignments.fill)
+    ugui.init_prop(node.uid, 'v_align', ugui.alignments.fill)
+    ugui.init_prop(node.uid, 'padding', {x = 0, y = 0})
 
-    for key, _ in pairs(control.props) do
-        ugui.send_message(control, {type = ugui.messages.prop_changed, key = key})
+    for key, _ in pairs(node.props) do
+        ugui.send_message(node, {type = ugui.messages.prop_changed, key = key})
     end
 
     -- We also need to invalidate the parent completely
-    ugui.invalidate_layout(parent_uid and parent_uid or control.uid)
-    ugui.invalidate_visuals(parent_uid and parent_uid or control.uid)
+    ugui.invalidate_layout(parent_uid and parent_uid or node.uid)
+    ugui.invalidate_visuals(parent_uid and parent_uid or node.uid)
 end
 
 ---Removes a node from the hierarchy along with all of its children
@@ -395,7 +418,7 @@ end
 ---@param node table A node
 ---@param msg table A message
 ugui.send_message = function(node, msg)
-    ugui.default_message_handler(ugui, node, msg)
+    default_message_handler(ugui, node, msg)
 
     -- Message interception: input events are dumped for disabled and hidden controls
     if msg.type == ugui.messages.mouse_enter
@@ -460,30 +483,10 @@ ugui.get_mouse_position = function()
     return {x = curr_input.xmouse, y = curr_input.ymouse}
 end
 
----Performs default message processing
----@param ugui table The related ugui context
----@param inst table The control instance
----@param msg table The message
-function ugui.default_message_handler(ugui, inst, msg)
-    if msg.type == ugui.messages.prop_changed then
-        if msg.key == 'hidden' then
-            -- Invalidate the grandparent in layout and visually
-            local grandparent = ugui.util.find(ugui.util.find(inst.parent_uid, root_node).parent_uid, root_node)
-
-            ugui.invalidate_layout(grandparent.uid)
-            ugui.invalidate_visuals(grandparent.uid)
-        end
-        if msg.key == 'h_align' or msg.key == 'v_align' or msg.key == 'disabled' or msg.key == 'padding' then
-            ugui.invalidate_layout(inst.uid)
-            ugui.invalidate_visuals(inst.uid)
-        end
-    end
-end
-
 ---Builds a node hierarchy from a simplified tree and places it into to the scene
 ---@param parent_uid number|nil The tree's parent node, or nil if it's the root
 ---@param tree table A tree of nodes
-function ugui.add_from_tree(parent_uid, tree)
+ugui.add_from_tree = function(parent_uid, tree)
     local function make_uids(node, current_uid, parent_uid)
         local override_uid = false
         if node.uid then
@@ -528,7 +531,7 @@ function ugui.add_from_tree(parent_uid, tree)
     make_uids(tree, 0, parent_uid)
 
     iterate(tree, function(node)
-        ugui.add_child(node.parent_uid, {
+        ugui.add_node(node.parent_uid, {
             type = node.type,
             uid = node.uid,
             props = node.props,
@@ -644,3 +647,4 @@ ugui.start = function(params, start)
 end
 
 return ugui
+--#endregion
