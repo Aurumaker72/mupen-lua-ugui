@@ -83,6 +83,20 @@ local ugui = {
             return t
         end,
 
+        ---Picks all items in the collection via the predicate
+        ---@param collection table
+        ---@param predicate function A function which takes a collection element as a parameter and returns whether it should be included in the final collection. This function should be pure in regards to the parameter.
+        ---@return table table A collection of the included items
+        where = function(collection, predicate)
+            local t = {}
+            for i = 1, #collection, 1 do
+                if predicate(collection[i]) then
+                    t[#t + 1] = collection[i]
+                end
+            end
+            return t
+        end,
+
         ---Deep clones an object
         ---@param obj any The current object
         ---@param seen any|nil The previous object, or nil for the first (obj)
@@ -226,6 +240,9 @@ local mouse_capturing_uid = nil
 -- Uids known to be used in the scene
 local used_uids = {}
 
+-- Queue of uids to be deleted. Their children will also be deleted.
+local deletion_queue = {}
+
 local last_input = nil
 local curr_input = nil
 local last_lmb_down_pos = {x = 0, y = 0}
@@ -273,6 +290,15 @@ end
 ---Gets the root node. Writing to it externally will probably break the library.
 function ugui.util.get_root_node()
     return root_node
+end
+
+---Gets a node's children
+---@param uid number A unique control identifier
+function ugui.util.get_child_uids(uid)
+    local node = ugui.util.find(uid, root_node)
+    return ugui.util.select(node.children, function(x)
+        return x.uid
+    end)
 end
 
 ---Returns the base layout bounds for a node
@@ -389,6 +415,39 @@ local function process_layout()
         layout_node(ugui.util.find(uid, root_node))
     end
     layout_queue = {}
+end
+
+---Processes all pending deletion operations
+local function process_deletion()
+    if #deletion_queue == 0 then
+        return
+    end
+    ugui.util.log(string.format('[core] Deleting %s nodes...', #deletion_queue))
+
+    for _, uid in pairs(deletion_queue) do
+        local node = ugui.util.find(uid, root_node)
+        local parent_node = ugui.util.find(node.parent_uid, root_node)
+
+        for i, value in pairs(parent_node.children) do
+            if value.uid == uid then
+                table.remove(parent_node.children, i)
+            end
+        end
+
+        ugui.invalidate_layout(parent_node.uid)
+        ugui.invalidate_visuals(parent_node.uid)
+    end
+
+    -- After doing this, we might have some invalid entries into the layout or visual invalidation queue
+    -- All elements with uids which point to nothing will be removed
+    layout_queue = ugui.util.where(layout_queue, function(x)
+        return ugui.util.find(x, root_node) ~= nil
+    end)
+    dirty_uids = ugui.util.where(dirty_uids, function(x)
+        return ugui.util.find(x, root_node) ~= nil
+    end)
+
+    deletion_queue = {}
 end
 
 ---Invalidates a control's layout along with its children
@@ -538,6 +597,12 @@ ugui.add_child = function(parent_uid, control)
     -- We also need to invalidate the parent completely
     ugui.invalidate_layout(parent_uid and parent_uid or control.uid)
     ugui.invalidate_visuals(parent_uid and parent_uid or control.uid)
+end
+
+---Removes a node from the hierarchy along with all of its children
+---@param uid number A unique control identifier
+ugui.remove_node = function(uid)
+    deletion_queue[#deletion_queue + 1] = uid
 end
 
 ---Sends a message to a node
@@ -710,6 +775,7 @@ ugui.start = function(params, start)
         local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}
         local last_mouse_point = {x = last_input.xmouse, y = last_input.ymouse}
 
+        process_deletion()
         process_layout()
         process_dirty_rects()
 

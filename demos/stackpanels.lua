@@ -166,6 +166,10 @@ local tree = {
                     props = {
                         h_align = ugui.alignments.center,
                         v_align = ugui.alignments.center,
+                        click = function(ugui, inst)
+                            local children = ugui.util.get_child_uids(50)
+                            ugui.remove_node(children[#children])
+                        end,
                     },
                     child = {
                         type = 'label',
