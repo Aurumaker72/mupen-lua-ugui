@@ -166,6 +166,25 @@ local util = {
 
         return node_at_point_impl(point, node)
     end,
+
+    ---Benchmarks a function
+    ---@param runs number The number of runs
+    ---@param func table The function to call
+    benchmark = function(runs, func)
+        -- Warmup
+        for i = 1, runs / 2, 1 do
+            func()
+        end
+
+
+        local t1 = os.clock()
+        for i = 1, runs, 1 do
+            func()
+        end
+        local t2 = os.clock()
+
+        print('Average time across ' .. runs .. ' runs: ' .. ((t2 - t1) / runs) * 1000 .. 'ms')
+    end,
 }
 
 ---Paints the bounding boxes of a node's children
@@ -181,7 +200,6 @@ end
 function util.sum(list)
     return util.reduce(list, function(x, y) return x + y end, 0)
 end
-
 
 ---Traverses all nodes above a node in bottom-up order
 ---@param ugui table The related ugui context

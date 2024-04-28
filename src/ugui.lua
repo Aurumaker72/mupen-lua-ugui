@@ -561,6 +561,13 @@ ugui.start = function(params, start)
             ugui.util.paint_bounding_boxes(root_node)
         end
 
+        if curr_input['T'] then
+            ugui.util.benchmark(100, function()
+                ugui.invalidate_layout(root_node.uid)
+                process_layout()
+            end)
+        end
+
         local mouse_point = {x = curr_input.xmouse, y = curr_input.ymouse}
         local last_mouse_point = {x = last_input.xmouse, y = last_input.ymouse}
 
