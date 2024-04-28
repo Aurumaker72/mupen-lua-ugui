@@ -7,7 +7,7 @@ local function folder(file)
 end
 
 local ugui = {
-    _version = '0.0.1',
+    _version = '0.0.2',
     messages = {
         -- The control has been created
         create = 0,
@@ -44,7 +44,6 @@ local ugui = {
         fill = 3,
     },
 }
-
 
 -- The control tree
 local root_node = nil
@@ -197,10 +196,11 @@ local function process_layout()
     if #layout_queue == 0 then
         return
     end
-    ugui.util.log(string.format('[layout] Performing %s node layouts...', #layout_queue))
+    ugui.util.log(string.format('[layout] Begin', #layout_queue))
     for _, uid in pairs(layout_queue) do
         layout_node(ugui.util.find(uid, root_node))
     end
+    ugui.util.log(string.format('[layout] Finished', #layout_queue))
     layout_queue = {}
 end
 
@@ -562,9 +562,16 @@ ugui.start = function(params, start)
         end
 
         if curr_input['T'] then
+            print("Layout benchmark...")
             ugui.util.benchmark(100, function()
                 ugui.invalidate_layout(root_node.uid)
                 process_layout()
+            end)
+
+            print("Paint benchmark...")
+            ugui.util.benchmark(100, function()
+                ugui.invalidate_visuals(root_node.uid)
+                process_dirty_rects()
             end)
         end
 
