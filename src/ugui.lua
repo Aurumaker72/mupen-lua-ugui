@@ -391,12 +391,20 @@ ugui.add_node = function(parent_uid, node)
     -- Standard props:
     -- h_align: ugui.alignments - The horizontal alignment inside the parent, defaults to fill (WPF)
     -- v_align: ugui.alignments - The vertical alignment inside the parent, defaults to fill (WPF)
+    -- min_width: number - The minimum width of the node.
+    -- min_height: number - The minimum height of the node.
+    -- max_width: number - The maximum width of the node.
+    -- max_height: number - The maximum height of the node.
     -- hidden: bool - Node doesn't receive input events, isn't visible and is exempt from layout.
     -- disabled: bool - Node doesn't receive input events.
     -- clickthrough: bool - Node isn't considered during hittesting and thus cant be clicked on, hovered, pushed, etc...
     -- padding: point - Space to add implicitly during control measurement
     ugui.init_prop(node.uid, 'h_align', ugui.alignments.fill)
     ugui.init_prop(node.uid, 'v_align', ugui.alignments.fill)
+    ugui.init_prop(node.uid, 'min_width', 0)
+    ugui.init_prop(node.uid, 'min_height', 0)
+    ugui.init_prop(node.uid, 'max_width', math.huge)
+    ugui.init_prop(node.uid, 'max_height', math.huge)
     ugui.init_prop(node.uid, 'padding', {x = 0, y = 0})
 
     for key, _ in pairs(node.props) do
@@ -454,8 +462,8 @@ ugui.send_message = function(node, msg)
             result.y = 0
         else
             -- Normal controls get padding added to measurement
-            result.x = result.x + node.props.padding.x
-            result.y = result.y + node.props.padding.y
+            result.x = ugui.util.clamp(result.x + node.props.padding.x, node.props.min_width, node.props.max_width)
+            result.y = ugui.util.clamp(result.y + node.props.padding.y, node.props.min_height, node.props.max_height)
         end
     end
 

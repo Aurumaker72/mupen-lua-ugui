@@ -238,6 +238,18 @@ function util.get_child_uids(ugui, uid)
     end)
 end
 
+---Clamps a numeric value to the specified bounds
+---@param value number The value
+---@param min number The lower bound
+---@param max number The upper bound
+---@return number The clamped value
+function util.clamp(value, min, max)
+    if value == nil then
+        return value
+    end
+    return math.max(math.min(value, max), min)
+end
+
 if false then
     util.log = print
 end
