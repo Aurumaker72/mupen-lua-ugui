@@ -139,6 +139,12 @@ local tree = {
                         click = function(ugui, inst)
                             ugui.add_from_tree(50, {
                                 type = 'button',
+                                props = {
+                                    h_align = ugui.alignments.center,
+                                    v_align = ugui.alignments.center,
+                                    min_width = math.random(80, 300),
+                                    min_height = math.random(10, 80),
+                                },
                                 children = {
                                     {
                                         type = 'label',
