@@ -47,6 +47,10 @@ Cool projects using `mupen-lua-ugui`
 
 # ✨ Features
 
+<img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/cfc1beec-ba7e-4000-a845-a479ed80e780">
+
+mupen-lua-ugui
+
 - Stylers
   - Windows 10 (built-in)
   - Nineslice (built-in)
@@ -68,6 +72,11 @@ Cool projects using `mupen-lua-ugui`
   - Scrolling support
   - Unlimited items with no performance degradation
 - Scrollbar
+
+<img width="28" align="left" src="https://private-user-images.githubusercontent.com/48759429/253744715-c57389da-9536-4bf4-abaa-8125a30f2a7c.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MjczNDQyMjMsIm5iZiI6MTcyNzM0MzkyMywicGF0aCI6Ii80ODc1OTQyOS8yNTM3NDQ3MTUtYzU3Mzg5ZGEtOTUzNi00YmY0LWFiYWEtODEyNWEzMGYyYTdjLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA5MjYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwOTI2VDA5NDUyM1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWY2ZmFiZDI0NWJiZmM4Y2M2MjQ4YWIyY2I0YTFkMTMyZDAyMWQ3MzI3YTU4ZDBiYTI1YTEzMDlkYjYzMzExNTAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.uttN6Y1S1YrmUZXMdpYAUX4RFp4f8wLV3viCZMVeUgQ">
+
+mupen-lua-ugui-ext
+
 - Spinner
 - TabControl
 - NumberBox
