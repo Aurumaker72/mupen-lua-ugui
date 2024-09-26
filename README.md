@@ -53,13 +53,10 @@ mupen-lua-ugui
 
 - Stylers
   - Windows 10 (built-in)
-  - Nineslice (built-in)
 - Flexibility
   - Modify any parts of the framework to your liking
 - User Productivity
   - Interactions emulate commctl behaviour to ensure consistency
-- Performance
-  - Graphics caching extension
 - Button
 - TextBox
   - Full-fledged selection and editing system
@@ -81,6 +78,10 @@ mupen-lua-ugui-ext
 - TabControl
 - NumberBox
 - TreeView
+- Performance
+  - Graphics caching extension
+- Stylers
+  - Nineslice (built-in)
 
 # 🎨 Graphics
 
