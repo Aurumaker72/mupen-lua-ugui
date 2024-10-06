@@ -719,12 +719,9 @@ ugui = {
 
             ugui.standard_styler.draw_raised_frame(control, visual_state)
             ugui.standard_styler.draw_joystick_inner(control.rectangle, visual_state, {
-                x = ugui.internal.remap(control.position.x, 0, 1, control.rectangle.x,
-                    control.rectangle.x + control.rectangle.width),
-                y = ugui.internal.remap(control.position.y, 0, 1, control.rectangle.y,
-                    control.rectangle.y + control.rectangle.height),
-                r = ugui.internal.remap(ugui.internal.clamp(control.mag, 0, 1), 0, 1, 0,
-                    math.min(control.rectangle.width, control.rectangle.height)),
+                x = ugui.internal.remap(ugui.internal.clamp(control.position.x, -128, 128), -128, 128, control.rectangle.x, control.rectangle.x + control.rectangle.width),
+                y = ugui.internal.remap(ugui.internal.clamp(control.position.y, -128, 128), -128, 128, control.rectangle.y, control.rectangle.y + control.rectangle.height),
+                r = ugui.internal.remap(ugui.internal.clamp(control.mag or 0, 0, 128), 0, 128, 0, math.min(control.rectangle.width, control.rectangle.height)),
             })
         end,
         draw_track = function(control, visual_state, is_horizontal)
@@ -1060,10 +1057,10 @@ ugui = {
     ---
     ---Additional fields in the `control` table:
     ---
-    --- `position` — `table` The joystick's position as `{x, y}` with the range `0-1`
-    --- `mag` - `number` The joystick's magnitude with the range `0-1`
+    --- `position` — `table` The joystick's position as `{x, y}` with the range `0-128`
+    --- `mag` - `number?` The joystick's magnitude with the range `0-128`
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ `table` The joystick's new position as `{x, y}` with the range `0-1`
+    ---@return _ `table` The joystick's new position as `{x, y}` with the range `0-128`
     joystick = function(control)
         ugui.standard_styler.draw_joystick(control)
 
@@ -1075,8 +1072,8 @@ ugui = {
             not control.topmost
 
         if ugui.internal.active_control == control.uid and not ignored then
-            position.x = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0, control.rectangle.width, 0, 1), 0, 1)
-            position.y = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0, control.rectangle.height, 0, 1), 0, 1)
+            position.x = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0, control.rectangle.width, 0, 1), -128, 128)
+            position.y = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0, control.rectangle.height, 0, 1), -128, 128)
         end
         
         return position
