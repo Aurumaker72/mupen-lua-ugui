@@ -12,9 +12,14 @@ local groups = {
     dofile(folder('runner.lua') .. 'toggle_button.lua'),
     dofile(folder('runner.lua') .. 'carrousel_button.lua'),
     dofile(folder('runner.lua') .. 'textbox.lua'),
+    dofile(folder('runner.lua') .. 'joystick.lua'),
+    dofile(folder('runner.lua') .. 'combobox.lua'),
+    dofile(folder('runner.lua') .. 'listbox.lua'),
+    dofile(folder('runner.lua') .. 'trackbar.lua'),
+    dofile(folder('runner.lua') .. 'scrollbar.lua'),
 }
 
-local verbose = true
+local verbose = false
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
