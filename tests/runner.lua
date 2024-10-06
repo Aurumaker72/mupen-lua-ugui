@@ -7,9 +7,13 @@ function folder(file)
     return s:gsub(p, '')
 end
 
-local groups = {}
+local groups = {
+    dofile(folder('runner.lua') .. 'button.lua'),
+    dofile(folder('runner.lua') .. 'toggle_button.lua'),
+    dofile(folder('runner.lua') .. 'carrousel_button.lua'),
+}
 
-groups[#groups + 1] = dofile(folder('runner.lua') .. 'button.lua')
+local verbose = true
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
@@ -23,7 +27,7 @@ for key, group in pairs(groups) do
 
     for _, test in pairs(group.tests) do
         -- Optionally reset the state between individual tests too
-        if group.reset_between_tests then
+        if group.keep_state_between_tests then
             dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
         end
 
@@ -32,6 +36,11 @@ for key, group in pairs(groups) do
         local test_context = {
             fail = function()
                 passed = false
+            end,
+            log = function(str)
+                if verbose then
+                    print('\t[@] ' .. str)
+                end
             end,
         }
 
@@ -42,6 +51,7 @@ for key, group in pairs(groups) do
         else
             print(string.format('\t%s failed [!!!]', test.name))
         end
-        
     end
+    
+    print('')
 end

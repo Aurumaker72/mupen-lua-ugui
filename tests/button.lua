@@ -1,6 +1,5 @@
 local group = {
     name = 'button',
-    reset_between_tests = true,
     tests = {},
 }
 
