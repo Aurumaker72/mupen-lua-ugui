@@ -37,7 +37,7 @@ group.tests[#group.tests + 1] = {
                 ctx.fail()
             end
             
-            -- ctx.log((checked and "true" or "false") .. " " .. ((i % 2 == 0) and "true" or "false") .. " i = " .. i)
+            ctx.log((checked and "true" or "false") .. " " .. ((i % 2 == 0) and "true" or "false") .. " i = " .. i)
 
             ugui.end_frame()
         end

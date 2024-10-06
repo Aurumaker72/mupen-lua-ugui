@@ -11,9 +11,10 @@ local groups = {
     dofile(folder('runner.lua') .. 'button.lua'),
     dofile(folder('runner.lua') .. 'toggle_button.lua'),
     dofile(folder('runner.lua') .. 'carrousel_button.lua'),
+    dofile(folder('runner.lua') .. 'textbox.lua'),
 }
 
-local verbose = true
+local verbose = false
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
@@ -26,32 +27,41 @@ for key, group in pairs(groups) do
     end
 
     for _, test in pairs(group.tests) do
-        -- Optionally reset the state between individual tests too
-        if group.keep_state_between_tests then
-            dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
-        end
 
-        local passed = true
+        local test_params = test.params and test.params or {0}
 
-        local test_context = {
-            fail = function()
-                passed = false
-            end,
-            log = function(str)
-                if verbose then
-                    print('\t[@] ' .. str)
-                end
-            end,
-        }
+        for test_param_index, test_param in pairs(test_params) do
 
-        test.func(test_context)
+            -- Optionally reset the state between individual tests too
+            if group.keep_state_between_tests then
+                dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
+            end
 
-        if passed then
-            print(string.format('\t%s passed', test.name))
-        else
-            print(string.format('\t%s failed [!!!]', test.name))
+            local passed = true
+
+            local test_context = {
+                data = test_param,
+                fail = function()
+                    passed = false
+                end,
+                log = function(str)
+                    if verbose then
+                        print('\t[@] ' .. str)
+                    end
+                end,
+            }
+
+            test.func(test_context)
+
+            local name = #test_params == 1 and test.name or string.format("%s (%d)", test.name, test_param_index)
+
+            if passed then
+                print(string.format('\t%s passed', name))
+            else
+                print(string.format('\t%s failed [!!!]', name))
+            end
         end
     end
-    
+
     print('')
 end
