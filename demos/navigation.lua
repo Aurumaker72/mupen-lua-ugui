@@ -16,7 +16,7 @@ local mouse_wheel = 0
 local is_joystick_enabled = true
 
 pages[1] = function()
-    Mupen_lua_ugui.button({
+    ugui.button({
         uid = 0,
 
         rectangle = {
@@ -30,7 +30,7 @@ pages[1] = function()
 end
 
 pages[2] = function()
-    Mupen_lua_ugui.joystick({
+    ugui.joystick({
         uid = 1,
         is_enabled = is_joystick_enabled,
         rectangle = {
@@ -46,7 +46,7 @@ pages[2] = function()
         mag = 0,
     })
 
-    is_joystick_enabled = Mupen_lua_ugui.toggle_button({
+    is_joystick_enabled = ugui.toggle_button({
         uid = 2,
 
         rectangle = {
@@ -73,7 +73,7 @@ emu.atdrawd2d(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame({
+    ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -90,7 +90,7 @@ emu.atdrawd2d(function()
         items[i] = 'Page Nr. ' .. i
     end
 
-    selected_page_index = Mupen_lua_ugui.combobox({
+    selected_page_index = ugui.combobox({
         uid = 6000,
 
         rectangle = {
@@ -103,7 +103,7 @@ emu.atdrawd2d(function()
         selected_index = selected_page_index,
     })
 
-    selected_page_index = Mupen_lua_ugui.carrousel_button({
+    selected_page_index = ugui.carrousel_button({
         uid = 60001,
 
         rectangle = {
@@ -118,7 +118,7 @@ emu.atdrawd2d(function()
 
     pages[selected_page_index]()
 
-    Mupen_lua_ugui.end_frame()
+    ugui.end_frame()
 end)
 
 emu.atstop(function()

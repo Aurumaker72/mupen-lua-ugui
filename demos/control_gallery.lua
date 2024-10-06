@@ -24,7 +24,7 @@ emu.atdrawd2d(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame({
+    ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -35,7 +35,7 @@ emu.atdrawd2d(function()
     })
     mouse_wheel = 0
 
-    Mupen_lua_ugui.button({
+    ugui.button({
         uid = 0,
         rectangle = {
             x = initial_size.width,
@@ -46,7 +46,7 @@ emu.atdrawd2d(function()
         text = 'Test',
     })
 
-    if (Mupen_lua_ugui.button({
+    if (ugui.button({
             uid = 1,
             is_enabled = false,
             rectangle = {
@@ -60,7 +60,7 @@ emu.atdrawd2d(function()
         print('a')
     end
 
-    Mupen_lua_ugui.textbox({
+    ugui.textbox({
         uid = 2,
         rectangle = {
             x = initial_size.width,
@@ -71,7 +71,7 @@ emu.atdrawd2d(function()
         text = 'Test',
     })
 
-    Mupen_lua_ugui.textbox({
+    ugui.textbox({
         uid = 3,
         is_enabled = false,
         rectangle = {
@@ -83,7 +83,7 @@ emu.atdrawd2d(function()
         text = 'Test',
     })
 
-    Mupen_lua_ugui.combobox({
+    ugui.combobox({
         uid = 4,
         rectangle = {
             x = initial_size.width,
@@ -97,7 +97,7 @@ emu.atdrawd2d(function()
         selected_index = 1,
     })
 
-    Mupen_lua_ugui.combobox({
+    ugui.combobox({
         uid = 5,
         is_enabled = false,
         rectangle = {
@@ -112,7 +112,7 @@ emu.atdrawd2d(function()
         selected_index = 1,
     })
 
-    value = Mupen_lua_ugui.trackbar({
+    value = ugui.trackbar({
         uid = 6,
         rectangle = {
             x = initial_size.width,
@@ -123,7 +123,7 @@ emu.atdrawd2d(function()
         value = value,
     })
 
-    Mupen_lua_ugui.trackbar({
+    ugui.trackbar({
         uid = 7,
         is_enabled = false,
         rectangle = {
@@ -136,7 +136,7 @@ emu.atdrawd2d(function()
     })
 
 
-    Mupen_lua_ugui.listbox({
+    ugui.listbox({
         uid = 8,
         rectangle = {
             x = initial_size.width,
@@ -151,7 +151,7 @@ emu.atdrawd2d(function()
         },
     })
 
-    Mupen_lua_ugui.listbox({
+    ugui.listbox({
         uid = 9,
         is_enabled = false,
         rectangle = {
@@ -167,7 +167,7 @@ emu.atdrawd2d(function()
         },
     })
 
-    Mupen_lua_ugui.joystick({
+    ugui.joystick({
         uid = 10,
         rectangle = {
             x = initial_size.width,
@@ -182,7 +182,7 @@ emu.atdrawd2d(function()
         mag = 0,
     })
 
-    Mupen_lua_ugui.joystick({
+    ugui.joystick({
         uid = 11,
         is_enabled = false,
         rectangle = {
@@ -199,7 +199,7 @@ emu.atdrawd2d(function()
     })
 
 
-    Mupen_lua_ugui.end_frame()
+    ugui.end_frame()
 end)
 
 emu.atstop(function()

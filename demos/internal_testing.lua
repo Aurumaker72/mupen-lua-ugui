@@ -30,7 +30,7 @@ emu.atdrawd2d(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame({
+    ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -41,7 +41,7 @@ emu.atdrawd2d(function()
     })
     mouse_wheel = 0
 
-    selected_index = Mupen_lua_ugui.combobox({
+    selected_index = ugui.combobox({
         uid = 0,
         rectangle = {
             x = initial_size.width + 5,
@@ -53,7 +53,7 @@ emu.atdrawd2d(function()
         selected_index = selected_index,
     })
 
-    if Mupen_lua_ugui.button({
+    if ugui.button({
             uid = 123,
             rectangle = {
                 x = initial_size.width + 100,
@@ -66,7 +66,7 @@ emu.atdrawd2d(function()
         print(math.random())
     end
 
-    selected_index_2 = Mupen_lua_ugui.listbox({
+    selected_index_2 = ugui.listbox({
         uid = 555,
         is_enabled = true,
         rectangle = {
@@ -80,7 +80,7 @@ emu.atdrawd2d(function()
         horizontal_scroll = false
     })
 
-    text = Mupen_lua_ugui.textbox({
+    text = ugui.textbox({
         uid = 5255,
         rectangle = {
             x = initial_size.width + 5,
@@ -91,7 +91,7 @@ emu.atdrawd2d(function()
         text = text,
     })
 
-    Mupen_lua_ugui.end_frame()
+    ugui.end_frame()
 end)
 
 emu.atstop(function()

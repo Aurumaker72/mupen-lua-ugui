@@ -43,7 +43,7 @@ emu.atdrawd2d(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame({
+    ugui.begin_frame({
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -54,7 +54,7 @@ emu.atdrawd2d(function()
     })
     mouse_wheel = 0
 
-    text = Mupen_lua_ugui.textbox({
+    text = ugui.textbox({
         uid = 1,
         rectangle = {
             x = initial_size.width + 10,
@@ -65,7 +65,7 @@ emu.atdrawd2d(function()
         text = text,
     })
 
-    if (Mupen_lua_ugui.button({
+    if (ugui.button({
             uid = 2,
             is_enabled = text:len() > 0,
             rectangle = {
@@ -90,7 +90,7 @@ emu.atdrawd2d(function()
         list_items[i] = priorities[items[i].priority] .. ' - ' .. items[i].text
     end
 
-    selected_list_index = Mupen_lua_ugui.listbox({
+    selected_list_index = ugui.listbox({
         uid = 3,
         rectangle = {
             x = initial_size.width + 10,
@@ -102,7 +102,7 @@ emu.atdrawd2d(function()
         items = list_items,
     })
 
-    if (Mupen_lua_ugui.button({
+    if (ugui.button({
             uid = 3,
             is_enabled = is_selection_valid(),
             rectangle = {
@@ -116,7 +116,7 @@ emu.atdrawd2d(function()
         table.remove(items, selected_list_index)
     end
 
-    is_editing = Mupen_lua_ugui.toggle_button({
+    is_editing = ugui.toggle_button({
         uid = 4,
         is_enabled = is_selection_valid(),
         rectangle = {
@@ -130,7 +130,7 @@ emu.atdrawd2d(function()
     })
 
 
-    local priority_selection_index = Mupen_lua_ugui.combobox({
+    local priority_selection_index = ugui.combobox({
         uid = 5,
         is_enabled = is_selection_valid() and is_editing,
         rectangle = {
@@ -149,7 +149,7 @@ emu.atdrawd2d(function()
 
 
 
-    local text = Mupen_lua_ugui.textbox({
+    local text = ugui.textbox({
         uid = 8,
         is_enabled = is_selection_valid() and is_editing,
         rectangle = {
@@ -168,7 +168,7 @@ emu.atdrawd2d(function()
 
 
 
-    Mupen_lua_ugui.end_frame()
+    ugui.end_frame()
 end)
 
 emu.atstop(function()

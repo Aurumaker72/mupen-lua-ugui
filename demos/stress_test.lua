@@ -23,7 +23,7 @@ emu.atdrawd2d(function()
     })
 
     local keys = input.get()
-    Mupen_lua_ugui.begin_frame( {
+    ugui.begin_frame( {
         mouse_position = {
             x = keys.xmouse,
             y = keys.ymouse,
@@ -36,7 +36,7 @@ emu.atdrawd2d(function()
 
     for x = 1, 10, 1 do
         for y = 1, 30, 1 do
-            Mupen_lua_ugui.button({
+            ugui.button({
                 uid = x * y,
                 
                 rectangle = {
@@ -52,7 +52,7 @@ emu.atdrawd2d(function()
 
 
 
-    Mupen_lua_ugui.end_frame()
+    ugui.end_frame()
 end)
 
 emu.atstop(function()
