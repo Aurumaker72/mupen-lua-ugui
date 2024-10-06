@@ -1063,10 +1063,23 @@ ugui = {
     --- `position` — `table` The joystick's position as `{x, y}` with the range `0-1`
     --- `mag` - `number` The joystick's magnitude with the range `0-1`
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
+    ---@return _ `table` The joystick's new position as `{x, y}` with the range `0-1`
     joystick = function(control)
         ugui.standard_styler.draw_joystick(control)
 
-        return control.position
+        local position = ugui.internal.deep_clone(control.position)
+
+        local pushed = ugui.internal.process_push(control)
+        local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
+                ugui.internal.input_state.mouse_position, ugui.internal.hittest_free_rects) and
+            not control.topmost
+
+        if ugui.internal.active_control == control.uid and not ignored then
+            position.x = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0, control.rectangle.width, 0, 1), 0, 1)
+            position.y = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0, control.rectangle.height, 0, 1), 0, 1)
+        end
+        
+        return position
     end,
 
     ---Places a Trackbar/Slider
