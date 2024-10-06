@@ -14,7 +14,7 @@ local groups = {
     dofile(folder('runner.lua') .. 'textbox.lua'),
 }
 
-local verbose = false
+local verbose = true
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
@@ -27,38 +27,46 @@ for key, group in pairs(groups) do
     end
 
     for _, test in pairs(group.tests) do
-
         local test_params = test.params and test.params or {0}
 
         for test_param_index, test_param in pairs(test_params) do
-
             -- Optionally reset the state between individual tests too
             if group.keep_state_between_tests then
                 dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
             end
 
             local passed = true
+            local fail_msgs = {}
 
             local test_context = {
                 data = test_param,
-                fail = function()
+                fail = function(str)
                     passed = false
+                    fail_msgs[# fail_msgs + 1] = str
                 end,
                 log = function(str)
                     if verbose then
-                        print('\t[@] ' .. str)
+                        print('    [@] ' .. str)
                     end
                 end,
             }
 
             test.func(test_context)
 
-            local name = #test_params == 1 and test.name or string.format("%s (%d)", test.name, test_param_index)
+            local name = not test.params and test.name or string.format('%s (%d)', test.name, test_param_index)
 
             if passed then
-                print(string.format('\t%s passed', name))
+                print(string.format('    %s passed', name))
             else
-                print(string.format('\t%s failed [!!!]', name))
+                if #fail_msgs > 0 then
+                    print(string.format('    %s failed:', name))
+
+                    for _, msg in pairs(fail_msgs) do
+                        print(string.format('      [!] %s', msg))
+                    end
+                else
+                    print(string.format('    %s failed!', name))
+                end
             end
         end
     end
