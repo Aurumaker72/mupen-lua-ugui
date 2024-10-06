@@ -223,5 +223,84 @@ group.tests[#group.tests + 1] = {
     end,
 }
 
+-- NOTE: This is pretty flaky since it depends on D2D text measuring behaviour but whatever
+group.tests[#group.tests + 1] = {
+    name = 'arrow_keys_modify_selection_indicies',
+    params = {
+        {
+            key = 'left',
+            initial_start_index = 2,
+            initial_end_index = 3,
+            expected_start_index = 2,
+            expected_end_index = 2,
+        },
+        {
+            key = 'left',
+            initial_start_index = 2,
+            initial_end_index = 2,
+            expected_start_index = 1,
+            expected_end_index = 1,
+        },
+        {
+            key = 'right',
+            initial_start_index = 2,
+            initial_end_index = 3,
+            expected_start_index = 3,
+            expected_end_index = 3,
+        },
+        {
+            key = 'right',
+            initial_start_index = 2,
+            initial_end_index = 2,
+            expected_start_index = 3,
+            expected_end_index = 3,
+        },
+    },
+    func = function(ctx)
+        local rect = {
+            x = 0,
+            y = 0,
+            width = 100,
+            height = 25,
+        }
+
+        ugui.begin_frame({
+            mouse_position = {x = 10, y = 10},
+            wheel = 0,
+            is_primary_down = false,
+            held_keys = {},
+        })
+        ugui.internal.active_control = 5
+        ugui.textbox({
+            uid = 5,
+            rectangle = rect,
+            text = 'Test',
+        })
+        ugui.end_frame()
+
+        ugui.internal.control_data[5].selection_start = ctx.data.initial_start_index
+        ugui.internal.control_data[5].selection_end = ctx.data.initial_end_index
+
+        ugui.begin_frame({
+            mouse_position = {x = 10, y = 10},
+            wheel = 0,
+            is_primary_down = false,
+            held_keys = {[ctx.data.key] = true},
+        })
+        ugui.textbox({
+            uid = 5,
+            rectangle = rect,
+            text = 'Test',
+        })
+        ugui.end_frame()
+
+        if ugui.internal.control_data[5].selection_start ~= ctx.data.expected_start_index then
+            ctx.fail(string.format('Expected start index %d, got %d', ctx.data.expected_start_index, ugui.internal.control_data[5].selection_start))
+        end
+        if ugui.internal.control_data[5].selection_end ~= ctx.data.expected_end_index then
+            ctx.fail(string.format('Expected end index %d, got %d', ctx.data.expected_end_index, ugui.internal.control_data[5].selection_end))
+        end
+    end,
+}
 
 return group
