@@ -1076,7 +1076,7 @@ ugui = {
             position.x = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0, control.rectangle.width, -128, 128), -128, 128)
             position.y = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0, control.rectangle.height, -128, 128), -128, 128)
         end
-        
+
         return position
     end,
 
@@ -1241,12 +1241,13 @@ ugui = {
                 or ugui.internal.active_control == control.uid) then
             local inc = 0
             if ugui.internal.is_mouse_wheel_up() then
-                inc = -1 / #control.items
+                inc = (ugui.standard_styler.item_height * -0.5) / #control.items
             end
             if ugui.internal.is_mouse_wheel_down() then
-                inc = 1 / #control.items
+                inc = (ugui.standard_styler.item_height * 0.5) / #control.items
             end
-            ugui.internal.control_data[control.uid].scroll_y = ugui.internal.clamp(ugui.internal.control_data[control.uid].scroll_y + inc, 0, 1)        
+
+            ugui.internal.control_data[control.uid].scroll_y = ugui.internal.clamp(ugui.internal.control_data[control.uid].scroll_y + inc, 0, 1)
         end
 
 
