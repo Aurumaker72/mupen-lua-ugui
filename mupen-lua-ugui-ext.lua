@@ -119,6 +119,8 @@ end
 ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
 ---@return _ number The new value
 ugui.spinner = function(control)
+    ugui.internal.register_uid(control.uid)
+
     if not ugui.standard_styler.spinner_button_thickness then
         ugui.standard_styler.spinner_button_thickness = 15
     end
@@ -220,6 +222,8 @@ end
 ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
 ---@return _ table A table structured as follows: { selected_index, rectangle }
 ugui.tabcontrol = function(control)
+    ugui.internal.register_uid(control.uid)
+
     if not ugui.standard_styler.tab_control_rail_thickness then
         ugui.standard_styler.tab_control_rail_thickness = 17
     end
@@ -300,6 +304,8 @@ end
 ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
 ---@return _ number The new value
 ugui.numberbox = function(control)
+    ugui.internal.register_uid(control.uid)
+
     if not ugui.internal.control_data[control.uid] then
         ugui.internal.control_data[control.uid] = {
             caret_index = 1,
@@ -631,6 +637,8 @@ end
 ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
 ---@return _ number The new value
 ugui.treeview = function(control)
+    ugui.internal.register_uid(control.uid)
+    
     -- TODO: scrolling
     if not ugui.internal.control_data[control.uid] then
         ugui.internal.control_data[control.uid] = {

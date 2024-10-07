@@ -8,18 +8,19 @@ function folder(file)
 end
 
 local groups = {
+    dofile(folder('runner.lua') .. 'core.lua'),
     dofile(folder('runner.lua') .. 'button.lua'),
     dofile(folder('runner.lua') .. 'toggle_button.lua'),
     dofile(folder('runner.lua') .. 'carrousel_button.lua'),
     dofile(folder('runner.lua') .. 'textbox.lua'),
     dofile(folder('runner.lua') .. 'joystick.lua'),
     dofile(folder('runner.lua') .. 'combobox.lua'),
-    -- dofile(folder('runner.lua') .. 'listbox.lua'),
+    dofile(folder('runner.lua') .. 'listbox.lua'),
     -- dofile(folder('runner.lua') .. 'trackbar.lua'),
     -- dofile(folder('runner.lua') .. 'scrollbar.lua'),
 }
 
-local verbose = false
+local verbose = true
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
@@ -51,9 +52,15 @@ for key, group in pairs(groups) do
                         fail_msgs[# fail_msgs + 1] = str
                     end
                 end,
+                assert_eq = function(expected, actual)
+                    if expected ~= actual then
+                        passed = false
+                        fail_msgs[# fail_msgs + 1] = string.format('Expected %s, got %s', tostring(expected), tostring(actual))
+                    end
+                end,
                 log = function(str)
                     if verbose then
-                        print('    [@] ' .. str)
+                        print('    [@] ' .. tostring(str))
                     end
                 end,
             }
