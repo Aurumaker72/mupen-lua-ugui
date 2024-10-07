@@ -225,35 +225,31 @@ group.tests[#group.tests + 1] = {
 
 -- NOTE: This is pretty flaky since it depends on D2D text measuring behaviour but whatever
 group.tests[#group.tests + 1] = {
-    name = 'arrow_keys_modify_selection_indicies',
+    name = 'arrow_keys_modify_caret_index',
     params = {
         {
             key = 'left',
             initial_start_index = 2,
             initial_end_index = 3,
-            expected_start_index = 2,
-            expected_end_index = 2,
+            expected_caret_index = 2,
         },
         {
             key = 'left',
             initial_start_index = 2,
             initial_end_index = 2,
-            expected_start_index = 1,
-            expected_end_index = 1,
+            expected_caret_index = 1,
         },
         {
             key = 'right',
             initial_start_index = 2,
             initial_end_index = 3,
-            expected_start_index = 3,
-            expected_end_index = 3,
+            expected_caret_index = 3,
         },
         {
             key = 'right',
             initial_start_index = 2,
             initial_end_index = 2,
-            expected_start_index = 3,
-            expected_end_index = 3,
+            expected_caret_index = 3,
         },
     },
     func = function(ctx)
@@ -278,6 +274,7 @@ group.tests[#group.tests + 1] = {
         })
         ugui.end_frame()
 
+        ugui.internal.control_data[5].caret_index = ctx.data.initial_start_index
         ugui.internal.control_data[5].selection_start = ctx.data.initial_start_index
         ugui.internal.control_data[5].selection_end = ctx.data.initial_end_index
 
@@ -294,13 +291,118 @@ group.tests[#group.tests + 1] = {
         })
         ugui.end_frame()
 
-        if ugui.internal.control_data[5].selection_start ~= ctx.data.expected_start_index then
-            ctx.fail(string.format('Expected start index %d, got %d', ctx.data.expected_start_index, ugui.internal.control_data[5].selection_start))
-        end
-        if ugui.internal.control_data[5].selection_end ~= ctx.data.expected_end_index then
-            ctx.fail(string.format('Expected end index %d, got %d', ctx.data.expected_end_index, ugui.internal.control_data[5].selection_end))
+        if ugui.internal.control_data[5].caret_index ~= ctx.data.expected_caret_index then
+            ctx.fail(string.format('Expected caret index %d, got %d', ctx.data.expected_caret_index, ugui.internal.control_data[5].caret_index))
         end
     end,
 }
+
+group.tests[#group.tests + 1] = {
+    name = 'keys_modify_text_correctly',
+    params = {
+        {
+            key = 'A',
+            text = 'Hello World!',
+            expected_text = 'HAello World!',
+            caret_index = 2,
+            start_index = 2,
+            end_index = 2,
+        },
+        {
+            key = 'backspace',
+            text = 'Hello World!',
+            expected_text = 'ello World!',
+            caret_index = 2,
+            start_index = 2,
+            end_index = 2,
+        },
+        {
+            key = 'backspace',
+            text = 'Hello World!',
+            expected_text = 'llo World!',
+            caret_index = 3,
+            start_index = 1,
+            end_index = 3,
+        },
+        {
+            key = 'A',
+            text = 'Hello World!',
+            expected_text = 'Allo World!',
+            caret_index = 3,
+            start_index = 1,
+            end_index = 3,
+        },
+        {
+            key = 'A',
+            text = 'Hello World!',
+            expected_text = 'A',
+            caret_index = 13,
+            start_index = 1,
+            end_index = 13,
+        },
+        {
+            key = 'backspace',
+            text = 'Hello World!',
+            expected_text = '',
+            caret_index = 13,
+            start_index = 1,
+            end_index = 13,
+        },
+        {
+            key = 'O',
+            text = 'Hello World!',
+            expected_text = 'Hello World!O',
+            caret_index = 13,
+            start_index = 13,
+            end_index = 13,
+        },
+    },
+    func = function(ctx)
+        local rect = {
+            x = 0,
+            y = 0,
+            width = 100,
+            height = 25,
+        }
+
+        local text = ctx.data.text
+
+        ugui.begin_frame({
+            mouse_position = {x = 10, y = 10},
+            wheel = 0,
+            is_primary_down = false,
+            held_keys = {},
+        })
+        ugui.internal.active_control = 5
+        text = ugui.textbox({
+            uid = 5,
+            rectangle = rect,
+            text = text,
+        })
+        ugui.end_frame()
+
+        ugui.internal.control_data[5].caret_index = ctx.data.caret_index
+        ugui.internal.control_data[5].selection_start = ctx.data.start_index
+        ugui.internal.control_data[5].selection_end = ctx.data.end_index
+
+        ugui.begin_frame({
+            mouse_position = {x = 10, y = 10},
+            wheel = 0,
+            is_primary_down = false,
+            held_keys = {[ctx.data.key] = true},
+        })
+        text = ugui.textbox({
+            uid = 5,
+            rectangle = rect,
+            text = text,
+        })
+        ugui.end_frame()
+
+        if text ~= ctx.data.expected_text then
+            ctx.fail(string.format('Expected text \"%s\", got \"%s\"', ctx.data.expected_text, text))
+        end
+    end,
+}
+
 
 return group
