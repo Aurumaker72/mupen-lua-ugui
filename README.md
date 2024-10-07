@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="128" align="center" src="https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/cfc1beec-ba7e-4000-a845-a479ed80e780">
+  <img width="128" align="center" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui.png?raw=true">
 </p>
 
 
@@ -47,7 +47,7 @@ Cool projects using `mupen-lua-ugui`
 
 # ✨ Features
 
-<img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/assets/48759429/cfc1beec-ba7e-4000-a845-a479ed80e780">
+<img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui.png?raw=true">
 
 mupen-lua-ugui
 
@@ -70,7 +70,7 @@ mupen-lua-ugui
   - Unlimited items with no performance degradation
 - Scrollbar
 
-<img width="28" align="left" src="https://private-user-images.githubusercontent.com/48759429/253744715-c57389da-9536-4bf4-abaa-8125a30f2a7c.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MjczNDQyMjMsIm5iZiI6MTcyNzM0MzkyMywicGF0aCI6Ii80ODc1OTQyOS8yNTM3NDQ3MTUtYzU3Mzg5ZGEtOTUzNi00YmY0LWFiYWEtODEyNWEzMGYyYTdjLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA5MjYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwOTI2VDA5NDUyM1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWY2ZmFiZDI0NWJiZmM4Y2M2MjQ4YWIyY2I0YTFkMTMyZDAyMWQ3MzI3YTU4ZDBiYTI1YTEzMDlkYjYzMzExNTAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.uttN6Y1S1YrmUZXMdpYAUX4RFp4f8wLV3viCZMVeUgQ">
+<img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui-ext.png?raw=true">
 
 mupen-lua-ugui-ext
 
@@ -86,7 +86,7 @@ mupen-lua-ugui-ext
 # 🎨 Graphics
 
 <p align="center">
-    <img width="128" align="center" src="https://user-images.githubusercontent.com/48759429/211370337-f5ce87e7-75de-4339-8ebd-401585a5f9f3.png">
+    <img width="128" align="center" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/breitbandgraphics.png?raw=true">
 </p>
 <h1 align="center">
   BreitbandGraphics
