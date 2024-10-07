@@ -54,14 +54,16 @@ mupen-lua-ugui  —  The base library
 - Stylers
   - Windows 10 (built-in)
 - Flexibility
-  - Modify any parts of the framework to your liking
+  - Modify any part of the framework to your liking
 - User Productivity
-  - Interactions emulate commctl behaviour to ensure consistency
+  - Controls behave like Windows controls, ensuring consistency
 - Button
 - TextBox
   - Full-fledged selection and editing system
 - ToggleButton
+- CarrouselButton
 - Joystick
+  - Adjustable magnitude circle 
 - TrackBar
   - Automatic layout adjustement based on size ratio 
 - ComboBox
