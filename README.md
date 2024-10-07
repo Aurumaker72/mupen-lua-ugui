@@ -49,7 +49,7 @@ Cool projects using `mupen-lua-ugui`
 
 <img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui.png?raw=true">
 
-mupen-lua-ugui
+mupen-lua-ugui  —  The base library
 
 - Stylers
   - Windows 10 (built-in)
@@ -72,7 +72,7 @@ mupen-lua-ugui
 
 <img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui-ext.png?raw=true">
 
-mupen-lua-ugui-ext
+mupen-lua-ugui-ext  —  Extensions and advanced features
 
 - Spinner
 - TabControl
@@ -83,19 +83,17 @@ mupen-lua-ugui-ext
 - Stylers
   - Nineslice (built-in)
 
-# 🎨 Graphics
+<img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/breitbandgraphics.png?raw=true">
 
-<p align="center">
-    <img width="128" align="center" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/breitbandgraphics.png?raw=true">
-</p>
-<h1 align="center">
-  BreitbandGraphics
-</h1>
-<p align="center">
-  Powerful abstraction layer over Mupen Lua drawing APIs
-</p>
+BreitbandGraphics  —  ugui's rendering core
 
-`mupen-lua-ugui` uses `BreitbandGraphics` for rendering.
+- Powerful abstraction layer over Mupen Lua drawing APIs
+- Maximized usability
+  - Stable API surface
+- Helpful utilities
+  - Hexadecimal color conversion
+  - Standard color tables
+- Low overhead
 
 ## 🧩 Porting
 
