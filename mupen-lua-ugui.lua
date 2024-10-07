@@ -1236,10 +1236,30 @@ ugui = {
         end
 
         if not ignored
+            and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
+                or ugui.internal.active_control == control.uid) then
+            for key, _ in pairs(ugui.internal.get_just_pressed_keys()) do
+                if key == 'up' then
+                    control.selected_index = ugui.internal.clamp(control.selected_index - 1, 1, #control.items)
+                end
+                if key == 'down' then
+                    control.selected_index = ugui.internal.clamp(control.selected_index + 1, 1, #control.items)
+                end
+                if not y_overflow then
+                    if key == 'pageup' or key == 'home' then
+                        control.selected_index = 1
+                    end
+                    if key == 'pagedown' or key == 'end' then
+                        control.selected_index = #control.items
+                    end
+                end
+            end
+        end
+
+        if not ignored
             and y_overflow
             and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
                 or ugui.internal.active_control == control.uid) then
-                    
             local inc = 0
             if ugui.internal.is_mouse_wheel_up() then
                 inc = -1 / #control.items
@@ -1260,12 +1280,6 @@ ugui = {
                 end
                 if key == 'end' then
                     inc = 1
-                end
-                if key == "up" then
-                    control.selected_index = ugui.internal.clamp(control.selected_index - 1, 1, #control.items)
-                end
-                if key == "down" then
-                    control.selected_index = ugui.internal.clamp(control.selected_index + 1, 1, #control.items)
                 end
             end
 
