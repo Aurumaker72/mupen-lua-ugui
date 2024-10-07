@@ -1073,8 +1073,8 @@ ugui = {
             not control.topmost
 
         if ugui.internal.active_control == control.uid and not ignored then
-            position.x = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0, control.rectangle.width, 0, 1), -128, 128)
-            position.y = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0, control.rectangle.height, 0, 1), -128, 128)
+            position.x = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0, control.rectangle.width, -128, 128), -128, 128)
+            position.y = ugui.internal.clamp(ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0, control.rectangle.height, -128, 128), -128, 128)
         end
         
         return position
