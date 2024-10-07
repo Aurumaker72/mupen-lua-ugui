@@ -1246,9 +1246,7 @@ ugui = {
             if ugui.internal.is_mouse_wheel_down() then
                 inc = 1 / #control.items
             end
-            ugui.internal.control_data[control.uid].scroll_y = ugui.internal.control_data
-                [control.uid]
-                .scroll_y + inc
+            ugui.internal.control_data[control.uid].scroll_y = ugui.internal.clamp(ugui.internal.control_data[control.uid].scroll_y + inc, 0, 1)        
         end
 
 
