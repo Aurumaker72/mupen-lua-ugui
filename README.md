@@ -102,12 +102,4 @@ BreitbandGraphics  —  ugui's rendering core
 ### To mupen-lua-ugui
 
 Porting a script to `mupen-lua-ugui` requires an understanding of the library's usage, achieved by reading the demos and comment docs.
-For individual help, contact me on Discord (`aurumaker72`) or post an issue in this repository.
-
-## 📈 Advantages
-- Maximized usability
-  - Stable API surface
-- Helpful utilities
-  - Hexadecimal color conversion
-  - Standard color tables
-- Low overhead
+For help, post an issue in this repository.
