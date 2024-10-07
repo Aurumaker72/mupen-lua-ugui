@@ -5,10 +5,9 @@ local function folder(file)
 end
 
 local items = {}
-for i = 1, 30, 1 do
+for i = 1, 1000, 1 do
     items[#items + 1] = 'Item ' .. i
 end
-items[20] = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 local mouse_wheel = 0
 dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
@@ -73,7 +72,7 @@ emu.atdrawd2d(function()
             x = initial_size.width + 5,
             y = 80,
             width = 150,
-            height = 400,
+            height = 83,
         },
         items = items,
         selected_index = selected_index_2,

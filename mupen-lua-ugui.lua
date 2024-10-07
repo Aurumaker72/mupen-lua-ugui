@@ -1213,7 +1213,7 @@ ugui = {
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
     ---@return _ number The selected index in the `items` array
     listbox = function(_control)
-        ugui.internal.register_uid(control.uid)
+        ugui.internal.register_uid(_control.uid)
 
         if not ugui.internal.control_data[_control.uid] then
             ugui.internal.control_data[_control.uid] = {
@@ -1364,7 +1364,7 @@ ugui = {
     ---@return _ number The new value
     scrollbar = function(control)
         ugui.internal.register_uid(control.uid)
-        
+
         local pushed = ugui.internal.process_push(control)
         local is_horizontal = control.rectangle.width > control.rectangle.height
 

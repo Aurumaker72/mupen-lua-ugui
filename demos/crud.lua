@@ -91,7 +91,7 @@ emu.atdrawd2d(function()
     end
 
     selected_list_index = ugui.listbox({
-        uid = 3,
+        uid = 5,
         rectangle = {
             x = initial_size.width + 10,
             y = 40,
@@ -103,7 +103,7 @@ emu.atdrawd2d(function()
     })
 
     if (ugui.button({
-            uid = 3,
+            uid = 10,
             is_enabled = is_selection_valid(),
             rectangle = {
                 x = initial_size.width + 10,
@@ -117,7 +117,7 @@ emu.atdrawd2d(function()
     end
 
     is_editing = ugui.toggle_button({
-        uid = 4,
+        uid = 15,
         is_enabled = is_selection_valid(),
         rectangle = {
             x = initial_size.width + 105,
@@ -131,7 +131,7 @@ emu.atdrawd2d(function()
 
 
     local priority_selection_index = ugui.combobox({
-        uid = 5,
+        uid = 20,
         is_enabled = is_selection_valid() and is_editing,
         rectangle = {
             x = initial_size.width + 10,
@@ -147,10 +147,8 @@ emu.atdrawd2d(function()
         items[selected_list_index].priority = priority_selection_index
     end
 
-
-
     local text = ugui.textbox({
-        uid = 8,
+        uid = 25,
         is_enabled = is_selection_valid() and is_editing,
         rectangle = {
             x = initial_size.width + 10,
@@ -161,14 +159,9 @@ emu.atdrawd2d(function()
         text = is_selection_valid() and items[selected_list_index].text or '',
     })
     
-    print(ugui.internal.control_data[8])
-    -- print(string.format("%s %s", ugui.internal.control_data[8].selection_start, ugui.internal.control_data[8].selection_end))
     if is_selection_valid() then
         items[selected_list_index].text = text
     end
-
-
-
 
     ugui.end_frame()
 end)

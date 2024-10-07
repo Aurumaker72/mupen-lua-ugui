@@ -34,11 +34,11 @@ emu.atdrawd2d(function()
     })
     mouse_wheel = 0
 
+    local i = 0
     for x = 1, 10, 1 do
         for y = 1, 30, 1 do
             ugui.button({
-                uid = x * y,
-                
+                uid = i,
                 rectangle = {
                     x = initial_size.width + (x - 1) * 20,
                     y = (y - 1) * 20,
@@ -47,6 +47,7 @@ emu.atdrawd2d(function()
                 },
                 text = ':)',
             })
+            i = i + 1
         end
     end
 

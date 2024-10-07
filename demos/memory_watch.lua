@@ -148,7 +148,7 @@ emu.atdrawd2d(function()
     mouse_wheel = 0
 
     address = ugui.textbox({
-        uid = 0,
+        uid = 5,
         rectangle = {
             x = initial_size.width + 5,
             y = 10,
@@ -159,7 +159,7 @@ emu.atdrawd2d(function()
     })
 
     type_index = ugui.combobox({
-        uid = 1,
+        uid = 10,
         rectangle = {
             x = initial_size.width + 105,
             y = 10,
@@ -171,7 +171,7 @@ emu.atdrawd2d(function()
     })
 
     if (ugui.button({
-            uid = 2,
+            uid = 15,
             rectangle = {
                 x = initial_size.width + 5,
                 y = 35,
@@ -198,7 +198,7 @@ emu.atdrawd2d(function()
     end
 
     selected_watch_index = ugui.listbox({
-        uid = 3,
+        uid = 20,
         rectangle = {
             x = initial_size.width + 5,
             y = 70,
