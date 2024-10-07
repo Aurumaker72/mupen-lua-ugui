@@ -1239,12 +1239,34 @@ ugui = {
             and y_overflow
             and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
                 or ugui.internal.active_control == control.uid) then
+                    
             local inc = 0
             if ugui.internal.is_mouse_wheel_up() then
-                inc = (ugui.standard_styler.item_height * -0.5) / #control.items
+                inc = -1 / #control.items
             end
             if ugui.internal.is_mouse_wheel_down() then
-                inc = (ugui.standard_styler.item_height * 0.5) / #control.items
+                inc = 1 / #control.items
+            end
+
+            for key, _ in pairs(ugui.internal.get_just_pressed_keys()) do
+                if key == 'pageup' then
+                    inc = -math.floor(control.rectangle.height / ugui.standard_styler.item_height) / #control.items
+                end
+                if key == 'pagedown' then
+                    inc = math.floor(control.rectangle.height / ugui.standard_styler.item_height) / #control.items
+                end
+                if key == 'home' then
+                    inc = -1
+                end
+                if key == 'end' then
+                    inc = 1
+                end
+                if key == "up" then
+                    control.selected_index = ugui.internal.clamp(control.selected_index - 1, 1, #control.items)
+                end
+                if key == "down" then
+                    control.selected_index = ugui.internal.clamp(control.selected_index + 1, 1, #control.items)
+                end
             end
 
             ugui.internal.control_data[control.uid].scroll_y = ugui.internal.clamp(ugui.internal.control_data[control.uid].scroll_y + inc, 0, 1)
