@@ -63,16 +63,16 @@ for key, group in pairs(groups) do
             local name = not test.params and test.name or string.format('%s (%d)', test.name, test_param_index)
 
             if passed then
-                print(string.format('    %s passed', name))
+                print(string.format('    PASS %s', name))
             else
                 if #fail_msgs > 0 then
-                    print(string.format('    %s failed:', name))
+                    print(string.format('    FAIL %s:', name))
 
                     for _, msg in pairs(fail_msgs) do
                         print(string.format('      [!] %s', msg))
                     end
                 else
-                    print(string.format('    %s failed!', name))
+                    print(string.format('    FAIL %s', name))
                 end
             end
         end
