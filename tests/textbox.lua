@@ -30,8 +30,8 @@ group.tests[#group.tests + 1] = {
                 text = 'Hello World!',
             })
 
-            if i == 3 and ugui.internal.active_control ~= 5 then
-                ctx.fail()
+            if i == 3 then
+                ctx.assert(ugui.internal.active_control == 5, 'Textbox not activated')
             end
 
             ctx.log((ugui.internal.active_control or 'nil') .. ' ' .. ((i % 2 == 0) and 'true' or 'false') .. ' i = ' .. i)
@@ -84,8 +84,8 @@ group.tests[#group.tests + 1] = {
                 text = 'Hello World!',
             })
 
-            if i == 5 and ugui.internal.active_control ~= 10 then
-                ctx.fail()
+            if i == 5 then
+                ctx.assert(ugui.internal.active_control == 10, 'Button not activated')
             end
 
             ctx.log((ugui.internal.active_control or 'nil') .. ' ' .. ((i % 2 == 0) and 'true' or 'false') .. ' i = ' .. i)
@@ -141,8 +141,8 @@ group.tests[#group.tests + 1] = {
                 text = 'Test',
             })
 
-            if i == 2 and ugui.internal.control_data[5].selection_start ~= ctx.data.expected_start_index then
-                ctx.fail()
+            if i == 2 then
+                ctx.assert(ugui.internal.control_data[5].selection_start == ctx.data.expected_start_index, string.format('Expected selection start %d, got %d', ctx.data.expected_start_index, ugui.internal.control_data[5].selection_start))
             end
 
             ctx.log((ugui.internal.control_data[5].selection_start or 'nil') .. ' ' .. ((i % 2 == 0) and 'true' or 'false') .. ' i = ' .. i)
@@ -207,12 +207,8 @@ group.tests[#group.tests + 1] = {
             })
 
             if i >= 3 then
-                if ugui.internal.control_data[5].selection_start ~= ctx.data.expected_start_index then
-                    ctx.fail()
-                end
-                if ugui.internal.control_data[5].selection_end ~= ctx.data.expected_end_index then
-                    ctx.fail()
-                end
+                ctx.assert(ugui.internal.control_data[5].selection_start == ctx.data.expected_start_index, string.format('Expected selection start %d, got %d', ctx.data.expected_start_index, ugui.internal.control_data[5].selection_start))
+                ctx.assert(ugui.internal.control_data[5].selection_end == ctx.data.expected_end_index, string.format('Expected selection end %d, got %d', ctx.data.expected_end_index, ugui.internal.control_data[5].selection_end))
             end
 
             ctx.log((ugui.internal.control_data[5].selection_start or 'nil') .. ' ' .. ((i % 2 == 0) and 'true' or 'false') .. ' i = ' .. i)
@@ -291,9 +287,7 @@ group.tests[#group.tests + 1] = {
         })
         ugui.end_frame()
 
-        if ugui.internal.control_data[5].caret_index ~= ctx.data.expected_caret_index then
-            ctx.fail(string.format('Expected caret index %d, got %d', ctx.data.expected_caret_index, ugui.internal.control_data[5].caret_index))
-        end
+        ctx.assert(ugui.internal.control_data[5].caret_index == ctx.data.expected_caret_index, string.format('Expected caret index %d, got %d', ctx.data.expected_caret_index, ugui.internal.control_data[5].caret_index))
     end,
 }
 
@@ -398,9 +392,7 @@ group.tests[#group.tests + 1] = {
         })
         ugui.end_frame()
 
-        if text ~= ctx.data.expected_text then
-            ctx.fail(string.format('Expected text \"%s\", got \"%s\"', ctx.data.expected_text, text))
-        end
+        ctx.assert(text == ctx.data.expected_text, string.format('Expected text \"%s\", got \"%s\"', ctx.data.expected_text, text))
     end,
 }
 

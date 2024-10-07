@@ -160,7 +160,9 @@ emu.atdrawd2d(function()
         },
         text = is_selection_valid() and items[selected_list_index].text or '',
     })
-
+    
+    print(ugui.internal.control_data[8])
+    -- print(string.format("%s %s", ugui.internal.control_data[8].selection_start, ugui.internal.control_data[8].selection_end))
     if is_selection_valid() then
         items[selected_list_index].text = text
     end

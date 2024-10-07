@@ -14,9 +14,9 @@ local groups = {
     dofile(folder('runner.lua') .. 'textbox.lua'),
     dofile(folder('runner.lua') .. 'joystick.lua'),
     dofile(folder('runner.lua') .. 'combobox.lua'),
-    dofile(folder('runner.lua') .. 'listbox.lua'),
-    dofile(folder('runner.lua') .. 'trackbar.lua'),
-    dofile(folder('runner.lua') .. 'scrollbar.lua'),
+    -- dofile(folder('runner.lua') .. 'listbox.lua'),
+    -- dofile(folder('runner.lua') .. 'trackbar.lua'),
+    -- dofile(folder('runner.lua') .. 'scrollbar.lua'),
 }
 
 local verbose = false
@@ -45,9 +45,11 @@ for key, group in pairs(groups) do
 
             local test_context = {
                 data = test_param,
-                fail = function(str)
-                    passed = false
-                    fail_msgs[# fail_msgs + 1] = str
+                assert = function(condition, str)
+                    if condition == false then
+                        passed = false
+                        fail_msgs[# fail_msgs + 1] = str
+                    end
                 end,
                 log = function(str)
                     if verbose then

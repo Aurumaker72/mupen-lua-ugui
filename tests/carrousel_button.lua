@@ -4,9 +4,9 @@ local group = {
 }
 
 local items = {
-    "Foo",
-    "Bar",
-    "Baz",
+    'Foo',
+    'Bar',
+    'Baz',
 }
 
 group.tests[#group.tests + 1] = {
@@ -39,10 +39,10 @@ group.tests[#group.tests + 1] = {
                 items = items,
             })
 
-            if i == 2 and index ~= 1 then
-                ctx.fail()
+            if i == 2 then
+                ctx.assert(index == 1, string.format('Expected index %d, got %d', 1, index))
             end
-            
+
             ugui.end_frame()
         end
     end,
@@ -78,10 +78,10 @@ group.tests[#group.tests + 1] = {
                 items = items,
             })
 
-            if i == 2 and index ~= 3 then
-                ctx.fail()
+            if i == 2 then
+                ctx.assert(index == 3, string.format('Expected index %d, got %d', 3, index))
             end
-            
+
             ugui.end_frame()
         end
     end,
@@ -117,10 +117,10 @@ group.tests[#group.tests + 1] = {
                 items = items,
             })
 
-            if i == 2 and index ~= 3 then
-                ctx.fail()
+            if i == 2 then
+                ctx.assert(index == 3, string.format('Expected index %d, got %d', 3, index))
             end
-            
+
             ugui.end_frame()
         end
     end,
@@ -156,10 +156,10 @@ group.tests[#group.tests + 1] = {
                 items = items,
             })
 
-            if i == 2 and index ~= 1 then
-                ctx.fail()
+            if i == 2 then
+                ctx.assert(index == 1, string.format('Expected index %d, got %d', 1, index))
             end
-            
+
             ugui.end_frame()
         end
     end,

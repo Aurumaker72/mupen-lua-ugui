@@ -33,8 +33,8 @@ group.tests[#group.tests + 1] = {
                 is_checked = checked,
             })
 
-            if i == 4 and checked then
-                ctx.fail()
+            if i == 4 then
+                ctx.assert(not checked, "Expected unchecked, got checked")
             end
             
             ctx.log((checked and "true" or "false") .. " " .. ((i % 2 == 0) and "true" or "false") .. " i = " .. i)

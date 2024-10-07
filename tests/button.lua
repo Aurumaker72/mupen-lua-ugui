@@ -30,8 +30,8 @@ group.tests[#group.tests + 1] = {
                 text = 'Hello World!',
             })
 
-            if i == 2 and not pressed then
-                ctx.fail()
+            if i == 2 then
+                ctx.assert(pressed, 'Button not pressed')
             end
 
             ugui.end_frame()

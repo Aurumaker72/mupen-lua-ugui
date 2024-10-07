@@ -88,13 +88,8 @@ group.tests[#group.tests + 1] = {
         })
         ugui.end_frame()
 
-        if math.floor(position.x) ~= math.floor(ctx.data.expected_joystick_position.x) then
-            ctx.fail(string.format('Expected x position %f, got %f', ctx.data.expected_joystick_position.x, position.x))
-        end
-
-        if math.floor(position.y) ~= math.floor(ctx.data.expected_joystick_position.y) then
-            ctx.fail(string.format('Expected y position %f, got %f', ctx.data.expected_joystick_position.y, position.y))
-        end
+        ctx.assert(math.floor(position.x) == math.floor(ctx.data.expected_joystick_position.x), string.format('Expected x position %f, got %f', ctx.data.expected_joystick_position.x, position.x))
+        ctx.assert(math.floor(position.y) == math.floor(ctx.data.expected_joystick_position.y), string.format('Expected y position %f, got %f', ctx.data.expected_joystick_position.y, position.y))
     end,
 }
 
