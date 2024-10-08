@@ -399,7 +399,15 @@ ugui = {
         },
 
         ---Draws an icon with the specified parameters
-        draw_icon = function(rectangle, color, key)
+        ---The draw_icon implementation may choose to use either the color or visual_state parameter to determine the icon's appearance. 
+        ---Therefore, the caller must provide either a color or a visual state, or both.
+        draw_icon = function(rectangle, color, visual_state, key)
+
+            if not color and visual_state then
+                BreitbandGraphics.fill_rectangle(rectangle, BreitbandGraphics.colors.red)
+                return
+            end
+
             if key == 'arrow_left' then
                 BreitbandGraphics.draw_text(rectangle,
                     'center',
@@ -632,14 +640,14 @@ ugui = {
                 y = control.rectangle.y,
                 width = ugui.standard_styler.icon_size,
                 height = control.rectangle.height,
-            }, ugui.standard_styler.raised_frame_text_colors[visual_state], 'arrow_left')
+            }, ugui.standard_styler.raised_frame_text_colors[visual_state], visual_state, 'arrow_left')
             ugui.standard_styler.draw_icon({
                 x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.textbox_padding -
                     ugui.standard_styler.icon_size,
                 y = control.rectangle.y,
                 width = ugui.standard_styler.icon_size,
                 height = control.rectangle.height,
-            }, ugui.standard_styler.raised_frame_text_colors[visual_state], 'arrow_right')
+            }, ugui.standard_styler.raised_frame_text_colors[visual_state], visual_state, 'arrow_right')
         end,
         draw_textbox = function(control)
             local visual_state = ugui.get_visual_state(control)
@@ -869,7 +877,7 @@ ugui = {
                 y = control.rectangle.y,
                 width = ugui.standard_styler.icon_size,
                 height = control.rectangle.height,
-            }, text_color, 'arrow_down')
+            }, text_color, visual_state, 'arrow_down')
         end,
 
         draw_listbox = function(control)
