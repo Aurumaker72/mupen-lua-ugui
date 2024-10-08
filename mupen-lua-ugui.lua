@@ -67,6 +67,10 @@ ugui = {
             return ugui.internal.input_state.is_primary_down and
                 not ugui.internal.previous_input_state.is_primary_down
         end,
+        is_mouse_just_up = function()
+            return not ugui.internal.input_state.is_primary_down and
+                ugui.internal.previous_input_state.is_primary_down
+        end,
         is_mouse_wheel_up = function()
             return ugui.internal.input_state.wheel == 1
         end,
@@ -259,6 +263,8 @@ ugui = {
         bar_width = 6,
         bar_height = 16,
         item_height = 15,
+        menu_item_height = 22,
+        menu_item_left_padding = 32,
         font_size = 12,
         cleartype = true,
         scrollbar_thickness = 17,
@@ -300,6 +306,30 @@ ugui = {
             [2] = BreitbandGraphics.hex_to_color('#7A7A7A'),
             [3] = BreitbandGraphics.hex_to_color('#7A7A7A'),
             [0] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+        },
+        menu_frame_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+            [2] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+            [3] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+            [0] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+        },
+        menu_frame_border_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+            [2] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+            [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+        },
+        menu_item_text_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#000000'),
+            [2] = BreitbandGraphics.hex_to_color('#000000'),
+            [3] = BreitbandGraphics.hex_to_color('#000000'),
+            [0] = BreitbandGraphics.hex_to_color('#6D6D6D'),
+        },
+        menu_item_back_colors = {
+            [1] = BreitbandGraphics.hex_to_color('#00000000'),
+            [2] = BreitbandGraphics.hex_to_color('#91C9F7'),
+            [3] = BreitbandGraphics.hex_to_color('#91C9F7'),
+            [0] = BreitbandGraphics.hex_to_color('#00000000'),
         },
         raised_frame_text_colors = {
             [1] = BreitbandGraphics.colors.black,
@@ -399,10 +429,9 @@ ugui = {
         },
 
         ---Draws an icon with the specified parameters
-        ---The draw_icon implementation may choose to use either the color or visual_state parameter to determine the icon's appearance. 
+        ---The draw_icon implementation may choose to use either the color or visual_state parameter to determine the icon's appearance.
         ---Therefore, the caller must provide either a color or a visual state, or both.
         draw_icon = function(rectangle, color, visual_state, key)
-
             if not color and visual_state then
                 BreitbandGraphics.fill_rectangle(rectangle, BreitbandGraphics.colors.red)
                 return
@@ -531,6 +560,12 @@ ugui = {
                 height = ugui.standard_styler.joystick_tip_size,
             }, tip_color)
         end,
+        draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
+            BreitbandGraphics.fill_rectangle(container_rectangle,
+                ugui.standard_styler.scrollbar_back_colors[visual_state])
+            BreitbandGraphics.fill_rectangle(thumb_rectangle,
+                ugui.standard_styler.scrollbar_thumb_colors[visual_state])
+        end,
         draw_list_item = function(item, rectangle, visual_state)
             if not item then
                 return
@@ -550,12 +585,6 @@ ugui = {
                 ugui.standard_styler.font_size,
                 ugui.standard_styler.font_name,
                 item)
-        end,
-        draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
-            BreitbandGraphics.fill_rectangle(container_rectangle,
-                ugui.standard_styler.scrollbar_back_colors[visual_state])
-            BreitbandGraphics.fill_rectangle(thumb_rectangle,
-                ugui.standard_styler.scrollbar_thumb_colors[visual_state])
         end,
         draw_list = function(control, rectangle)
             local visual_state = ugui.get_visual_state(control)
@@ -606,6 +635,59 @@ ugui = {
             end
 
             BreitbandGraphics.pop_clip()
+        end,
+        draw_menu_frame = function(rectangle, visual_state)
+            BreitbandGraphics.fill_rectangle(rectangle,
+                ugui.standard_styler.menu_frame_border_colors[visual_state])
+            BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
+                ugui.standard_styler.menu_frame_back_colors[visual_state])
+        end,
+        draw_menu_item = function(item, rectangle, visual_state)
+            BreitbandGraphics.fill_rectangle(rectangle,
+                ugui.standard_styler.menu_item_back_colors[visual_state])
+            BreitbandGraphics.push_clip({
+                x = rectangle.x,
+                y = rectangle.y,
+                width = rectangle.width,
+                height = rectangle.height,
+            })
+            BreitbandGraphics.draw_text({
+                    x = rectangle.x + ugui.standard_styler.menu_item_left_padding,
+                    y = rectangle.y,
+                    width = 9999999,
+                    height = rectangle.height,
+                }, 'start', 'center', {aliased = not ugui.standard_styler.cleartype},
+                ugui.standard_styler.menu_item_text_colors[visual_state],
+                ugui.standard_styler.font_size,
+                ugui.standard_styler.font_name,
+                item.text)
+            BreitbandGraphics.pop_clip()
+        end,
+        draw_menu = function(control, rectangle)
+            local visual_state = ugui.get_visual_state(control)
+            ugui.standard_styler.draw_menu_frame(rectangle, visual_state)
+
+            local y = rectangle.y
+
+            for _, item in pairs(control.items) do
+                local rectangle = {
+                    x = rectangle.x,
+                    y = y,
+                    width = rectangle.width,
+                    height = ugui.standard_styler.menu_item_height,
+                }
+
+                local visual_state = ugui.visual_states.normal
+                if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, rectangle) then
+                    visual_state = ugui.visual_states.hovered
+                end
+                if item.enabled == false then
+                    visual_state = ugui.visual_states.disabled
+                end
+                ugui.standard_styler.draw_menu_item(item, rectangle, visual_state)
+
+                y = y + ugui.standard_styler.menu_item_height
+            end
         end,
         draw_button = function(control)
             local visual_state = ugui.get_visual_state(control)
@@ -1483,5 +1565,47 @@ ugui = {
         ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
 
         return control.value
+    end,
+
+    ---Places a Menu
+    ---
+    ---Additional fields in the `control` table:
+    ---
+    --- `items` — `table[]` The items contained in the dropdown as (`{ enabled: boolean | nil, text: string }`)
+    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
+    ---@return _ table The interaction result as (`{ index: number | nil, dismissed: boolean }`). The `index` field is nil if no item was clicked.
+    menu = function(control)
+        ugui.internal.register_uid(control.uid)
+
+        -- We adjust the dimensions with what should fit the content
+        control.rectangle.width = control.rectangle.width + ugui.standard_styler.menu_item_left_padding
+        control.rectangle.height = #control.items * ugui.standard_styler.menu_item_height
+
+        local result = {
+            index = nil,
+            dismissed = false,
+        }
+
+        local mouse_inside_control = BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
+
+        ugui.internal.hittest_free_rects[#ugui.internal.hittest_free_rects + 1] = control.rectangle
+
+        if ugui.internal.is_mouse_just_down() and control.is_enabled ~= false and not mouse_inside_control then
+            result.dismissed = true
+        end
+
+        if ugui.internal.is_mouse_just_up() and control.is_enabled ~= false and mouse_inside_control then
+            local i = math.floor((ugui.internal.input_state.mouse_position.y - control.rectangle.y) / ugui.standard_styler.menu_item_height) + 1
+
+            if control.items[i].enabled == nil or control.items[i].enabled == true then
+                result.index = i
+            end
+        end
+
+        ugui.internal.late_callbacks[#ugui.internal.late_callbacks + 1] = function()
+            ugui.standard_styler.draw_menu(control, control.rectangle)
+        end
+
+        return result
     end,
 }

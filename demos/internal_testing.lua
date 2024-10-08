@@ -14,6 +14,19 @@ local initial_size = wgui.info()
 local selected_index = 1
 local selected_index_2 = 1
 local text = 'a'
+local menu_open = false
+local menu_items = {
+    {
+        text = 'Hello World',
+    },
+    {
+        text = 'Disabled item',
+        enabled = false,
+    },
+    {
+        text = 'Something else aaaaaaaaa',
+    },
+}
 
 wgui.resize(initial_size.width + 200, initial_size.height)
 emu.atdrawd2d(function()
@@ -52,17 +65,39 @@ emu.atdrawd2d(function()
         selected_index = selected_index,
     })
 
+    if menu_open then
+        local result = ugui.menu({
+            uid = 5,
+            rectangle = {
+                x = initial_size.width + 5,
+                y = 76,
+                width = 150,
+                height = 20,
+            },
+            items = menu_items,
+        })
+
+        if result.dismissed then
+            menu_open = false
+        end
+
+        if result.index ~= nil then
+            menu_open = false
+            print('Chose ' .. menu_items[result.index].text)
+        end
+    end
+
     if ugui.button({
             uid = 123,
             rectangle = {
-                x = initial_size.width + 100,
-                y = 5,
+                x = initial_size.width + 5,
+                y = 55,
                 width = 90,
                 height = 20,
             },
             text = 'a',
         }) then
-        print(math.random())
+        menu_open = true
     end
 
     selected_index_2 = ugui.listbox({
