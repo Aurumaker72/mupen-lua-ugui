@@ -24,7 +24,11 @@ local menu_items = {
         enabled = false,
     },
     {
-        text = 'Something else aaaaaaaaa',
+        text = 'Something else',
+    },
+    {
+        text = 'Checkable!',
+        checked = true,
     },
 }
 
@@ -71,7 +75,7 @@ emu.atdrawd2d(function()
             rectangle = {
                 x = initial_size.width + 5,
                 y = 76,
-                width = 150,
+                width = 110,
                 height = 20,
             },
             items = menu_items,
@@ -83,6 +87,10 @@ emu.atdrawd2d(function()
 
         if result.index ~= nil then
             menu_open = false
+            text = menu_items[result.index].text
+            if menu_items[result.index].checked ~= nil then
+                menu_items[result.index].checked = not menu_items[result.index].checked
+            end
             print('Chose ' .. menu_items[result.index].text)
         end
     end
@@ -95,7 +103,7 @@ emu.atdrawd2d(function()
                 width = 90,
                 height = 20,
             },
-            text = 'a',
+            text = text,
         }) then
         menu_open = true
     end

@@ -473,6 +473,10 @@ ugui = {
                     ugui.standard_styler.font_size,
                     'Segoe UI Mono',
                     'v')
+            elseif key == 'checkmark' then
+                BreitbandGraphics.draw_line({ x = rectangle.x, y = rectangle.y + rectangle.height / 2}, { x = rectangle.x + rectangle.width / 2, y = rectangle.y + rectangle.height }, color, 1)
+                BreitbandGraphics.draw_line({ x = rectangle.x + rectangle.width / 2, y = rectangle.y + rectangle.height }, { x = rectangle.x + rectangle.width, y = rectangle.y }, color, 1)
+                
             else
                 -- Unknown icon, probably a good idea to nag the user
                 BreitbandGraphics.fill_rectangle(rectangle, BreitbandGraphics.colors.red)
@@ -651,6 +655,17 @@ ugui = {
                 width = rectangle.width,
                 height = rectangle.height,
             })
+
+            if item.checked then
+                local icon_rect = BreitbandGraphics.inflate_rectangle({
+                    x = rectangle.x + (ugui.standard_styler.menu_item_left_padding - rectangle.height) * 0.5,
+                    y = rectangle.y,
+                    width = rectangle.height,
+                    height = rectangle.height,
+                }, -7)
+                ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.menu_item_text_colors[visual_state], nil, 'checkmark')
+            end
+
             BreitbandGraphics.draw_text({
                     x = rectangle.x + ugui.standard_styler.menu_item_left_padding,
                     y = rectangle.y,
@@ -1571,7 +1586,7 @@ ugui = {
     ---
     ---Additional fields in the `control` table:
     ---
-    --- `items` — `table[]` The items contained in the dropdown as (`{ enabled: boolean | nil, text: string }`)
+    --- `items` — `table[]` The items contained in the dropdown as (`{ enabled: boolean | nil, checked: boolean | nil, text: string }`)
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
     ---@return _ table The interaction result as (`{ index: number | nil, dismissed: boolean }`). The `index` field is nil if no item was clicked.
     menu = function(control)
