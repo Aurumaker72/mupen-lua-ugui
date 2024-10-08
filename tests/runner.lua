@@ -16,11 +16,12 @@ local groups = {
     dofile(folder('runner.lua') .. 'joystick.lua'),
     dofile(folder('runner.lua') .. 'combobox.lua'),
     dofile(folder('runner.lua') .. 'listbox.lua'),
-    -- dofile(folder('runner.lua') .. 'trackbar.lua'),
-    -- dofile(folder('runner.lua') .. 'scrollbar.lua'),
+    dofile(folder('runner.lua') .. 'trackbar.lua'),
+    dofile(folder('runner.lua') .. 'scrollbar.lua'),
+    dofile(folder('runner.lua') .. 'menu.lua'),
 }
 
-local verbose = true
+local verbose = false
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
@@ -41,21 +42,24 @@ for key, group in pairs(groups) do
                 dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
             end
 
+            local assertion_count = 0
             local passed = true
-            local fail_msgs = {}
+            local messages = {}
 
             local test_context = {
                 data = test_param,
                 assert = function(condition, str)
+                    assertion_count = assertion_count + 1
                     if condition == false then
                         passed = false
-                        fail_msgs[# fail_msgs + 1] = str
+                        messages[# messages + 1] = str
                     end
                 end,
                 assert_eq = function(expected, actual)
+                    assertion_count = assertion_count + 1
                     if expected ~= actual then
                         passed = false
-                        fail_msgs[# fail_msgs + 1] = string.format('Expected %s, got %s', tostring(expected), tostring(actual))
+                        messages[# messages + 1] = string.format('Expected %s, got %s', tostring(expected), tostring(actual))
                     end
                 end,
                 log = function(str)
@@ -69,17 +73,21 @@ for key, group in pairs(groups) do
 
             local name = not test.params and test.name or string.format('%s (%d)', test.name, test_param_index)
 
-            if passed then
-                print(string.format('    PASS %s', name))
+            if assertion_count == 0 then
+                print(string.format('    NO ASSERTIONS %s', name))
             else
-                if #fail_msgs > 0 then
-                    print(string.format('    FAIL %s:', name))
-
-                    for _, msg in pairs(fail_msgs) do
-                        print(string.format('      [!] %s', msg))
-                    end
+                if passed then
+                    print(string.format('    PASS %s', name))
                 else
-                    print(string.format('    FAIL %s', name))
+                    if #messages > 0 then
+                        print(string.format('    FAIL %s:', name))
+
+                        for _, msg in pairs(messages) do
+                            print(string.format('      [!] %s', msg))
+                        end
+                    else
+                        print(string.format('    FAIL %s', name))
+                    end
                 end
             end
         end
