@@ -168,7 +168,7 @@ BreitbandGraphics = {
     ---@param text string The string to be measured
     ---@param font_size number The font size
     ---@param font_name string The font name
-    ---@return _ table The text's bounding box as `{x, y}`
+    ---@return _ table The text's bounding box as `{width, height}`
     get_text_size = function(text, font_size, font_name)
         return d2d.get_text_size(text, font_name, font_size, 99999999, 99999999)
     end,
