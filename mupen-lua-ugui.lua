@@ -474,8 +474,9 @@ ugui = {
                     'Segoe UI Mono',
                     'v')
             elseif key == 'checkmark' then
-                BreitbandGraphics.draw_line({ x = rectangle.x, y = rectangle.y + rectangle.height / 2}, { x = rectangle.x + rectangle.width / 2, y = rectangle.y + rectangle.height }, color, 1)
-                BreitbandGraphics.draw_line({ x = rectangle.x + rectangle.width / 2, y = rectangle.y + rectangle.height }, { x = rectangle.x + rectangle.width, y = rectangle.y }, color, 1)
+                local connection_point = { x = rectangle.x + rectangle.width * 0.3, y = rectangle.y + rectangle.height }
+                BreitbandGraphics.draw_line({ x = rectangle.x, y = rectangle.y + rectangle.height / 2}, connection_point, color, 1)
+                BreitbandGraphics.draw_line(connection_point, { x = rectangle.x + rectangle.width, y = rectangle.y }, color, 1)
                 
             else
                 -- Unknown icon, probably a good idea to nag the user
