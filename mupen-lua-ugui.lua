@@ -16,10 +16,10 @@ ugui = {
         control_data = {},
 
         -- the current input state
-        input_state = nil,
+        environment = nil,
 
         -- the last frame's input state
-        previous_input_state = nil,
+        previous_environment = nil,
 
         -- the position of the mouse at the last click
         mouse_down_position = {x = 0, y = 0},
@@ -64,18 +64,18 @@ ugui = {
             return string.sub(string, 1, start_index - 1) .. string.sub(string, end_index)
         end,
         is_mouse_just_down = function()
-            return ugui.internal.input_state.is_primary_down and
-                not ugui.internal.previous_input_state.is_primary_down
+            return ugui.internal.environment.is_primary_down and
+                not ugui.internal.previous_environment.is_primary_down
         end,
         is_mouse_just_up = function()
-            return not ugui.internal.input_state.is_primary_down and
-                ugui.internal.previous_input_state.is_primary_down
+            return not ugui.internal.environment.is_primary_down and
+                ugui.internal.previous_environment.is_primary_down
         end,
         is_mouse_wheel_up = function()
-            return ugui.internal.input_state.wheel == 1
+            return ugui.internal.environment.wheel == 1
         end,
         is_mouse_wheel_down = function()
-            return ugui.internal.input_state.wheel == -1
+            return ugui.internal.environment.wheel == -1
         end,
         remove_at = function(string, index)
             if index == 0 then
@@ -97,8 +97,8 @@ ugui = {
         end,
         get_just_pressed_keys = function()
             local keys = {}
-            for key, _ in pairs(ugui.internal.input_state.held_keys) do
-                if not ugui.internal.previous_input_state.held_keys[key] then
+            for key, _ in pairs(ugui.internal.environment.held_keys) do
+                if not ugui.internal.previous_environment.held_keys[key] then
                     keys[key] = 1
                 end
             end
@@ -109,10 +109,10 @@ ugui = {
                 return false
             end
 
-            if ugui.internal.input_state.is_primary_down and not ugui.internal.previous_input_state.is_primary_down then
+            if ugui.internal.environment.is_primary_down and not ugui.internal.previous_environment.is_primary_down then
                 if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.mouse_down_position,
                         control.rectangle) then
-                    if not control.topmost and BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.input_state.mouse_position, ugui.internal.hittest_free_rects) then
+                    if not control.topmost and BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) then
                         return false
                     end
 
@@ -229,10 +229,10 @@ ugui = {
         end
 
         local now_inside = BreitbandGraphics.is_point_inside_rectangle(
-                ugui.internal.input_state.mouse_position,
+                ugui.internal.environment.mouse_position,
                 control.rectangle)
             and
-            not BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.input_state.mouse_position,
+            not BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.environment.mouse_position,
                 ugui.internal.hittest_free_rects)
 
         local down_inside = BreitbandGraphics.is_point_inside_rectangle(
@@ -241,15 +241,15 @@ ugui = {
             not BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.mouse_down_position,
                 ugui.internal.hittest_free_rects)
 
-        if now_inside and not ugui.internal.input_state.is_primary_down then
+        if now_inside and not ugui.internal.environment.is_primary_down then
             return ugui.visual_states.hovered
         end
 
-        if down_inside and ugui.internal.input_state.is_primary_down and not now_inside then
+        if down_inside and ugui.internal.environment.is_primary_down and not now_inside then
             return ugui.visual_states.hovered
         end
 
-        if now_inside and down_inside and ugui.internal.input_state.is_primary_down then
+        if now_inside and down_inside and ugui.internal.environment.is_primary_down then
             return ugui.visual_states.active
         end
 
@@ -1015,17 +1015,17 @@ ugui = {
     },
 
     ---Begins a new frame
-    ---@param input_state table A table describing the state of the user's input devices as `{ mouse_position = {x, y}, wheel, is_primary_down, held_keys }`
-    begin_frame = function(input_state)
-        if not ugui.internal.input_state then
-            ugui.internal.input_state = input_state
+    ---@param environment table A table describing the state of the environment as `{ mouse_position = {x, y}, wheel, is_primary_down, held_keys, window_size = {x, y} }`
+    begin_frame = function(environment)
+        if not ugui.internal.environment then
+            ugui.internal.environment = environment
         end
-        ugui.internal.previous_input_state = ugui.internal.deep_clone(ugui.internal
-            .input_state)
-        ugui.internal.input_state = ugui.internal.deep_clone(input_state)
+        ugui.internal.previous_environment = ugui.internal.deep_clone(ugui.internal
+            .environment)
+        ugui.internal.environment = ugui.internal.deep_clone(environment)
 
         if ugui.internal.is_mouse_just_down() then
-            ugui.internal.mouse_down_position = ugui.internal.input_state.mouse_position
+            ugui.internal.mouse_down_position = ugui.internal.environment.mouse_position
         end
     end,
 
@@ -1039,7 +1039,7 @@ ugui = {
         ugui.internal.hittest_free_rects = {}
         ugui.internal.used_uids = {}
 
-        if not ugui.internal.input_state.is_primary_down and ugui.internal.clear_active_control_after_mouse_up then
+        if not ugui.internal.environment.is_primary_down and ugui.internal.clear_active_control_after_mouse_up then
             ugui.internal.active_control = nil
         end
     end,
@@ -1094,7 +1094,7 @@ ugui = {
         local selected_index = control.selected_index
 
         if pushed then
-            local relative_x = ugui.internal.input_state.mouse_position.x - control.rectangle.x
+            local relative_x = ugui.internal.environment.mouse_position.x - control.rectangle.x
             if relative_x > control.rectangle.width / 2 then
                 selected_index = selected_index + 1
                 if selected_index > #control.items then
@@ -1139,7 +1139,7 @@ ugui = {
 
         -- if active and user clicks elsewhere, deactivate
         if ugui.internal.active_control == control.uid
-            and not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle) then
+            and not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
             if ugui.internal.is_mouse_just_down() then
                 -- deactivate, then clear selection
                 ugui.internal.active_control = nil
@@ -1162,16 +1162,16 @@ ugui = {
 
         if ugui.internal.active_control == control.uid and control.is_enabled ~= false then
             local theoretical_caret_index = ugui.internal.get_caret_index(text,
-                ugui.internal.input_state.mouse_position.x - control.rectangle.x)
+                ugui.internal.environment.mouse_position.x - control.rectangle.x)
 
             -- start a new selection
-            if ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle) then
+            if ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
                 ugui.internal.control_data[control.uid].caret_index = theoretical_caret_index
                 ugui.internal.control_data[control.uid].selection_start = theoretical_caret_index
             end
 
             -- already has selection, move end to appropriate index
-            if ugui.internal.input_state.is_primary_down and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.mouse_down_position, control.rectangle) then
+            if ugui.internal.environment.is_primary_down and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.mouse_down_position, control.rectangle) then
                 ugui.internal.control_data[control.uid].selection_end = theoretical_caret_index
             end
 
@@ -1247,15 +1247,15 @@ ugui = {
 
         local pushed = ugui.internal.process_push(control)
         local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
-                ugui.internal.input_state.mouse_position, ugui.internal.hittest_free_rects) and
+                ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) and
             not control.topmost
 
         if ugui.internal.active_control == control.uid and not ignored then
             position.x = ugui.internal.clamp(
-                ugui.internal.remap(ugui.internal.input_state.mouse_position.x - control.rectangle.x, 0,
+                ugui.internal.remap(ugui.internal.environment.mouse_position.x - control.rectangle.x, 0,
                     control.rectangle.width, -128, 128), -128, 128)
             position.y = ugui.internal.clamp(
-                ugui.internal.remap(ugui.internal.input_state.mouse_position.y - control.rectangle.y, 0,
+                ugui.internal.remap(ugui.internal.environment.mouse_position.y - control.rectangle.y, 0,
                     control.rectangle.height, -128, 128), -128, 128)
         end
 
@@ -1284,12 +1284,12 @@ ugui = {
         if ugui.internal.active_control == control.uid then
             if control.rectangle.width > control.rectangle.height then
                 value = ugui.internal.clamp(
-                    (ugui.internal.input_state.mouse_position.x - control.rectangle.x) /
+                    (ugui.internal.environment.mouse_position.x - control.rectangle.x) /
                     control.rectangle.width,
                     0, 1)
             else
                 value = ugui.internal.clamp(
-                    (ugui.internal.input_state.mouse_position.y - control.rectangle.y) /
+                    (ugui.internal.environment.mouse_position.y - control.rectangle.y) /
                     control.rectangle.height,
                     0, 1)
             end
@@ -1323,12 +1323,12 @@ ugui = {
         end
 
         if ugui.internal.is_mouse_just_down() and control.is_enabled ~= false then
-            if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle) then
+            if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
                 ugui.internal.control_data[control.uid].is_open = not ugui.internal.control_data
                     [control.uid].is_open
             else
                 local content_bounds = ugui.standard_styler.get_listbox_content_bounds(control)
-                if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, {
+                if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
                         width = control.rectangle.width,
@@ -1408,11 +1408,11 @@ ugui = {
 
         local pushed = ugui.internal.process_push(control)
         local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
-                ugui.internal.input_state.mouse_position, ugui.internal.hittest_free_rects) and
+                ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) and
             not control.topmost
 
         if ugui.internal.active_control == control.uid and not ignored then
-            local relative_y = ugui.internal.input_state.mouse_position.y - control.rectangle.y
+            local relative_y = ugui.internal.environment.mouse_position.y - control.rectangle.y
             local new_index = math.ceil((relative_y + (ugui.internal.control_data[control.uid].scroll_y *
                     ((ugui.standard_styler.item_height * #control.items) - control.rectangle.height))) /
                 ugui.standard_styler.item_height)
@@ -1424,7 +1424,7 @@ ugui = {
         end
 
         if not ignored
-            and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
+            and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle)
                 or ugui.internal.active_control == control.uid) then
             for key, _ in pairs(ugui.internal.get_just_pressed_keys()) do
                 if key == 'up' then
@@ -1446,7 +1446,7 @@ ugui = {
 
         if not ignored
             and y_overflow
-            and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
+            and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle)
                 or ugui.internal.active_control == control.uid) then
             local inc = 0
             if ugui.internal.is_mouse_wheel_up() then
@@ -1533,7 +1533,7 @@ ugui = {
 
         -- if active and user clicks elsewhere, deactivate
         if ugui.internal.active_control == control.uid then
-            if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle) then
+            if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
                 if ugui.internal.is_mouse_just_down() then
                     -- deactivate, then clear selection
                     ugui.internal.active_control = nil
@@ -1541,10 +1541,10 @@ ugui = {
             end
         end
 
-        if ugui.internal.active_control == control.uid and control.is_enabled ~= false and ugui.internal.input_state.is_primary_down then
+        if ugui.internal.active_control == control.uid and control.is_enabled ~= false and ugui.internal.environment.is_primary_down then
             local relative_mouse = {
-                x = ugui.internal.input_state.mouse_position.x - control.rectangle.x,
-                y = ugui.internal.input_state.mouse_position.y - control.rectangle.y,
+                x = ugui.internal.environment.mouse_position.x - control.rectangle.x,
+                y = ugui.internal.environment.mouse_position.y - control.rectangle.y,
             }
             local relative_mouse_down = {
                 x = ugui.internal.mouse_down_position.x - control.rectangle.x,
@@ -1585,7 +1585,7 @@ ugui = {
         end
 
         local visual_state = ugui.get_visual_state(control)
-        if ugui.internal.active_control == control.uid and control.is_enabled ~= false and ugui.internal.input_state.is_primary_down then
+        if ugui.internal.active_control == control.uid and control.is_enabled ~= false and ugui.internal.environment.is_primary_down then
             visual_state = ugui.visual_states.active
         end
         ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
@@ -1629,7 +1629,7 @@ ugui = {
             dismissed = false,
         }
 
-        local mouse_inside_control = BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
+        local mouse_inside_control = BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle)
 
         if control.is_enabled ~= false then
             ugui.internal.hittest_free_rects[#ugui.internal.hittest_free_rects + 1] = control.rectangle
@@ -1640,7 +1640,7 @@ ugui = {
             end
 
             if mouse_inside_control then
-                local i = math.floor((ugui.internal.input_state.mouse_position.y - control.rectangle.y) / ugui.standard_styler.menu_item_height) + 1
+                local i = math.floor((ugui.internal.environment.mouse_position.y - control.rectangle.y) / ugui.standard_styler.menu_item_height) + 1
                 local item = control.items[i]
 
                 ugui.internal.control_data[control.uid].hovered_index = i

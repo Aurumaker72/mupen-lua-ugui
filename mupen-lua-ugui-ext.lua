@@ -353,7 +353,7 @@ ugui.numberbox = function(control)
 
     -- if active and user clicks elsewhere, deactivate
     if ugui.internal.active_control == control.uid then
-        if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle) then
+        if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
             if ugui.internal.is_mouse_just_down() then
                 -- deactivate, then clear selection
                 ugui.internal.active_control = nil
@@ -446,9 +446,9 @@ ugui.numberbox = function(control)
 
     if ugui.internal.active_control == control.uid then
         -- find the clicked number, change caret index
-        if ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle) then
+        if ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
             ugui.internal.control_data[control.uid].caret_index = get_caret_index_at_relative_x(text,
-                ugui.internal.input_state.mouse_position.x - control.rectangle.x)
+                ugui.internal.environment.mouse_position.x - control.rectangle.x)
         end
 
         -- handle number key press
@@ -691,7 +691,7 @@ ugui.treeview = function(control)
 
         local effective_rectangle = #item.children ~= 0 and text_rectangle or item_rectangle
 
-        if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, effective_rectangle) and ugui.internal.is_mouse_just_down() then
+        if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, effective_rectangle) and ugui.internal.is_mouse_just_down() then
             ugui.internal.control_data[control.uid].selected_uid = item.uid
         end
 
