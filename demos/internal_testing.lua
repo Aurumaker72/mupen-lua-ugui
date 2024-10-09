@@ -17,34 +17,65 @@ local text = 'a'
 local menu_open = false
 local menu_items = {
     {
-        text = 'Hello World',
+        text = 'Normal item',
     },
     {
         text = 'Disabled item',
         enabled = false,
     },
     {
-        text = 'Something else',
+        text = 'Checkable item',
+        checked = true,
     },
     {
-        text = 'Checkable!',
-        checked = true,
+        text = 'With subitems right here ok okok',
+        items = {
+            {
+                text = 'Subitem #1',
+            },
+            {
+                text = 'Subitem #2',
+                checked = true,
+            },
+            {
+                text = 'Subitem #3',
+                items = {
+                    {
+                        text = 'Subitem #4',
+                    },
+                    {
+                        text = 'Subitem #5',
+                        checked = true,
+                    },
+                    {
+                        text = 'Subitem #6',
+                        enabled = false,
+                        items = {
+                            {
+                                text = 'Should never appear',
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
 }
 
-wgui.resize(initial_size.width + 200, initial_size.height)
+-- wgui.resize(initial_size.width + 300, initial_size.height)
 emu.atdrawd2d(function()
-    BreitbandGraphics.fill_rectangle({
-        x = initial_size.width,
-        y = 0,
-        width = 200,
-        height = initial_size.height,
-    }, {
-        r = 253,
-        g = 253,
-        b = 253,
-    })
+    -- BreitbandGraphics.fill_rectangle({
+    --     x = initial_size.width,
+    --     y = 0,
+    --     width = 200,
+    --     height = initial_size.height,
+    -- }, {
+    --     r = 253,
+    --     g = 253,
+    --     b = 253,
+    -- })
 
+    d2d.clear(0, 0, 0, 0)
     local keys = input.get()
     ugui.begin_frame({
         mouse_position = {
@@ -60,7 +91,7 @@ emu.atdrawd2d(function()
     selected_index = ugui.combobox({
         uid = 0,
         rectangle = {
-            x = initial_size.width + 5,
+            x = 5,
             y = 5,
             width = 90,
             height = 20,
@@ -73,10 +104,8 @@ emu.atdrawd2d(function()
         local result = ugui.menu({
             uid = 5,
             rectangle = {
-                x = initial_size.width + 5,
+                x = 5,
                 y = 76,
-                width = 110,
-                height = 20,
             },
             items = menu_items,
         })
@@ -85,20 +114,20 @@ emu.atdrawd2d(function()
             menu_open = false
         end
 
-        if result.index ~= nil then
+        if result.item ~= nil then
             menu_open = false
-            text = menu_items[result.index].text
-            if menu_items[result.index].checked ~= nil then
-                menu_items[result.index].checked = not menu_items[result.index].checked
+            text = result.item.text
+            if result.item.checked ~= nil then
+                result.item.checked = not result.item.checked
             end
-            print('Chose ' .. menu_items[result.index].text)
+            print('Chose ' .. result.item.text)
         end
     end
 
     if ugui.button({
             uid = 123,
             rectangle = {
-                x = initial_size.width + 5,
+                x = 5,
                 y = 55,
                 width = 90,
                 height = 20,
@@ -112,20 +141,20 @@ emu.atdrawd2d(function()
         uid = 555,
         is_enabled = true,
         rectangle = {
-            x = initial_size.width + 5,
+            x = 5,
             y = 80,
             width = 150,
             height = 83,
         },
         items = items,
         selected_index = selected_index_2,
-        horizontal_scroll = false
+        horizontal_scroll = false,
     })
 
     text = ugui.textbox({
         uid = 5255,
         rectangle = {
-            x = initial_size.width + 5,
+            x = 5,
             y = 30,
             width = 140,
             height = 20,
@@ -137,7 +166,7 @@ emu.atdrawd2d(function()
 end)
 
 emu.atstop(function()
-    wgui.resize(initial_size.width, initial_size.height)
+    -- wgui.resize(initial_size.width, initial_size.height)
 end)
 
 emu.atwindowmessage(function(_, msg_id, wparam, _)

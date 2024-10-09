@@ -265,6 +265,7 @@ ugui = {
         item_height = 15,
         menu_item_height = 22,
         menu_item_left_padding = 32,
+        menu_item_right_padding = 32,
         font_size = 12,
         cleartype = true,
         scrollbar_thickness = 17,
@@ -474,10 +475,9 @@ ugui = {
                     'Segoe UI Mono',
                     'v')
             elseif key == 'checkmark' then
-                local connection_point = { x = rectangle.x + rectangle.width * 0.3, y = rectangle.y + rectangle.height }
-                BreitbandGraphics.draw_line({ x = rectangle.x, y = rectangle.y + rectangle.height / 2}, connection_point, color, 1)
-                BreitbandGraphics.draw_line(connection_point, { x = rectangle.x + rectangle.width, y = rectangle.y }, color, 1)
-                
+                local connection_point = {x = rectangle.x + rectangle.width * 0.3, y = rectangle.y + rectangle.height}
+                BreitbandGraphics.draw_line({x = rectangle.x, y = rectangle.y + rectangle.height / 2}, connection_point, color, 1)
+                BreitbandGraphics.draw_line(connection_point, {x = rectangle.x + rectangle.width, y = rectangle.y}, color, 1)
             else
                 -- Unknown icon, probably a good idea to nag the user
                 BreitbandGraphics.fill_rectangle(rectangle, BreitbandGraphics.colors.red)
@@ -667,6 +667,16 @@ ugui = {
                 ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.menu_item_text_colors[visual_state], nil, 'checkmark')
             end
 
+            if item.items then
+                local icon_rect = BreitbandGraphics.inflate_rectangle({
+                    x = rectangle.x + rectangle.width - (ugui.standard_styler.menu_item_right_padding),
+                    y = rectangle.y,
+                    width = ugui.standard_styler.menu_item_right_padding,
+                    height = rectangle.height,
+                }, -7)
+                ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.menu_item_text_colors[visual_state], nil, 'arrow_right')
+            end
+
             BreitbandGraphics.draw_text({
                     x = rectangle.x + ugui.standard_styler.menu_item_left_padding,
                     y = rectangle.y,
@@ -685,16 +695,16 @@ ugui = {
 
             local y = rectangle.y
 
-            for _, item in pairs(control.items) do
-                local rectangle = {
+            for i, item in pairs(control.items) do
+                local rectangle = BreitbandGraphics.inflate_rectangle({
                     x = rectangle.x,
                     y = y,
                     width = rectangle.width,
                     height = ugui.standard_styler.menu_item_height,
-                }
+                }, -1)
 
                 local visual_state = ugui.visual_states.normal
-                if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, rectangle) then
+                if ugui.internal.control_data[control.uid].hovered_index and ugui.internal.control_data[control.uid].hovered_index == i then
                     visual_state = ugui.visual_states.hovered
                 end
                 if item.enabled == false then
@@ -1589,38 +1599,109 @@ ugui = {
     ---
     --- `items` — `table[]` The items contained in the dropdown as (`{ enabled: boolean | nil, checked: boolean | nil, text: string }`)
     ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ table The interaction result as (`{ index: number | nil, dismissed: boolean }`). The `index` field is nil if no item was clicked.
+    ---@return _ table The interaction result as (`{ item: table | nil, dismissed: boolean }`). The `item` field is nil if no item was clicked.
     menu = function(control)
         ugui.internal.register_uid(control.uid)
 
+        if not ugui.internal.control_data[control.uid] then
+            ugui.internal.control_data[control.uid] = {
+                hovered_index = nil,
+                depth = 0,
+            }
+        end
+
         -- We adjust the dimensions with what should fit the content
-        control.rectangle.width = control.rectangle.width + ugui.standard_styler.menu_item_left_padding
+        local max_text_width = 0
+        for _, item in pairs(control.items) do
+            local size = BreitbandGraphics.get_text_size(item.text, ugui.standard_styler.font_size, ugui.standard_styler.font_name)
+            if size.width > max_text_width then
+                max_text_width = size.width
+            end
+        end
+
+        control.rectangle.width = max_text_width + ugui.standard_styler.menu_item_left_padding + ugui.standard_styler.menu_item_right_padding
         control.rectangle.height = #control.items * ugui.standard_styler.menu_item_height
 
+        -- TODO: Overflow avoidance: allow the user to provide a window size in begin_frame and use it here to shift the X/Y position to avoid going out of bounds
+
         local result = {
-            index = nil,
+            item = nil,
             dismissed = false,
         }
 
         local mouse_inside_control = BreitbandGraphics.is_point_inside_rectangle(ugui.internal.input_state.mouse_position, control.rectangle)
 
-        ugui.internal.hittest_free_rects[#ugui.internal.hittest_free_rects + 1] = control.rectangle
+        if control.is_enabled ~= false then
+            ugui.internal.hittest_free_rects[#ugui.internal.hittest_free_rects + 1] = control.rectangle
 
-        if ugui.internal.is_mouse_just_down() and control.is_enabled ~= false and not mouse_inside_control then
-            result.dismissed = true
-        end
+            if ugui.internal.is_mouse_just_down() and not mouse_inside_control then
+                -- This path is also reached when a subitem is clicked, so we'll delay clearing the hover indicies until the submenu has also given a result
+                result.dismissed = true
+            end
 
-        if ugui.internal.is_mouse_just_up() and control.is_enabled ~= false and mouse_inside_control then
-            local i = math.floor((ugui.internal.input_state.mouse_position.y - control.rectangle.y) / ugui.standard_styler.menu_item_height) + 1
+            if mouse_inside_control then
+                local i = math.floor((ugui.internal.input_state.mouse_position.y - control.rectangle.y) / ugui.standard_styler.menu_item_height) + 1
+                local item = control.items[i]
 
-            if control.items[i].enabled == nil or control.items[i].enabled == true then
-                result.index = i
+                ugui.internal.control_data[control.uid].hovered_index = i
+
+                if ugui.internal.is_mouse_just_up() then
+                    if (item.enabled == nil or item.enabled == true) and (item.items == nil or #item.items == 0) then
+                        result.item = item
+                    end
+                end
+            end
+
+            if ugui.internal.control_data[control.uid].hovered_index ~= nil then
+                local i = ugui.internal.control_data[control.uid].hovered_index
+                local item = control.items[i]
+                if item.items and (item.enabled == nil or item.enabled == true) then
+                    local submenu_uid = control.uid + 1
+
+                    -- If showing the submenu for the first time, fill out its controldata with the depth info
+                    if not ugui.internal.control_data[submenu_uid] then
+                        ugui.internal.control_data[submenu_uid] = {
+                            hovered_index = nil,
+                            depth = ugui.internal.control_data[control.uid].depth + 1,
+                        }
+                    end
+
+                    local submenu_result = ugui.menu({
+                        uid = submenu_uid,
+                        rectangle = {
+                            x = control.rectangle.x + control.rectangle.width - 3,
+                            y = control.rectangle.y + ((i - 1) * ugui.standard_styler.menu_item_height),
+                        },
+                        items = item.items,
+                    })
+
+                    if submenu_result.item then
+                        result.dismissed = false
+                        result.item = submenu_result.item
+                    end
+                end
             end
         end
 
-        ugui.internal.late_callbacks[#ugui.internal.late_callbacks + 1] = function()
-            ugui.standard_styler.draw_menu(control, control.rectangle)
+        if result.dismissed or result.item then
+            -- We need to clear the hover index or all menus in this tree, which means a massively annoying tree traversal
+            local function clear_hover_index_for_menu(uid, items)
+                if ugui.internal.control_data[uid] and ugui.internal.control_data[uid].hovered_index then
+                    ugui.internal.control_data[uid].hovered_index = nil
+                end
+                for _, item in pairs(items) do
+                    if item.items then
+                        clear_hover_index_for_menu(uid + 1, item.items)
+                    end
+                end
+            end
+            clear_hover_index_for_menu(control.uid, control.items)
         end
+
+        -- Menus are late-drawn, but in reverse order since submenus must overlap and draw over the parent
+        table.insert(ugui.internal.late_callbacks, 1, function()
+            ugui.standard_styler.draw_menu(control, control.rectangle)
+        end)
 
         return result
     end,
