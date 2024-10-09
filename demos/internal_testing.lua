@@ -56,6 +56,59 @@ local menu_items = {
                             },
                         },
                     },
+                    {
+                        text = 'Subitem #7',
+                        items = {
+
+                            {
+                                text = 'Normal item',
+                            },
+                            {
+                                text = 'Disabled item',
+                                enabled = false,
+                            },
+                            {
+                                text = 'Checkable item',
+                                checked = true,
+                            },
+                            {
+                                text = 'With subitems right here ok okok',
+                                items = {
+                                    {
+                                        text = 'Subitem #1',
+                                    },
+                                    {
+                                        text = 'Subitem #2',
+                                        checked = true,
+                                    },
+                                    {
+                                        text = 'Subitem #3',
+                                        items = {
+                                            {
+                                                text = 'Subitem #4',
+                                            },
+                                            {
+                                                text = 'Subitem #5',
+                                                checked = true,
+                                            },
+                                            {
+                                                text = 'Subitem #6',
+                                                enabled = false,
+                                                items = {
+                                                    {
+                                                        text = 'Should never appear',
+                                                    },
+                                                },
+                                            },
+                                            {
+                                                text = 'Subitem #7',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
         },
@@ -85,7 +138,12 @@ emu.atdrawd2d(function()
         wheel = mouse_wheel,
         is_primary_down = keys.leftclick,
         held_keys = keys,
+        window_size = {
+            x = wgui.info().width,
+            y = 250,
+        },
     })
+    BreitbandGraphics.draw_rectangle({x = 0, y = 0, width = wgui.info().width, height = 250}, BreitbandGraphics.colors.red, 1)
     mouse_wheel = 0
 
     selected_index = ugui.combobox({
@@ -104,7 +162,7 @@ emu.atdrawd2d(function()
         local result = ugui.menu({
             uid = 5,
             rectangle = {
-                x = 5,
+                x = 500,
                 y = 76,
             },
             items = menu_items,
