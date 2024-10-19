@@ -737,7 +737,7 @@ ugui = {
         draw_carrousel_button = function(control)
             -- add a "fake" text field
             local copy = ugui.internal.deep_clone(control)
-            copy.text = control.items[control.selected_index]
+            copy.text = control.items and control.items[control.selected_index] or ''
             ugui.standard_styler.draw_button(copy)
 
             local visual_state = ugui.get_visual_state(control)
@@ -759,6 +759,7 @@ ugui = {
         end,
         draw_textbox = function(control)
             local visual_state = ugui.get_visual_state(control)
+            local text = control.text or ''
 
             if ugui.internal.active_control == control.uid and control.is_enabled ~= false then
                 visual_state = ugui.visual_states.active
@@ -772,9 +773,9 @@ ugui = {
                 not (ugui.internal.control_data[control.uid].selection_start == ugui.internal.control_data[control.uid].selection_end)
 
             if should_visualize_selection then
-                local string_to_selection_start = control.text:sub(1,
+                local string_to_selection_start = text:sub(1,
                     ugui.internal.control_data[control.uid].selection_start - 1)
-                local string_to_selection_end = control.text:sub(1,
+                local string_to_selection_end = text:sub(1,
                     ugui.internal.control_data[control.uid].selection_end - 1)
 
                 BreitbandGraphics.fill_rectangle({
@@ -805,7 +806,7 @@ ugui = {
                 }, 'start', 'start', {clip = true, aliased = not ugui.standard_styler.cleartype},
                 ugui.standard_styler.edit_frame_text_colors[visual_state],
                 ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name, control.text)
+                ugui.standard_styler.font_name, text)
 
             if should_visualize_selection then
                 local lower = ugui.internal.control_data[control.uid].selection_start
@@ -815,9 +816,9 @@ ugui = {
                     higher = ugui.internal.control_data[control.uid].selection_start
                 end
 
-                local string_to_selection_start = control.text:sub(1,
+                local string_to_selection_start = text:sub(1,
                     lower - 1)
-                local string_to_selection_end = control.text:sub(1,
+                local string_to_selection_end = text:sub(1,
                     higher - 1)
 
                 local selection_start_x = control.rectangle.x +
@@ -847,12 +848,12 @@ ugui = {
                     BreitbandGraphics.invert_color(ugui.standard_styler.edit_frame_text_colors
                         [visual_state]),
                     ugui.standard_styler.font_size,
-                    ugui.standard_styler.font_name, control.text)
+                    ugui.standard_styler.font_name, text)
                 BreitbandGraphics.pop_clip()
             end
 
 
-            local string_to_caret = control.text:sub(1, ugui.internal.control_data[control.uid].caret_index - 1)
+            local string_to_caret = text:sub(1, ugui.internal.control_data[control.uid].caret_index - 1)
             local caret_x = BreitbandGraphics.get_text_size(string_to_caret,
                     ugui.standard_styler.font_size,
                     ugui.standard_styler.font_name).width +
@@ -878,6 +879,9 @@ ugui = {
         end,
         draw_joystick = function(control)
             local visual_state = ugui.get_visual_state(control)
+            local x = control.position and control.position.x or 0
+            local y = control.position and control.position.y or 0
+            local mag = control.mag or 0
 
             -- joystick has no hover or active states
             if not (visual_state == ugui.visual_states.disabled) then
@@ -886,11 +890,11 @@ ugui = {
 
             ugui.standard_styler.draw_raised_frame(control, visual_state)
             ugui.standard_styler.draw_joystick_inner(control.rectangle, visual_state, {
-                x = ugui.internal.remap(ugui.internal.clamp(control.position.x, -128, 128), -128, 128,
+                x = ugui.internal.remap(ugui.internal.clamp(x, -128, 128), -128, 128,
                     control.rectangle.x, control.rectangle.x + control.rectangle.width),
-                y = ugui.internal.remap(ugui.internal.clamp(control.position.y, -128, 128), -128, 128,
+                y = ugui.internal.remap(ugui.internal.clamp(y, -128, 128), -128, 128,
                     control.rectangle.y, control.rectangle.y + control.rectangle.height),
-                r = ugui.internal.remap(ugui.internal.clamp(control.mag or 0, 0, 128), 0, 128, 0,
+                r = ugui.internal.remap(ugui.internal.clamp(mag, 0, 128), 0, 128, 0,
                     math.min(control.rectangle.width, control.rectangle.height)),
             })
         end,
@@ -961,6 +965,7 @@ ugui = {
         end,
         draw_combobox = function(control)
             local visual_state = ugui.get_visual_state(control)
+            local selected_item = control.items and (control.selected_index and control.items[control.selected_index] or "") or ""
 
             if ugui.internal.control_data[control.uid].is_open and control.is_enabled ~= false then
                 visual_state = ugui.visual_states.active
@@ -978,7 +983,7 @@ ugui = {
                 }, 'start', 'center', {clip = true, aliased = not ugui.standard_styler.cleartype}, text_color,
                 ugui.standard_styler.font_size,
                 ugui.standard_styler.font_name,
-                control.items[control.selected_index])
+                selected_item)
 
             ugui.standard_styler.draw_icon({
                 x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.icon_size - ugui.standard_styler.textbox_padding * 2,
@@ -1009,7 +1014,7 @@ ugui = {
                 x = 0,
                 y = 0,
                 width = max_width,
-                height = ugui.standard_styler.item_height * #control.items,
+                height = ugui.standard_styler.item_height * (control.items and #control.items or 0),
             }
         end,
     },
@@ -1114,7 +1119,7 @@ ugui = {
 
         ugui.standard_styler.draw_carrousel_button(control)
 
-        return ugui.internal.clamp(selected_index, 1, #control.items)
+        return control.items and ugui.internal.clamp(selected_index, 1, #control.items) or nil
     end,
     ---Places a TextBox
     ---
@@ -1135,7 +1140,7 @@ ugui = {
         end
 
         local pushed = ugui.internal.process_push(control)
-        local text = control.text
+        local text = control.text or ''
 
         if pushed then
             ugui.internal.clear_active_control_after_mouse_up = false
@@ -1246,9 +1251,9 @@ ugui = {
         ugui.internal.register_uid(control.uid)
 
         ugui.standard_styler.draw_joystick(control)
-
-        local position = ugui.internal.deep_clone(control.position)
-
+        
+        local position = control.position and ugui.internal.deep_clone(control.position) or {x = 0, y = 0}
+        
         local pushed = ugui.internal.process_push(control)
         local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
                 ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) and
