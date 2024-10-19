@@ -69,7 +69,20 @@ for key, group in pairs(groups) do
                 end,
             }
 
-            test.func(test_context)
+            local success, error_message = pcall(function()
+                test.func(test_context)
+            end)
+
+            if not success then
+                assertion_count = assertion_count + 1
+                passed = false
+                messages[# messages + 1] = error_message
+            end
+
+            if success and test.pass_if_no_error then
+                assertion_count = assertion_count + 1
+                passed = true
+            end
 
             local name = not test.params and test.name or string.format('%s (%d)', test.name, test_param_index)
 
