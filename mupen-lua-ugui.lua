@@ -595,7 +595,7 @@ ugui = {
             local visual_state = ugui.get_visual_state(control)
             ugui.standard_styler.draw_list_frame(rectangle, visual_state)
 
-            local content_bounds = ugui.standard_styler.get_listbox_content_bounds(control)
+            local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
             -- item y position:
             -- y = (20 * (i - 1)) - (scroll_y * ((20 * #control.items) - control.rectangle.height))
             local scroll_x = ugui.internal.control_data[control.uid].scroll_x and
@@ -997,7 +997,12 @@ ugui = {
             ugui.standard_styler.draw_list(control, control.rectangle)
         end,
 
-        get_listbox_content_bounds = function(control)
+        ---Gets the desired bounds of a listbox's content. 
+        ---@param control table A table abiding by the mupen-lua-ugui control contract
+        ---@return _ table A rectangle specifying the desired bounds of the content as `{x = 0, y = 0, width: number, height: number}`.
+        get_desired_listbox_content_bounds = function(control)
+
+            -- Since horizontal content bounds measuring is expensive, we only do this if explicitly enabled. 
             local max_width = 0
             if control.horizontal_scroll == true then
                 for _, value in pairs(control.items) do
@@ -1336,7 +1341,7 @@ ugui = {
                 ugui.internal.control_data[control.uid].is_open = not ugui.internal.control_data
                     [control.uid].is_open
             else
-                local content_bounds = ugui.standard_styler.get_listbox_content_bounds(control)
+                local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
                 if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, {
                         x = control.rectangle.x,
                         y = control.rectangle.y + control.rectangle.height,
@@ -1351,7 +1356,7 @@ ugui = {
         local selected_index = control.selected_index
 
         if ugui.internal.control_data[control.uid].is_open and control.is_enabled ~= false then
-            local content_bounds = ugui.standard_styler.get_listbox_content_bounds(control)
+            local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
 
             local list_rect = {
                 x = control.rectangle.x,
@@ -1399,7 +1404,7 @@ ugui = {
             ugui.internal.control_data[_control.uid].scroll_y = 0
         end
 
-        local content_bounds = ugui.standard_styler.get_listbox_content_bounds(_control)
+        local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(_control)
         local x_overflow = content_bounds.width > _control.rectangle.width
         local y_overflow = content_bounds.height > _control.rectangle.height
 
