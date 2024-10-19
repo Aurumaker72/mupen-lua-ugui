@@ -117,18 +117,17 @@ local menu_items = {
 
 -- wgui.resize(initial_size.width + 300, initial_size.height)
 emu.atdrawd2d(function()
-    -- BreitbandGraphics.fill_rectangle({
-    --     x = initial_size.width,
-    --     y = 0,
-    --     width = 200,
-    --     height = initial_size.height,
-    -- }, {
-    --     r = 253,
-    --     g = 253,
-    --     b = 253,
-    -- })
+    BreitbandGraphics.fill_rectangle({
+        x = 0,
+        y = 0,
+        width = wgui.info().width,
+        height = wgui.info().height,
+    }, {
+        r = 253,
+        g = 253,
+        b = 253,
+    })
 
-    d2d.clear(0, 0, 0, 0)
     local keys = input.get()
     ugui.begin_frame({
         mouse_position = {
@@ -140,10 +139,9 @@ emu.atdrawd2d(function()
         held_keys = keys,
         window_size = {
             x = wgui.info().width,
-            y = 250,
+            y = wgui.info().height,
         },
     })
-    BreitbandGraphics.draw_rectangle({x = 0, y = 0, width = wgui.info().width, height = 250}, BreitbandGraphics.colors.red, 1)
     mouse_wheel = 0
 
     selected_index = ugui.combobox({
