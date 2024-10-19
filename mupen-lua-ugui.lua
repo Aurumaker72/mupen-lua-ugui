@@ -49,10 +49,10 @@ ugui = {
                 or not control.rectangle.width
                 or not control.rectangle.height
             then
-                error('Attempted to provide a malformed control.\r\n' .. debug.traceback())
+                error('Attempted to show a malformed control.\r\n' .. debug.traceback())
             end
             if ugui.internal.used_uids[control.uid] then
-                error(string.format('Uid %d is already in use!', control.uid))
+                error(string.format('Attempted to show a control with uid %d, which is already in use! Note that some controls reserve more than one uid slot after them.', control.uid))
             end
             ugui.internal.used_uids[control.uid] = control.uid
         end,
