@@ -275,6 +275,7 @@ ugui = {
         bar_height = 16,
         item_height = 15,
         menu_item_height = 22,
+        menu_overlap_size = 3,
         menu_item_left_padding = 32,
         menu_item_right_padding = 32,
         font_size = 12,
@@ -1637,6 +1638,7 @@ ugui = {
         ugui.internal.validate_and_register_control(control)
 
         if not ugui.internal.control_data[control.uid] then
+            print("Top-level menu")
             ugui.internal.control_data[control.uid] = {
                 hovered_index = nil,
                 parent_rectangle = nil,
@@ -1660,7 +1662,7 @@ ugui = {
             local parent_rect = ugui.internal.control_data[control.uid].parent_rectangle
             -- If the menu has a parent and there's an overflow on the X axis, try snaking out of the situation by moving left of the menu
             if parent_rect then
-                control.rectangle.x = parent_rect.x - control.rectangle.width
+                control.rectangle.x = parent_rect.x - control.rectangle.width + ugui.standard_styler.menu_overlap_size
             else
                 control.rectangle.x = control.rectangle.x - (control.rectangle.x + control.rectangle.width - ugui.internal.environment.window_size.x)
             end
@@ -1713,7 +1715,7 @@ ugui = {
                     local submenu_result = ugui.menu({
                         uid = submenu_uid,
                         rectangle = {
-                            x = control.rectangle.x + control.rectangle.width - 3,
+                            x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.menu_overlap_size,
                             y = control.rectangle.y + ((i - 1) * ugui.standard_styler.menu_item_height),
                         },
                         items = item.items,
