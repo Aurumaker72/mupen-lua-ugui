@@ -116,6 +116,7 @@ end
 --- `value` — `number` The spinner's numerical value
 --- `minimum_value` — `number` The spinner's minimum numerical value
 --- `maximum_value` — `number` The spinner's maximum numerical value
+--- `increment` — `number` The increment applied when the + or - buttons are clicked
 ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
 ---@return _ number The new value
 ugui.spinner = function(control)
@@ -124,6 +125,7 @@ ugui.spinner = function(control)
     if not ugui.standard_styler.spinner_button_thickness then
         ugui.standard_styler.spinner_button_thickness = 15
     end
+    local increment = control.increment or 1
 
     local value = control.value
 
@@ -156,7 +158,7 @@ ugui.spinner = function(control)
                 text = "-",
             }))
         then
-            value = value - 1
+            value = value - increment
         end
 
         if (ugui.button({
@@ -172,7 +174,7 @@ ugui.spinner = function(control)
                 text = "+",
             }))
         then
-            value = value + 1
+            value = value + increment
         end
     else
         if (ugui.button({
@@ -188,7 +190,7 @@ ugui.spinner = function(control)
                 text = "+",
             }))
         then
-            value = value + 1
+            value = value + increment
         end
 
         if (ugui.button({
@@ -204,7 +206,7 @@ ugui.spinner = function(control)
                 text = "-",
             }))
         then
-            value = value - 1
+            value = value - increment
         end
     end
 
@@ -638,7 +640,7 @@ end
 ---@return _ number The new value
 ugui.treeview = function(control)
     ugui.internal.validate_and_register_control(control)
-    
+
     -- TODO: scrolling
     if not ugui.internal.control_data[control.uid] then
         ugui.internal.control_data[control.uid] = {
