@@ -119,7 +119,7 @@ end
 ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
 ---@return _ number The new value
 ugui.spinner = function(control)
-    ugui.internal.validate_and_register_control(control)
+    ugui.internal.validate_control(control)
 
     if not ugui.standard_styler.spinner_button_thickness then
         ugui.standard_styler.spinner_button_thickness = 15
