@@ -9,6 +9,7 @@ end
 
 local groups = {
     dofile(folder('runner.lua') .. 'core.lua'),
+    dofile(folder('runner.lua') .. 'breitbandgraphics.lua'),
     dofile(folder('runner.lua') .. 'button.lua'),
     dofile(folder('runner.lua') .. 'toggle_button.lua'),
     dofile(folder('runner.lua') .. 'carrousel_button.lua'),
