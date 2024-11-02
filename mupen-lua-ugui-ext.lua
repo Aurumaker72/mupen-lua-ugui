@@ -159,10 +159,10 @@ ugui.spinner = function(control)
         and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, textbox_rect) or ugui.internal.active_control == control.uid) 
         then
         if ugui.internal.is_mouse_wheel_up() then
-            value = value + 1
+            value = value + increment
         end
         if ugui.internal.is_mouse_wheel_down() then
-            value = value - 1
+            value = value - increment
         end
     end
 
