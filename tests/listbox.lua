@@ -67,4 +67,50 @@ group.tests[#group.tests + 1] = {
     end,
 }
 
+group.tests[#group.tests + 1] = {
+    name = 'pressing_navigation_keys_while_hovering_without_selection_does_not_crash',
+    params = {
+        {
+            items = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'},
+            rect = {x = 10, y = 10, width = 100, height = 200},
+            mouse_position = {x = 20, y = 20},
+            key = 'up',
+        },
+        {
+            items = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'},
+            rect = {x = 10, y = 10, width = 100, height = 200},
+            mouse_position = {x = 20, y = 20},
+            key = 'down',
+        },
+    },
+    func = function(ctx)
+        ugui.begin_frame({
+            mouse_position = ctx.data.mouse_position,
+            wheel = 0,
+            held_keys = {},
+        })
+        ugui.listbox({
+            uid = 5,
+            rectangle = ctx.data.rect,
+            items = ctx.data.items,
+        })
+        ugui.end_frame()
+
+        ugui.begin_frame({
+            mouse_position = ctx.data.mouse_position,
+            wheel = 0,
+            held_keys = {[ctx.data.key] = true},
+        })
+        local success, _ = pcall(function()
+            ugui.listbox({
+                uid = 5,
+                rectangle = ctx.data.rect,
+                items = ctx.data.items,
+            })
+        end)
+        ctx.assert_eq(true, success)
+        ugui.end_frame()
+    end,
+}
+
 return group
