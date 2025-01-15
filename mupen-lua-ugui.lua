@@ -12,13 +12,23 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ugui = {
 
     internal = {
+
+        ---@class Environment
+        ---@field public mouse_position { x: number, y: number }
+        ---@field public wheel number The mouse wheel delta.
+        ---@field public is_primary_down boolean Whether the primary mouse button is being pressed.
+        ---@field public held_keys table<string, boolean> A map of held key identifiers to booleans. A key not being present or its value being 'false' means it is not held.
+        ---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
+
         -- per-uid library-side data, such as scroll position
         control_data = {},
 
-        -- the current input state
+        ---@type Environment
+        ---The environment for the current frame.
         environment = nil,
 
-        -- the last frame's input state
+        ---@type Environment
+        ---The environment for the previous frame.
         previous_environment = nil,
 
         -- the position of the mouse at the last click
@@ -52,7 +62,7 @@ ugui = {
                 error('Attempted to show a malformed control.\r\n' .. debug.traceback())
             end
         end,
-        
+
         ---Validates the structure of a control and registers its uid. Must be called in every control function.
         ---@param control table A control which may or may not abide by the mupen-lua-ugui control contract
         validate_and_register_control = function(control)
@@ -1042,8 +1052,8 @@ ugui = {
         end,
     },
 
-    ---Begins a new frame
-    ---@param environment table A table describing the state of the environment as `{ mouse_position = {x, y}, wheel, is_primary_down, held_keys, window_size = {x, y} }`
+    ---Begins a new frame.
+    ---@param environment Environment The environment for the current frame.
     begin_frame = function(environment)
         if not ugui.internal.environment then
             ugui.internal.environment = environment
@@ -1061,8 +1071,9 @@ ugui = {
         end
     end,
 
-    --- Ends a frame
+    --- Ends the current frame.
     end_frame = function()
+        -- FIXME: end_frame & begin_frame should throw an error when unbalanced (begin_frame(), begin_frame()) 
         for i = 1, #ugui.internal.late_callbacks, 1 do
             ugui.internal.late_callbacks[i]()
         end
