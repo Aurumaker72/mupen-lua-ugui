@@ -23,6 +23,9 @@ local groups = {
 }
 
 local verbose = false
+local tests_passed = 0
+local tests_failed = 0
+local tests_empty = 0
 
 for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
@@ -88,11 +91,14 @@ for key, group in pairs(groups) do
             local name = not test.params and test.name or string.format('%s (%d)', test.name, test_param_index)
 
             if assertion_count == 0 then
+                tests_empty = tests_empty + 1
                 print(string.format('    NO ASSERTIONS %s', name))
             else
                 if passed then
+                    tests_passed = tests_passed + 1
                     print(string.format('    PASS %s', name))
                 else
+                    tests_failed = tests_failed + 1
                     if #messages > 0 then
                         print(string.format('    FAIL %s:', name))
 
@@ -109,3 +115,13 @@ for key, group in pairs(groups) do
 
     print('')
 end
+
+local tests_total = tests_passed + tests_failed + tests_empty
+
+print('Test Summary:')
+print(string.format('  Passed: %d', tests_passed))
+print(string.format('  Failed: %d', tests_failed))
+print(string.format('  Empty: %d', tests_empty))
+print(string.format('  Total: %d', tests_total))
+print(string.format('  (%d/%d)', tests_passed, tests_total))
+
