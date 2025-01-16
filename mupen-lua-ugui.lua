@@ -449,6 +449,9 @@ ugui = {
             --- The font name.
             font_name = 'MS Shell Dlg 2',
 
+            --- The monospace variant font name.
+            monospace_font_name = 'Consolas',
+
             --- The font size.
             font_size = 12,
 
