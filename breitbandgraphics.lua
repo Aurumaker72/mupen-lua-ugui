@@ -43,8 +43,17 @@ end
 
 BreitbandGraphics = {
     internal = {
+        ---@type table<string, integer>
+        ---Map of color keys to brush handles.
         brushes = {},
+
+        ---@type table<string, integer>
+        ---Map of image paths to image handles.
         images = {},
+
+        ---Gets a brush from a color value, creating one and caching it if it doesn't already exist in the cache.
+        ---@param color Color The color value to create a brush from.
+        ---@return integer # The brush handle.
         brush_from_color = function(color)
             local key = (color.r << 24) | (color.g << 16) | (color.b << 8) | (color.a and color.a or 255)
             if not BreitbandGraphics.internal.brushes[key] then
@@ -54,6 +63,10 @@ BreitbandGraphics = {
             end
             return BreitbandGraphics.internal.brushes[key]
         end,
+
+        ---Gets an image from a path, creating one and caching it if it doesn't already exist in the cache.
+        ---@param path string The path to the image.
+        ---@return integer # The image handle.
         image_from_path = function(path)
             if not BreitbandGraphics.internal.images[path] then
                 BreitbandGraphics.internal.images[path] = d2d.load_image(path)
@@ -333,7 +346,7 @@ BreitbandGraphics = {
     ---@param font_size number The font size.
     ---@param font_name string The font name.
     ---@param text string The text.
-    ---TODO: Creates draw_text2, which takes in a big configuration table and uses a table enum for the alignments! 
+    ---TODO: Creates draw_text2, which takes in a big configuration table and uses a table enum for the alignments!
     draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
         text)
         if text == nil then
