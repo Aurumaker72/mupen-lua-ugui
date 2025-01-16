@@ -15,7 +15,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@class Environment
 ---@field public mouse_position { x: number, y: number } The mouse position.
 ---@field public wheel number The mouse wheel delta.
----@field public is_primary_down boolean Whether the primary mouse button is being pressed.
+---@field public is_primary_down boolean? Whether the primary mouse button is being pressed.
 ---@field public held_keys table<string, boolean> A map of held key identifiers to booleans. A key not being present or its value being 'false' means it is not held.
 ---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
 
@@ -23,6 +23,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@field public uid UID The unique identifier of the control.
 ---@field public rectangle Rectangle The rectangle in which the control is drawn.
 ---@field public is_enabled boolean? Whether the control is enabled. If nil or true, the control is enabled.
+---@field package topmost boolean? Whether the control is drawn at the end of the frame, after all other controls.
 ---The base class for all controls.
 
 ---@class Button : Control
@@ -35,6 +36,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 
 ---@class CarrouselButton : Control
 ---@field public items string[] The items contained in the carrousel button.
+---@field public selected_index integer The index of the currently selected item into the items array.
 ---A button which can be toggled on and off.
 ---TODO: Make wraparound optional
 
@@ -67,10 +69,10 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@class ScrollBar : Control
 ---@field public value number The scroll proportion in the range 0-1.
 ---@field public ratio number The overflow ratio, which is calculated by dividing the desired content dimensions by the relevant attached control's (e.g.: a listbox's) dimensions.
----@field public selected_index integer The index of the currently selected item into the items array.
 ---A scrollbar which allows scrolling horizontally or vertically, depending on the control's dimensions.
 
 ---@class MenuItem
+---@field public items MenuItem[]? The item's child items. If nil or empty, the item has no child items and is clickable.
 ---@field public enabled boolean? Whether the item is enabled. If nil or true, the item is enabled.
 ---@field public checked boolean? Whether the item is checked. If true, the item is checked.
 ---@field public text string The item's text.
@@ -178,14 +180,14 @@ ugui = {
 
         ---@return boolean # Whether LMB was just pressed.
         is_mouse_just_down = function()
-            return ugui.internal.environment.is_primary_down and
-                not ugui.internal.previous_environment.is_primary_down
+            local value = ugui.internal.environment.is_primary_down and not ugui.internal.previous_environment.is_primary_down
+            return value and true or false
         end,
 
         ---@return boolean # Whether LMB was just released.
         is_mouse_just_up = function()
-            return not ugui.internal.environment.is_primary_down and
-                ugui.internal.previous_environment.is_primary_down
+            local value = not ugui.internal.environment.is_primary_down and ugui.internal.previous_environment.is_primary_down
+            return value and true or false
         end,
 
         ---@return boolean # Whether the mouse wheel was just moved up.
@@ -235,6 +237,7 @@ ugui = {
         ---@param max number The upper bound.
         ---@return number # The new limited value.
         clamp = function(value, min, max)
+            -- FIXME: Remove this nil check, deal with the fallout.
             if value == nil then
                 return value
             end
@@ -286,8 +289,8 @@ ugui = {
             local positions = {}
             for i = 1, #text, 1 do
                 local width = BreitbandGraphics.get_text_size(text:sub(1, i),
-                    ugui.standard_styler.font_size,
-                    ugui.standard_styler.font_name).width
+                    ugui.standard_styler.params.font_size,
+                    ugui.standard_styler.params.font_name).width
 
                 positions[#positions + 1] = width
             end
@@ -436,176 +439,213 @@ ugui = {
 
     --- The standard style implementation, which is responsible for drawing controls.
     standard_styler = {
-        textbox_padding = 2,
-        track_thickness = 2,
-        bar_width = 6,
-        bar_height = 16,
-        item_height = 15,
-        menu_item_height = 22,
-        menu_overlap_size = 3,
-        menu_item_left_padding = 32,
-        menu_item_right_padding = 32,
-        font_size = 12,
-        cleartype = true,
-        scrollbar_thickness = 17,
-        joystick_tip_size = 8,
-        icon_size = 12,
-        font_name = 'MS Shell Dlg 2',
-        raised_frame_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#E1E1E1'),
-            [2] = BreitbandGraphics.hex_to_color('#E5F1FB'),
-            [3] = BreitbandGraphics.hex_to_color('#CCE4F7'),
-            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-        },
-        raised_frame_border_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#ADADAD'),
-            [2] = BreitbandGraphics.hex_to_color('#0078D7'),
-            [3] = BreitbandGraphics.hex_to_color('#005499'),
-            [0] = BreitbandGraphics.hex_to_color('#BFBFBF'),
-        },
-        edit_frame_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-        },
-        edit_frame_border_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#7A7A7A'),
-            [2] = BreitbandGraphics.hex_to_color('#171717'),
-            [3] = BreitbandGraphics.hex_to_color('#0078D7'),
-            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-        },
-        list_frame_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-        },
-        list_frame_border_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#7A7A7A'),
-            [2] = BreitbandGraphics.hex_to_color('#7A7A7A'),
-            [3] = BreitbandGraphics.hex_to_color('#7A7A7A'),
-            [0] = BreitbandGraphics.hex_to_color('#7A7A7A'),
-        },
-        menu_frame_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#F2F2F2'),
-            [2] = BreitbandGraphics.hex_to_color('#F2F2F2'),
-            [3] = BreitbandGraphics.hex_to_color('#F2F2F2'),
-            [0] = BreitbandGraphics.hex_to_color('#F2F2F2'),
-        },
-        menu_frame_border_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-            [2] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-            [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-        },
-        menu_item_text_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#000000'),
-            [2] = BreitbandGraphics.hex_to_color('#000000'),
-            [3] = BreitbandGraphics.hex_to_color('#000000'),
-            [0] = BreitbandGraphics.hex_to_color('#6D6D6D'),
-        },
-        menu_item_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#00000000'),
-            [2] = BreitbandGraphics.hex_to_color('#91C9F7'),
-            [3] = BreitbandGraphics.hex_to_color('#91C9F7'),
-            [0] = BreitbandGraphics.hex_to_color('#00000000'),
-        },
-        raised_frame_text_colors = {
-            [1] = BreitbandGraphics.colors.black,
-            [2] = BreitbandGraphics.colors.black,
-            [3] = BreitbandGraphics.colors.black,
-            [0] = BreitbandGraphics.repeated_to_color(160),
-        },
-        edit_frame_text_colors = {
-            [1] = BreitbandGraphics.colors.black,
-            [2] = BreitbandGraphics.colors.black,
-            [3] = BreitbandGraphics.colors.black,
-            [0] = BreitbandGraphics.repeated_to_color(160),
-        },
-        list_text_colors = {
-            [1] = BreitbandGraphics.colors.black,
-            [2] = BreitbandGraphics.colors.black,
-            [3] = BreitbandGraphics.colors.white,
-            [0] = BreitbandGraphics.repeated_to_color(160),
-        },
-        list_item_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [3] = BreitbandGraphics.hex_to_color('#0078D7'),
-            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-        },
-        joystick_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-            [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
-        },
-        joystick_outline_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#000000'),
-            [2] = BreitbandGraphics.hex_to_color('#000000'),
-            [3] = BreitbandGraphics.hex_to_color('#000000'),
-            [0] = BreitbandGraphics.hex_to_color('#000000'),
-        },
-        joystick_tip_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FF0000'),
-            [2] = BreitbandGraphics.hex_to_color('#FF0000'),
-            [3] = BreitbandGraphics.hex_to_color('#FF0000'),
-            [0] = BreitbandGraphics.hex_to_color('#FF8080'),
-        },
-        joystick_line_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#0000FF'),
-            [2] = BreitbandGraphics.hex_to_color('#0000FF'),
-            [3] = BreitbandGraphics.hex_to_color('#0000FF'),
-            [0] = BreitbandGraphics.hex_to_color('#8080FF'),
-        },
-        joystick_inner_mag_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FF000022'),
-            [2] = BreitbandGraphics.hex_to_color('#FF000022'),
-            [3] = BreitbandGraphics.hex_to_color('#FF000022'),
-            [0] = BreitbandGraphics.hex_to_color('#00000000'),
-        },
-        joystick_outer_mag_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#FF0000'),
-            [2] = BreitbandGraphics.hex_to_color('#FF0000'),
-            [3] = BreitbandGraphics.hex_to_color('#FF0000'),
-            [0] = BreitbandGraphics.hex_to_color('#FF8080'),
-        },
-        joystick_mag_thicknesses = {
-            [1] = 2,
-            [2] = 2,
-            [3] = 2,
-            [0] = 2,
-        },
-        scrollbar_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#F0F0F0'),
-            [2] = BreitbandGraphics.hex_to_color('#F0F0F0'),
-            [3] = BreitbandGraphics.hex_to_color('#F0F0F0'),
-            [0] = BreitbandGraphics.hex_to_color('#F0F0F0'),
-        },
-        scrollbar_thumb_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#CDCDCD'),
-            [2] = BreitbandGraphics.hex_to_color('#A6A6A6'),
-            [3] = BreitbandGraphics.hex_to_color('#606060'),
-            [0] = BreitbandGraphics.hex_to_color('#C0C0C0'),
-        },
-        trackbar_back_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#E7EAEA'),
-            [2] = BreitbandGraphics.hex_to_color('#E7EAEA'),
-            [3] = BreitbandGraphics.hex_to_color('#E7EAEA'),
-            [0] = BreitbandGraphics.hex_to_color('#E7EAEA'),
-        },
-        trackbar_border_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#D6D6D6'),
-            [2] = BreitbandGraphics.hex_to_color('#D6D6D6'),
-            [3] = BreitbandGraphics.hex_to_color('#D6D6D6'),
-            [0] = BreitbandGraphics.hex_to_color('#D6D6D6'),
-        },
-        trackbar_thumb_colors = {
-            [1] = BreitbandGraphics.hex_to_color('#007AD9'),
-            [2] = BreitbandGraphics.hex_to_color('#171717'),
-            [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
-            [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+
+        --- The styler parameters, which determine how controls are drawn.
+        params = {
+
+            --- Whether font filtering is enabled.
+            cleartype = true,
+
+            --- The font name.
+            font_name = 'MS Shell Dlg 2',
+
+            --- The font size.
+            font_size = 12,
+
+            --- The icon size.
+            icon_size = 12,
+
+            button = {
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#E1E1E1'),
+                    [2] = BreitbandGraphics.hex_to_color('#E5F1FB'),
+                    [3] = BreitbandGraphics.hex_to_color('#CCE4F7'),
+                    [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                },
+                border = {
+                    [1] = BreitbandGraphics.hex_to_color('#ADADAD'),
+                    [2] = BreitbandGraphics.hex_to_color('#0078D7'),
+                    [3] = BreitbandGraphics.hex_to_color('#005499'),
+                    [0] = BreitbandGraphics.hex_to_color('#BFBFBF'),
+                },
+                text = {
+                    [1] = BreitbandGraphics.hex_to_color('#000000'),
+                    [2] = BreitbandGraphics.hex_to_color('#000000'),
+                    [3] = BreitbandGraphics.hex_to_color('#000000'),
+                    [0] = BreitbandGraphics.hex_to_color('#A0A0A0'),
+                },
+            },
+            textbox = {
+                padding = {x = 2, y = 0},
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                },
+                border = {
+                    [1] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+                    [2] = BreitbandGraphics.hex_to_color('#171717'),
+                    [3] = BreitbandGraphics.hex_to_color('#0078D7'),
+                    [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                },
+                text = {
+                    [1] = BreitbandGraphics.hex_to_color('#000000'),
+                    [2] = BreitbandGraphics.hex_to_color('#000000'),
+                    [3] = BreitbandGraphics.hex_to_color('#000000'),
+                    [0] = BreitbandGraphics.hex_to_color('#A0A0A0'),
+                },
+            },
+            listbox = {
+                item_height = 15,
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                },
+                border = {
+                    [1] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+                    [2] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+                    [3] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+                    [0] = BreitbandGraphics.hex_to_color('#7A7A7A'),
+                },
+            },
+            listbox_item = {
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [3] = BreitbandGraphics.hex_to_color('#0078D7'),
+                    [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                },
+                text = {
+                    [1] = BreitbandGraphics.hex_to_color('#000000'),
+                    [2] = BreitbandGraphics.hex_to_color('#000000'),
+                    [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [0] = BreitbandGraphics.hex_to_color('#A0A0A0'),
+                },
+            },
+            menu = {
+                overlap_size = 3,
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+                    [2] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+                    [3] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+                    [0] = BreitbandGraphics.hex_to_color('#F2F2F2'),
+                },
+                border = {
+                    [1] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [2] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                },
+            },
+            menu_item = {
+                height = 22,
+                left_padding = 32,
+                right_padding = 32,
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#00000000'),
+                    [2] = BreitbandGraphics.hex_to_color('#91C9F7'),
+                    [3] = BreitbandGraphics.hex_to_color('#91C9F7'),
+                    [0] = BreitbandGraphics.hex_to_color('#00000000'),
+                },
+                border = {
+                    [1] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [2] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                },
+                text = {
+                    [1] = BreitbandGraphics.hex_to_color('#000000'),
+                    [2] = BreitbandGraphics.hex_to_color('#000000'),
+                    [3] = BreitbandGraphics.hex_to_color('#000000'),
+                    [0] = BreitbandGraphics.hex_to_color('#6D6D6D'),
+                },
+            },
+            joystick = {
+                tip_size = 8,
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [3] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                    [0] = BreitbandGraphics.hex_to_color('#FFFFFF'),
+                },
+                outline = {
+                    [1] = BreitbandGraphics.hex_to_color('#000000'),
+                    [2] = BreitbandGraphics.hex_to_color('#000000'),
+                    [3] = BreitbandGraphics.hex_to_color('#000000'),
+                    [0] = BreitbandGraphics.hex_to_color('#000000'),
+                },
+                tip = {
+                    [1] = BreitbandGraphics.hex_to_color('#FF0000'),
+                    [2] = BreitbandGraphics.hex_to_color('#FF0000'),
+                    [3] = BreitbandGraphics.hex_to_color('#FF0000'),
+                    [0] = BreitbandGraphics.hex_to_color('#FF8080'),
+                },
+                line = {
+                    [1] = BreitbandGraphics.hex_to_color('#0000FF'),
+                    [2] = BreitbandGraphics.hex_to_color('#0000FF'),
+                    [3] = BreitbandGraphics.hex_to_color('#0000FF'),
+                    [0] = BreitbandGraphics.hex_to_color('#8080FF'),
+                },
+                inner_mag = {
+                    [1] = BreitbandGraphics.hex_to_color('#FF000022'),
+                    [2] = BreitbandGraphics.hex_to_color('#FF000022'),
+                    [3] = BreitbandGraphics.hex_to_color('#FF000022'),
+                    [0] = BreitbandGraphics.hex_to_color('#00000000'),
+                },
+                outer_mag = {
+                    [1] = BreitbandGraphics.hex_to_color('#FF0000'),
+                    [2] = BreitbandGraphics.hex_to_color('#FF0000'),
+                    [3] = BreitbandGraphics.hex_to_color('#FF0000'),
+                    [0] = BreitbandGraphics.hex_to_color('#FF8080'),
+                },
+                mag_thicknesses = {
+                    [1] = 2,
+                    [2] = 2,
+                    [3] = 2,
+                    [0] = 2,
+                },
+            },
+            scrollbar = {
+                thickness = 17,
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+                    [2] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+                    [3] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+                    [0] = BreitbandGraphics.hex_to_color('#F0F0F0'),
+                },
+                thumb = {
+                    [1] = BreitbandGraphics.hex_to_color('#CDCDCD'),
+                    [2] = BreitbandGraphics.hex_to_color('#A6A6A6'),
+                    [3] = BreitbandGraphics.hex_to_color('#606060'),
+                    [0] = BreitbandGraphics.hex_to_color('#C0C0C0'),
+                },
+            },
+            trackbar = {
+                track_thickness = 2,
+                bar_width = 6,
+                bar_height = 16,
+                back = {
+                    [1] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+                    [2] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+                    [3] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+                    [0] = BreitbandGraphics.hex_to_color('#E7EAEA'),
+                },
+                border = {
+                    [1] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+                    [2] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+                    [3] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+                    [0] = BreitbandGraphics.hex_to_color('#D6D6D6'),
+                },
+                thumb = {
+                    [1] = BreitbandGraphics.hex_to_color('#007AD9'),
+                    [2] = BreitbandGraphics.hex_to_color('#171717'),
+                    [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                    [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
+                },
+            },
         },
 
         ---Draws an icon with the specified parameters.
@@ -616,7 +656,8 @@ ugui = {
         ---@param visual_state VisualState? The icon's visual state.
         ---@param key string The icon's identifier.
         draw_icon = function(rectangle, color, visual_state, key)
-            if not color and visual_state then
+            -- NOTE: visual_state is not utilized by the standard implementation of draw_icon.
+            if not color then
                 BreitbandGraphics.fill_rectangle(rectangle, BreitbandGraphics.colors.red)
                 return
             end
@@ -625,36 +666,36 @@ ugui = {
                 BreitbandGraphics.draw_text(rectangle,
                     'center',
                     'center',
-                    {aliased = not ugui.standard_styler.cleartype},
+                    {aliased = not ugui.standard_styler.params.cleartype},
                     color,
-                    ugui.standard_styler.font_size,
+                    ugui.standard_styler.params.font_size,
                     'Segoe UI Mono',
                     '<')
             elseif key == 'arrow_right' then
                 BreitbandGraphics.draw_text(rectangle,
                     'center',
                     'center',
-                    {aliased = not ugui.standard_styler.cleartype},
+                    {aliased = not ugui.standard_styler.params.cleartype},
                     color,
-                    ugui.standard_styler.font_size,
+                    ugui.standard_styler.params.font_size,
                     'Segoe UI Mono',
                     '>')
             elseif key == 'arrow_up' then
                 BreitbandGraphics.draw_text(rectangle,
                     'center',
                     'center',
-                    {aliased = not ugui.standard_styler.cleartype},
+                    {aliased = not ugui.standard_styler.params.cleartype},
                     color,
-                    ugui.standard_styler.font_size,
+                    ugui.standard_styler.params.font_size,
                     'Segoe UI Mono',
                     '^')
             elseif key == 'arrow_down' then
                 BreitbandGraphics.draw_text(rectangle,
                     'center',
                     'center',
-                    {aliased = not ugui.standard_styler.cleartype},
+                    {aliased = not ugui.standard_styler.params.cleartype},
                     color,
-                    ugui.standard_styler.font_size,
+                    ugui.standard_styler.params.font_size,
                     'Segoe UI Mono',
                     'v')
             elseif key == 'checkmark' then
@@ -672,9 +713,9 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         draw_raised_frame = function(control, visual_state)
             BreitbandGraphics.fill_rectangle(control.rectangle,
-                ugui.standard_styler.raised_frame_border_colors[visual_state])
+                ugui.standard_styler.params.button.border[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
-                ugui.standard_styler.raised_frame_back_colors[visual_state])
+                ugui.standard_styler.params.button.back[visual_state])
         end,
 
         ---Draws an edit frame with the specified parameters.
@@ -682,9 +723,9 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         draw_edit_frame = function(control, rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(control.rectangle,
-                ugui.standard_styler.edit_frame_border_colors[visual_state])
+                ugui.standard_styler.params.textbox.border[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
-                ugui.standard_styler.edit_frame_back_colors[visual_state])
+                ugui.standard_styler.params.textbox.back[visual_state])
         end,
 
         ---Draws a list frame with the specified parameters.
@@ -692,9 +733,9 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         draw_list_frame = function(rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(rectangle,
-                ugui.standard_styler.list_frame_border_colors[visual_state])
+                ugui.standard_styler.params.listbox.border[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
-                ugui.standard_styler.list_frame_back_colors[visual_state])
+                ugui.standard_styler.params.listbox.back[visual_state])
         end,
 
         ---Draws a joystick's inner part with the specified parameters.
@@ -702,13 +743,13 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         ---@param position Vector2 The joystick's position.
         draw_joystick_inner = function(rectangle, visual_state, position)
-            local back_color = ugui.standard_styler.joystick_back_colors[visual_state]
-            local outline_color = ugui.standard_styler.joystick_outline_colors[visual_state]
-            local tip_color = ugui.standard_styler.joystick_tip_colors[visual_state]
-            local line_color = ugui.standard_styler.joystick_line_colors[visual_state]
-            local inner_mag_color = ugui.standard_styler.joystick_inner_mag_colors[visual_state]
-            local outer_mag_color = ugui.standard_styler.joystick_outer_mag_colors[visual_state]
-            local mag_thickness = ugui.standard_styler.joystick_mag_thicknesses[visual_state]
+            local back_color = ugui.standard_styler.params.joystick.back[visual_state]
+            local outline_color = ugui.standard_styler.params.joystick.outline[visual_state]
+            local tip_color = ugui.standard_styler.params.joystick.tip[visual_state]
+            local line_color = ugui.standard_styler.params.joystick.line[visual_state]
+            local inner_mag_color = ugui.standard_styler.params.joystick.inner_mag[visual_state]
+            local outer_mag_color = ugui.standard_styler.params.joystick.outer_mag[visual_state]
+            local mag_thickness = ugui.standard_styler.params.joystick.mag_thicknesses[visual_state]
 
             BreitbandGraphics.fill_ellipse(BreitbandGraphics.inflate_rectangle(rectangle, -1),
                 back_color)
@@ -758,10 +799,10 @@ ugui = {
             }, line_color, 3)
 
             BreitbandGraphics.fill_ellipse({
-                x = position.x - ugui.standard_styler.joystick_tip_size / 2,
-                y = position.y - ugui.standard_styler.joystick_tip_size / 2,
-                width = ugui.standard_styler.joystick_tip_size,
-                height = ugui.standard_styler.joystick_tip_size,
+                x = position.x - ugui.standard_styler.params.joystick.tip_size / 2,
+                y = position.y - ugui.standard_styler.params.joystick.tip_size / 2,
+                width = ugui.standard_styler.params.joystick.tip_size,
+                height = ugui.standard_styler.params.joystick.tip_size,
             }, tip_color)
         end,
 
@@ -771,9 +812,9 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(container_rectangle,
-                ugui.standard_styler.scrollbar_back_colors[visual_state])
+                ugui.standard_styler.params.scrollbar.back[visual_state])
             BreitbandGraphics.fill_rectangle(thumb_rectangle,
-                ugui.standard_styler.scrollbar_thumb_colors[visual_state])
+                ugui.standard_styler.params.scrollbar.thumb[visual_state])
         end,
 
         ---Draws a list item with the specified parameters.
@@ -785,24 +826,24 @@ ugui = {
                 return
             end
             BreitbandGraphics.fill_rectangle(rectangle,
-                ugui.standard_styler.list_item_back_colors[visual_state])
+                ugui.standard_styler.params.listbox_item.back[visual_state])
 
-            local size = BreitbandGraphics.get_text_size(item, ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name)
+            local size = BreitbandGraphics.get_text_size(item, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
+
             BreitbandGraphics.draw_text({
                     x = rectangle.x + 2,
                     y = rectangle.y,
                     width = size.width * 2,
                     height = rectangle.height,
-                }, 'start', 'center', {aliased = not ugui.standard_styler.cleartype},
-                ugui.standard_styler.list_text_colors[visual_state],
-                ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name,
+                }, 'start', 'center', {aliased = not ugui.standard_styler.params.cleartype},
+                ugui.standard_styler.params.listbox_item.text[visual_state],
+                ugui.standard_styler.params.font_size,
+                ugui.standard_styler.params.font_name,
                 item)
         end,
 
         ---Draws a list with the specified parameters.
-        ---@param control Control The control table.
+        ---@param control ListBox The control table.
         ---@param rectangle Rectangle The list item's bounds.
         draw_list = function(control, rectangle)
             local visual_state = ugui.get_visual_state(control)
@@ -818,11 +859,11 @@ ugui = {
 
             local index_begin = (scroll_y *
                     (content_bounds.height - rectangle.height)) /
-                ugui.standard_styler.item_height
+                ugui.standard_styler.params.listbox.item_height
 
             local index_end = (rectangle.height + (scroll_y *
                     (content_bounds.height - rectangle.height))) /
-                ugui.standard_styler.item_height
+                ugui.standard_styler.params.listbox.item_height
 
             index_begin = ugui.internal.clamp(math.floor(index_begin), 1, #control.items)
             index_end = ugui.internal.clamp(math.ceil(index_end), 1, #control.items)
@@ -832,7 +873,7 @@ ugui = {
             BreitbandGraphics.push_clip(BreitbandGraphics.inflate_rectangle(rectangle, -1))
 
             for i = index_begin, index_end, 1 do
-                local y_offset = (ugui.standard_styler.item_height * (i - 1)) -
+                local y_offset = (ugui.standard_styler.params.listbox.item_height * (i - 1)) -
                     (scroll_y * (content_bounds.height - rectangle.height))
 
                 local item_visual_state = ugui.visual_states.normal
@@ -848,7 +889,7 @@ ugui = {
                     x = rectangle.x - x_offset,
                     y = rectangle.y + y_offset,
                     width = math.max(content_bounds.width, control.rectangle.width),
-                    height = ugui.standard_styler.item_height,
+                    height = ugui.standard_styler.params.listbox.item_height,
                 }, item_visual_state)
             end
 
@@ -860,9 +901,9 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         draw_menu_frame = function(rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(rectangle,
-                ugui.standard_styler.menu_frame_border_colors[visual_state])
+                ugui.standard_styler.params.menu.border[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
-                ugui.standard_styler.menu_frame_back_colors[visual_state])
+                ugui.standard_styler.params.menu.back[visual_state])
         end,
 
         ---Draws a menu item with the specified parameters.
@@ -871,7 +912,7 @@ ugui = {
         ---@param visual_state VisualState The control's visual state.
         draw_menu_item = function(item, rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(rectangle,
-                ugui.standard_styler.menu_item_back_colors[visual_state])
+                ugui.standard_styler.params.menu_item.back[visual_state])
             BreitbandGraphics.push_clip({
                 x = rectangle.x,
                 y = rectangle.y,
@@ -881,33 +922,33 @@ ugui = {
 
             if item.checked then
                 local icon_rect = BreitbandGraphics.inflate_rectangle({
-                    x = rectangle.x + (ugui.standard_styler.menu_item_left_padding - rectangle.height) * 0.5,
+                    x = rectangle.x + (ugui.standard_styler.params.menu_item.left_padding - rectangle.height) * 0.5,
                     y = rectangle.y,
                     width = rectangle.height,
                     height = rectangle.height,
                 }, -7)
-                ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.menu_item_text_colors[visual_state], nil, 'checkmark')
+                ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.params.menu_item.height[visual_state], nil, 'checkmark')
             end
 
             if item.items then
                 local icon_rect = BreitbandGraphics.inflate_rectangle({
-                    x = rectangle.x + rectangle.width - (ugui.standard_styler.menu_item_right_padding),
+                    x = rectangle.x + rectangle.width - (ugui.standard_styler.params.menu_item.right_padding),
                     y = rectangle.y,
-                    width = ugui.standard_styler.menu_item_right_padding,
+                    width = ugui.standard_styler.params.menu_item.right_padding,
                     height = rectangle.height,
                 }, -7)
-                ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.menu_item_text_colors[visual_state], nil, 'arrow_right')
+                ugui.standard_styler.draw_icon(icon_rect, ugui.standard_styler.params.menu_item.height[visual_state], nil, 'arrow_right')
             end
 
             BreitbandGraphics.draw_text({
-                    x = rectangle.x + ugui.standard_styler.menu_item_left_padding,
+                    x = rectangle.x + ugui.standard_styler.params.menu_item.left_padding,
                     y = rectangle.y,
                     width = 9999999,
                     height = rectangle.height,
-                }, 'start', 'center', {aliased = not ugui.standard_styler.cleartype},
-                ugui.standard_styler.menu_item_text_colors[visual_state],
-                ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name,
+                }, 'start', 'center', {aliased = not ugui.standard_styler.params.cleartype},
+                ugui.standard_styler.params.menu_item.height[visual_state],
+                ugui.standard_styler.params.font_size,
+                ugui.standard_styler.params.font_name,
                 item.text)
             BreitbandGraphics.pop_clip()
         end,
@@ -926,7 +967,7 @@ ugui = {
                     x = rectangle.x,
                     y = y,
                     width = rectangle.width,
-                    height = ugui.standard_styler.menu_item_height,
+                    height = ugui.standard_styler.params.menu_item.height,
                 }, -1)
 
                 local visual_state = ugui.visual_states.normal
@@ -956,10 +997,10 @@ ugui = {
             ugui.standard_styler.draw_raised_frame(control, visual_state)
 
             BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-                {clip = true, aliased = not ugui.standard_styler.cleartype},
-                ugui.standard_styler.raised_frame_text_colors[visual_state],
-                ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name, control.text)
+                {clip = true, aliased = not ugui.standard_styler.params.cleartype},
+                ugui.standard_styler.params.button.text[visual_state],
+                ugui.standard_styler.params.font_size,
+                ugui.standard_styler.params.font_name, control.text)
         end,
 
         ---Draws a ToggleButton with the specified parameters.
@@ -980,18 +1021,18 @@ ugui = {
 
             -- draw the arrows
             ugui.standard_styler.draw_icon({
-                x = control.rectangle.x + ugui.standard_styler.textbox_padding,
+                x = control.rectangle.x + ugui.standard_styler.params.textbox.padding.x,
                 y = control.rectangle.y,
-                width = ugui.standard_styler.icon_size,
+                width = ugui.standard_styler.params.icon_size,
                 height = control.rectangle.height,
-            }, ugui.standard_styler.raised_frame_text_colors[visual_state], visual_state, 'arrow_left')
+            }, ugui.standard_styler.params.button.text[visual_state], visual_state, 'arrow_left')
             ugui.standard_styler.draw_icon({
-                x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.textbox_padding -
-                    ugui.standard_styler.icon_size,
+                x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.params.textbox.padding.x -
+                    ugui.standard_styler.params.icon_size,
                 y = control.rectangle.y,
-                width = ugui.standard_styler.icon_size,
+                width = ugui.standard_styler.params.icon_size,
                 height = control.rectangle.height,
-            }, ugui.standard_styler.raised_frame_text_colors[visual_state], visual_state, 'arrow_right')
+            }, ugui.standard_styler.params.button.text[visual_state], visual_state, 'arrow_right')
         end,
 
         ---Draws a TextBox with the specified parameters.
@@ -1020,17 +1061,17 @@ ugui = {
                 BreitbandGraphics.fill_rectangle({
                         x = control.rectangle.x +
                             BreitbandGraphics.get_text_size(string_to_selection_start,
-                                ugui.standard_styler.font_size,
-                                ugui.standard_styler.font_name)
-                            .width + ugui.standard_styler.textbox_padding,
+                                ugui.standard_styler.params.font_size,
+                                ugui.standard_styler.params.font_name)
+                            .width + ugui.standard_styler.params.textbox.padding.x,
                         y = control.rectangle.y,
                         width = BreitbandGraphics.get_text_size(string_to_selection_end,
-                                ugui.standard_styler.font_size,
-                                ugui.standard_styler.font_name)
+                                ugui.standard_styler.params.font_size,
+                                ugui.standard_styler.params.font_name)
                             .width -
                             BreitbandGraphics.get_text_size(string_to_selection_start,
-                                ugui.standard_styler.font_size,
-                                ugui.standard_styler.font_name)
+                                ugui.standard_styler.params.font_size,
+                                ugui.standard_styler.params.font_name)
                             .width,
                         height = control.rectangle.height,
                     },
@@ -1038,14 +1079,14 @@ ugui = {
             end
 
             BreitbandGraphics.draw_text({
-                    x = control.rectangle.x + ugui.standard_styler.textbox_padding,
+                    x = control.rectangle.x + ugui.standard_styler.params.textbox.padding.x,
                     y = control.rectangle.y,
-                    width = control.rectangle.width - ugui.standard_styler.textbox_padding * 2,
+                    width = control.rectangle.width - ugui.standard_styler.params.textbox.padding.x * 2,
                     height = control.rectangle.height,
-                }, 'start', 'start', {clip = true, aliased = not ugui.standard_styler.cleartype},
-                ugui.standard_styler.edit_frame_text_colors[visual_state],
-                ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name, text)
+                }, 'start', 'start', {clip = true, aliased = not ugui.standard_styler.params.cleartype},
+                ugui.standard_styler.params.textbox.text[visual_state],
+                ugui.standard_styler.params.font_size,
+                ugui.standard_styler.params.font_name, text)
 
             if should_visualize_selection then
                 local lower = ugui.internal.control_data[control.uid].selection_start
@@ -1062,15 +1103,15 @@ ugui = {
 
                 local selection_start_x = control.rectangle.x +
                     BreitbandGraphics.get_text_size(string_to_selection_start,
-                        ugui.standard_styler.font_size,
-                        ugui.standard_styler.font_name).width +
-                    ugui.standard_styler.textbox_padding
+                        ugui.standard_styler.params.font_size,
+                        ugui.standard_styler.params.font_name).width +
+                    ugui.standard_styler.params.textbox.padding.x
 
                 local selection_end_x = control.rectangle.x +
                     BreitbandGraphics.get_text_size(string_to_selection_end,
-                        ugui.standard_styler.font_size,
-                        ugui.standard_styler.font_name).width +
-                    ugui.standard_styler.textbox_padding
+                        ugui.standard_styler.params.font_size,
+                        ugui.standard_styler.params.font_name).width +
+                    ugui.standard_styler.params.textbox.padding.x
 
                 BreitbandGraphics.push_clip({
                     x = selection_start_x,
@@ -1079,24 +1120,24 @@ ugui = {
                     height = control.rectangle.height,
                 })
                 BreitbandGraphics.draw_text({
-                        x = control.rectangle.x + ugui.standard_styler.textbox_padding,
+                        x = control.rectangle.x + ugui.standard_styler.params.textbox.padding.x,
                         y = control.rectangle.y,
-                        width = control.rectangle.width - ugui.standard_styler.textbox_padding * 2,
+                        width = control.rectangle.width - ugui.standard_styler.params.textbox.padding.x * 2,
                         height = control.rectangle.height,
-                    }, 'start', 'start', {clip = true, aliased = not ugui.standard_styler.cleartype},
-                    BreitbandGraphics.invert_color(ugui.standard_styler.edit_frame_text_colors
+                    }, 'start', 'start', {clip = true, aliased = not ugui.standard_styler.params.cleartype},
+                    BreitbandGraphics.invert_color(ugui.standard_styler.params.textbox.text
                         [visual_state]),
-                    ugui.standard_styler.font_size,
-                    ugui.standard_styler.font_name, text)
+                    ugui.standard_styler.params.font_size,
+                    ugui.standard_styler.params.font_name, text)
                 BreitbandGraphics.pop_clip()
             end
 
 
             local string_to_caret = text:sub(1, ugui.internal.control_data[control.uid].caret_index - 1)
             local caret_x = BreitbandGraphics.get_text_size(string_to_caret,
-                    ugui.standard_styler.font_size,
-                    ugui.standard_styler.font_name).width +
-                ugui.standard_styler.textbox_padding
+                    ugui.standard_styler.params.font_size,
+                    ugui.standard_styler.params.font_name).width +
+                ugui.standard_styler.params.textbox.padding.x
 
             if visual_state == ugui.visual_states.active and math.floor(os.clock() * 2) % 2 == 0 and not should_visualize_selection then
                 BreitbandGraphics.draw_line({
@@ -1107,7 +1148,7 @@ ugui = {
                     y = control.rectangle.y +
                         math.max(15,
                             BreitbandGraphics.get_text_size(string_to_caret, 12,
-                                ugui.standard_styler.font_name)
+                                ugui.standard_styler.params.font_name)
                             .height), -- TODO: move text measurement into BreitbandGraphics
                 }, {
                     r = 0,
@@ -1145,25 +1186,25 @@ ugui = {
             if not is_horizontal then
                 track_rectangle = {
                     x = control.rectangle.x + control.rectangle.width / 2 -
-                        ugui.standard_styler.track_thickness / 2,
+                        ugui.standard_styler.params.trackbar.track_thickness / 2,
                     y = control.rectangle.y,
-                    width = ugui.standard_styler.track_thickness,
+                    width = ugui.standard_styler.params.trackbar.track_thickness,
                     height = control.rectangle.height,
                 }
             else
                 track_rectangle = {
                     x = control.rectangle.x,
                     y = control.rectangle.y + control.rectangle.height / 2 -
-                        ugui.standard_styler.track_thickness / 2,
+                        ugui.standard_styler.params.trackbar.track_thickness / 2,
                     width = control.rectangle.width,
-                    height = ugui.standard_styler.track_thickness,
+                    height = ugui.standard_styler.params.trackbar.track_thickness,
                 }
             end
 
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(track_rectangle, 1),
-                ugui.standard_styler.trackbar_border_colors[visual_state])
+                ugui.standard_styler.params.trackbar.border[visual_state])
             BreitbandGraphics.fill_rectangle(track_rectangle,
-                ugui.standard_styler.trackbar_back_colors[visual_state])
+                ugui.standard_styler.params.trackbar.back[visual_state])
         end,
 
         ---Draws a Trackbar's thumb with the specified parameters.
@@ -1175,28 +1216,28 @@ ugui = {
             local head_rectangle = {}
             local effective_bar_height = math.min(
                 (is_horizontal and control.rectangle.height or control.rectangle.width) * 2,
-                ugui.standard_styler.bar_height)
+                ugui.standard_styler.params.trackbar.bar_height)
             if not is_horizontal then
                 head_rectangle = {
                     x = control.rectangle.x + control.rectangle.width / 2 -
                         effective_bar_height / 2,
                     y = control.rectangle.y + (value * control.rectangle.height) -
-                        ugui.standard_styler.bar_width / 2,
+                        ugui.standard_styler.params.trackbar.bar_width / 2,
                     width = effective_bar_height,
-                    height = ugui.standard_styler.bar_width,
+                    height = ugui.standard_styler.params.trackbar.bar_width,
                 }
             else
                 head_rectangle = {
                     x = control.rectangle.x + (value * control.rectangle.width) -
-                        ugui.standard_styler.bar_width / 2,
+                        ugui.standard_styler.params.trackbar.bar_width / 2,
                     y = control.rectangle.y + control.rectangle.height / 2 -
                         effective_bar_height / 2,
-                    width = ugui.standard_styler.bar_width,
+                    width = ugui.standard_styler.params.trackbar.bar_width,
                     height = effective_bar_height,
                 }
             end
             BreitbandGraphics.fill_rectangle(head_rectangle,
-                ugui.standard_styler.trackbar_thumb_colors[visual_state])
+                ugui.standard_styler.params.trackbar.thumb[visual_state])
         end,
 
         ---Draws a Trackbar with the specified parameters.
@@ -1227,22 +1268,22 @@ ugui = {
 
             ugui.standard_styler.draw_raised_frame(control, visual_state)
 
-            local text_color = ugui.standard_styler.raised_frame_text_colors[visual_state]
+            local text_color = ugui.standard_styler.params.button.text[visual_state]
 
             BreitbandGraphics.draw_text({
-                    x = control.rectangle.x + ugui.standard_styler.textbox_padding * 2,
+                    x = control.rectangle.x + ugui.standard_styler.params.textbox.padding.x * 2,
                     y = control.rectangle.y,
                     width = control.rectangle.width,
                     height = control.rectangle.height,
-                }, 'start', 'center', {clip = true, aliased = not ugui.standard_styler.cleartype}, text_color,
-                ugui.standard_styler.font_size,
-                ugui.standard_styler.font_name,
+                }, 'start', 'center', {clip = true, aliased = not ugui.standard_styler.params.cleartype}, text_color,
+                ugui.standard_styler.params.font_size,
+                ugui.standard_styler.params.font_name,
                 selected_item)
 
             ugui.standard_styler.draw_icon({
-                x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.icon_size - ugui.standard_styler.textbox_padding * 2,
+                x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.params.icon_size - ugui.standard_styler.params.textbox.padding.x * 2,
                 y = control.rectangle.y,
-                width = ugui.standard_styler.icon_size,
+                width = ugui.standard_styler.params.icon_size,
                 height = control.rectangle.height,
             }, text_color, visual_state, 'arrow_down')
         end,
@@ -1261,8 +1302,8 @@ ugui = {
             local max_width = 0
             if control.horizontal_scroll == true then
                 for _, value in pairs(control.items) do
-                    local width = BreitbandGraphics.get_text_size(value, ugui.standard_styler.font_size,
-                        ugui.standard_styler.font_name).width
+                    local width = BreitbandGraphics.get_text_size(value, ugui.standard_styler.params.font_size,
+                        ugui.standard_styler.params.font_name).width
 
                     if width > max_width then
                         max_width = width
@@ -1274,7 +1315,7 @@ ugui = {
                 x = 0,
                 y = 0,
                 width = max_width,
-                height = ugui.standard_styler.item_height * (control.items and #control.items or 0),
+                height = ugui.standard_styler.params.listbox.item_height * (control.items and #control.items or 0),
             }
         end,
     },
@@ -1633,10 +1674,10 @@ ugui = {
 
         local new_rectangle = ugui.internal.deep_clone(_control.rectangle)
         if x_overflow then
-            new_rectangle.height = new_rectangle.height - ugui.standard_styler.scrollbar_thickness
+            new_rectangle.height = new_rectangle.height - ugui.standard_styler.params.scrollbar.thickness
         end
         if y_overflow then
-            new_rectangle.width = new_rectangle.width - ugui.standard_styler.scrollbar_thickness
+            new_rectangle.width = new_rectangle.width - ugui.standard_styler.params.scrollbar.thickness
         end
 
         -- we need to adjust rectangle to fit scrollbars
@@ -1651,8 +1692,8 @@ ugui = {
         if ugui.internal.active_control == control.uid and not ignored then
             local relative_y = ugui.internal.environment.mouse_position.y - control.rectangle.y
             local new_index = math.ceil((relative_y + (ugui.internal.control_data[control.uid].scroll_y *
-                    ((ugui.standard_styler.item_height * #control.items) - control.rectangle.height))) /
-                ugui.standard_styler.item_height)
+                    ((ugui.standard_styler.params.listbox.item_height * #control.items) - control.rectangle.height))) /
+                ugui.standard_styler.params.listbox.item_height)
             -- we only assign the new index if it's within bounds, as
             -- this emulates windows commctl behaviour
             if new_index <= #control.items then
@@ -1695,10 +1736,10 @@ ugui = {
 
             for key, _ in pairs(ugui.internal.get_just_pressed_keys()) do
                 if key == 'pageup' then
-                    inc = -math.floor(control.rectangle.height / ugui.standard_styler.item_height) / #control.items
+                    inc = -math.floor(control.rectangle.height / ugui.standard_styler.params.listbox.item_height) / #control.items
                 end
                 if key == 'pagedown' then
-                    inc = math.floor(control.rectangle.height / ugui.standard_styler.item_height) / #control.items
+                    inc = math.floor(control.rectangle.height / ugui.standard_styler.params.listbox.item_height) / #control.items
                 end
                 if key == 'home' then
                     inc = -1
@@ -1721,7 +1762,7 @@ ugui = {
                     x = control.rectangle.x,
                     y = control.rectangle.y + control.rectangle.height,
                     width = control.rectangle.width,
-                    height = ugui.standard_styler.scrollbar_thickness,
+                    height = ugui.standard_styler.params.scrollbar.thickness,
                 },
                 value = ugui.internal.control_data[control.uid].scroll_x,
                 ratio = 1 / (content_bounds.width / control.rectangle.width),
@@ -1735,7 +1776,7 @@ ugui = {
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width,
                     y = control.rectangle.y,
-                    width = ugui.standard_styler.scrollbar_thickness,
+                    width = ugui.standard_styler.params.scrollbar.thickness,
                     height = control.rectangle.height,
                 },
                 value = ugui.internal.control_data[control.uid].scroll_y,
@@ -1851,13 +1892,13 @@ ugui = {
         -- We adjust the dimensions with what should fit the content
         local max_text_width = 0
         for _, item in pairs(control.items) do
-            local size = BreitbandGraphics.get_text_size(item.text, ugui.standard_styler.font_size, ugui.standard_styler.font_name)
+            local size = BreitbandGraphics.get_text_size(item.text, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
             if size.width > max_text_width then
                 max_text_width = size.width
             end
         end
 
-        control.rectangle.width = max_text_width + ugui.standard_styler.menu_item_left_padding + ugui.standard_styler.menu_item_right_padding
+        control.rectangle.width = max_text_width + ugui.standard_styler.params.menu_item.left_padding + ugui.standard_styler.params.menu_item.right_padding
         control.rectangle.height = #control.items * ugui.standard_styler.menu_item_height
 
         -- Overflow avoidance: shift the X/Y position to avoid going out of bounds
@@ -1920,6 +1961,8 @@ ugui = {
                         rectangle = {
                             x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.menu_overlap_size,
                             y = control.rectangle.y + ((i - 1) * ugui.standard_styler.menu_item_height),
+                            width = nil,
+                            height = nil,
                         },
                         items = item.items,
                     })

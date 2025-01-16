@@ -42,9 +42,9 @@ group.tests[#group.tests + 1] = {
             i = i + 1
         end
 
-        BreitbandGraphics.draw_text(ctx.data.rectangle, 'start', 'start', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.font_size, ugui.standard_styler.font_name, '(start, start)')
-        BreitbandGraphics.draw_text(ctx.data.rectangle, 'center', 'center', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.font_size, ugui.standard_styler.font_name, '(center, center)')
-        BreitbandGraphics.draw_text(ctx.data.rectangle, 'end', 'end', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.font_size, ugui.standard_styler.font_name, '(end, end)')
+        BreitbandGraphics.draw_text(ctx.data.rectangle, 'start', 'start', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(start, start)')
+        BreitbandGraphics.draw_text(ctx.data.rectangle, 'center', 'center', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(center, center)')
+        BreitbandGraphics.draw_text(ctx.data.rectangle, 'end', 'end', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(end, end)')
 
         d2d.draw_text = d2d_draw_text
     end,

@@ -280,8 +280,8 @@ ugui.tabcontrol = function(control)
     for i = 1, #control.items, 1 do
         local item = control.items[i]
 
-        local width = BreitbandGraphics.get_text_size(item, ugui.standard_styler.font_size,
-            ugui.standard_styler.font_name).width + 10
+        local width = BreitbandGraphics.get_text_size(item, ugui.standard_styler.params.font_size,
+            ugui.standard_styler.params.font_name).width + 10
 
         -- if it would overflow, we wrap onto a new line
         if x + width > control.rectangle.width then
@@ -389,7 +389,7 @@ ugui.numberbox = function(control)
         end
     end
 
-    local font_size = control.font_size and control.font_size or ugui.standard_styler.font_size * 1.5
+    local font_size = control.font_size and control.font_size or ugui.standard_styler.params.font_size * 1.5
     local font_name = control.font_name and control.font_name or "Consolas"
 
     local function get_caret_index_at_relative_x(text, x)
@@ -432,8 +432,8 @@ ugui.numberbox = function(control)
     local text = string.format("%0" .. tostring(control.places) .. "d", control.value)
 
     BreitbandGraphics.draw_text(control.rectangle, "center", "center",
-        { aliased = not ugui.standard_styler.cleartype },
-        ugui.standard_styler.edit_frame_text_colors[visual_state],
+        { aliased = not ugui.standard_styler.params.cleartype },
+        ugui.standard_styler.params.textbox.text[visual_state],
         font_size,
         font_name, text)
 
@@ -522,8 +522,8 @@ ugui.numberbox = function(control)
         BreitbandGraphics.fill_rectangle(selected_char_rect, BreitbandGraphics.hex_to_color('#0078D7'))
         BreitbandGraphics.push_clip(selected_char_rect)
         BreitbandGraphics.draw_text(control.rectangle, "center", "center",
-            { aliased = not ugui.standard_styler.cleartype },
-            BreitbandGraphics.invert_color(ugui.standard_styler.edit_frame_text_colors[visual_state]),
+            { aliased = not ugui.standard_styler.params.cleartype },
+            BreitbandGraphics.invert_color(ugui.standard_styler.params.textbox.text[visual_state]),
             font_size,
             font_name, text)
         BreitbandGraphics.pop_clip()
@@ -593,10 +593,10 @@ ugui_ext.apply_nineslice = function(style)
                 y = rectangle.y,
                 width = rectangle.width,
                 height = rectangle.height,
-            }, 'start', 'center', { clip = true, aliased = not ugui.standard_styler.cleartype },
+            }, 'start', 'center', { clip = true, aliased = not ugui.standard_styler.params.cleartype },
             ugui.standard_styler.list_text_colors[visual_state],
-            ugui.standard_styler.font_size,
-            ugui.standard_styler.font_name,
+            ugui.standard_styler.params.font_size,
+            ugui.standard_styler.params.font_name,
             item)
     end
     ugui.standard_styler.draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
@@ -617,15 +617,15 @@ ugui_ext.apply_nineslice = function(style)
             end)
     end
     -- TODO: Refactor this into property override mask!!!
-    ugui.standard_styler.raised_frame_text_colors = style.button.text_colors
-    ugui.standard_styler.edit_frame_text_colors = style.textbox.text_colors
-    ugui.standard_styler.font_name = style.font_name
-    ugui.standard_styler.font_size = style.font_size
+    ugui.standard_styler.params.button.text = style.button.text_colors
+    ugui.standard_styler.params.textbox.text = style.textbox.text_colors
+    ugui.standard_styler.params.font_name = style.font_name
+    ugui.standard_styler.params.font_size = style.font_size
     ugui.standard_styler.item_height = style.item_height
     ugui.standard_styler.list_text_colors = style.listbox.text_colors
-    ugui.standard_styler.scrollbar_thickness = style.scrollbar_rail.width
-    ugui.standard_styler.cleartype = not style.pixelated_text
-    ugui.standard_styler.joystick_tip_size = style.joystick_tip_size
+    ugui.standard_styler.params.scrollbar.thickness = style.scrollbar_rail.width
+    ugui.standard_styler.params.cleartype = not style.pixelated_text
+    ugui.standard_styler.params.joystick.tip_size = style.joystick_tip_size
     ugui.standard_styler.joystick_back_colors = style.joystick.back_colors
     ugui.standard_styler.joystick_outline_colors = style.joystick.outline_colors
     ugui.standard_styler.joystick_inner_mag_colors = style.joystick.inner_mag_colors

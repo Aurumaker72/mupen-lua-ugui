@@ -41,9 +41,9 @@ emu.atdrawd2d(function()
     })
 
     BreitbandGraphics.draw_rectangle(rectangle, BreitbandGraphics.colors.red, 1)
-    BreitbandGraphics.draw_text(rectangle, 'start', 'start', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.font_size, ugui.standard_styler.font_name, '(start, start)')
-    BreitbandGraphics.draw_text(rectangle, 'center', 'center', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.font_size, ugui.standard_styler.font_name, '(center, center)')
-    BreitbandGraphics.draw_text(rectangle, 'end', 'end', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.font_size, ugui.standard_styler.font_name, '(end, end)')
+    BreitbandGraphics.draw_text(rectangle, 'start', 'start', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(start, start)')
+    BreitbandGraphics.draw_text(rectangle, 'center', 'center', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(center, center)')
+    BreitbandGraphics.draw_text(rectangle, 'end', 'end', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(end, end)')
 
     if keys.leftclick then
         rectangle.width = math.max(1, keys.xmouse)
