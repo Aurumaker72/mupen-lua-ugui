@@ -22,6 +22,7 @@ local groups = {
     dofile(folder('runner.lua') .. 'menu.lua'),
     dofile(folder('runner.lua') .. 'spinner.lua'),
     dofile(folder('runner.lua') .. 'tabcontrol.lua'),
+    dofile(folder('runner.lua') .. 'numberbox.lua'),
 }
 
 local verbose = false
