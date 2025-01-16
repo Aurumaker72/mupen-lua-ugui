@@ -500,7 +500,6 @@ ugui = {
                 },
             },
             listbox = {
-                item_height = 15,
                 back = {
                     [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
                     [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
@@ -515,6 +514,7 @@ ugui = {
                 },
             },
             listbox_item = {
+                height = 15,
                 back = {
                     [1] = BreitbandGraphics.hex_to_color('#FFFFFF'),
                     [2] = BreitbandGraphics.hex_to_color('#FFFFFF'),
@@ -862,11 +862,11 @@ ugui = {
 
             local index_begin = (scroll_y *
                     (content_bounds.height - rectangle.height)) /
-                ugui.standard_styler.params.listbox.item_height
+                ugui.standard_styler.params.listbox_item.height
 
             local index_end = (rectangle.height + (scroll_y *
                     (content_bounds.height - rectangle.height))) /
-                ugui.standard_styler.params.listbox.item_height
+                ugui.standard_styler.params.listbox_item.height
 
             index_begin = ugui.internal.clamp(math.floor(index_begin), 1, #control.items)
             index_end = ugui.internal.clamp(math.ceil(index_end), 1, #control.items)
@@ -876,7 +876,7 @@ ugui = {
             BreitbandGraphics.push_clip(BreitbandGraphics.inflate_rectangle(rectangle, -1))
 
             for i = index_begin, index_end, 1 do
-                local y_offset = (ugui.standard_styler.params.listbox.item_height * (i - 1)) -
+                local y_offset = (ugui.standard_styler.params.listbox_item.height * (i - 1)) -
                     (scroll_y * (content_bounds.height - rectangle.height))
 
                 local item_visual_state = ugui.visual_states.normal
@@ -892,7 +892,7 @@ ugui = {
                     x = rectangle.x - x_offset,
                     y = rectangle.y + y_offset,
                     width = math.max(content_bounds.width, control.rectangle.width),
-                    height = ugui.standard_styler.params.listbox.item_height,
+                    height = ugui.standard_styler.params.listbox_item.height,
                 }, item_visual_state)
             end
 
@@ -1318,7 +1318,7 @@ ugui = {
                 x = 0,
                 y = 0,
                 width = max_width,
-                height = ugui.standard_styler.params.listbox.item_height * (control.items and #control.items or 0),
+                height = ugui.standard_styler.params.listbox_item.height * (control.items and #control.items or 0),
             }
         end,
     },
@@ -1695,8 +1695,8 @@ ugui = {
         if ugui.internal.active_control == control.uid and not ignored then
             local relative_y = ugui.internal.environment.mouse_position.y - control.rectangle.y
             local new_index = math.ceil((relative_y + (ugui.internal.control_data[control.uid].scroll_y *
-                    ((ugui.standard_styler.params.listbox.item_height * #control.items) - control.rectangle.height))) /
-                ugui.standard_styler.params.listbox.item_height)
+                    ((ugui.standard_styler.params.listbox_item.height * #control.items) - control.rectangle.height))) /
+                ugui.standard_styler.params.listbox_item.height)
             -- we only assign the new index if it's within bounds, as
             -- this emulates windows commctl behaviour
             if new_index <= #control.items then
@@ -1739,10 +1739,10 @@ ugui = {
 
             for key, _ in pairs(ugui.internal.get_just_pressed_keys()) do
                 if key == 'pageup' then
-                    inc = -math.floor(control.rectangle.height / ugui.standard_styler.params.listbox.item_height) / #control.items
+                    inc = -math.floor(control.rectangle.height / ugui.standard_styler.params.listbox_item.height) / #control.items
                 end
                 if key == 'pagedown' then
-                    inc = math.floor(control.rectangle.height / ugui.standard_styler.params.listbox.item_height) / #control.items
+                    inc = math.floor(control.rectangle.height / ugui.standard_styler.params.listbox_item.height) / #control.items
                 end
                 if key == 'home' then
                     inc = -1
