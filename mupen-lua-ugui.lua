@@ -855,6 +855,10 @@ ugui = {
             local visual_state = ugui.get_visual_state(control)
             ugui.standard_styler.draw_list_frame(rectangle, visual_state)
 
+            if not control.items then
+                return
+            end
+
             local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
             -- item y position:
             -- y = (20 * (i - 1)) - (scroll_y * ((20 * #control.items) - control.rectangle.height))
@@ -1329,8 +1333,8 @@ ugui = {
     ---Begins a new frame.
     ---@param environment Environment The environment for the current frame.
     begin_frame = function(environment)
-        if ugui.internal.frame_in_progress  then
-            error("Tried to call begin_frame() while a frame is already in progress. End the previous frame with end_frame() before starting a new one.")
+        if ugui.internal.frame_in_progress then
+            error('Tried to call begin_frame() while a frame is already in progress. End the previous frame with end_frame() before starting a new one.')
         end
 
         ugui.internal.frame_in_progress = true
@@ -1353,10 +1357,10 @@ ugui = {
 
     --- Ends the current frame.
     end_frame = function()
-        if not ugui.internal.frame_in_progress  then
+        if not ugui.internal.frame_in_progress then
             error("Tried to call end_frame() while a frame wasn't already in progress. Start a frame with begin_frame() before ending an in-progress one.")
         end
-        
+
         for i = 1, #ugui.internal.late_callbacks, 1 do
             ugui.internal.late_callbacks[i]()
         end
