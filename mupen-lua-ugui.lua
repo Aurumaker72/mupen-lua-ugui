@@ -1,4 +1,4 @@
--- mupen-lua-ugui 1.7.0
+-- mupen-lua-ugui 2.0.0
 -- https://github.com/Aurumaker72/mupen-lua-ugui
 
 local function folder(file)
