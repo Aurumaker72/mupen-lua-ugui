@@ -75,7 +75,8 @@ if d2d.draw_to_image then
 end
 
 if not d2d.create_render_target and not d2d.draw_to_image then
-    print('mupen-lua-ugui-ext: No supported cached rendering method found, falling back to uncached drawing. Performance will be affected. Please update to the latest version of mupen64-rr-lua.')
+    print(
+        'mupen-lua-ugui-ext: No supported cached rendering method found, falling back to uncached drawing. Performance will be affected. Please update to the latest version of mupen64-rr-lua.')
     ugui_ext.internal.cached_draw = function(key, rectangle, draw_callback)
         draw_callback(rectangle)
     end
@@ -410,7 +411,7 @@ ugui.numberbox = function(control)
     local text = string.format('%0' .. tostring(control.places) .. 'd', control.value)
 
     BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-        {aliased = not ugui.standard_styler.params.cleartype},
+        { aliased = not ugui.standard_styler.params.cleartype },
         ugui.standard_styler.params.textbox.text[visual_state],
         font_size,
         font_name, text)
@@ -486,7 +487,7 @@ ugui.numberbox = function(control)
         BreitbandGraphics.fill_rectangle(selected_char_rect, BreitbandGraphics.hex_to_color('#0078D7'))
         BreitbandGraphics.push_clip(selected_char_rect)
         BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-            {aliased = not ugui.standard_styler.params.cleartype},
+            { aliased = not ugui.standard_styler.params.cleartype },
             BreitbandGraphics.invert_color(ugui.standard_styler.params.textbox.text[visual_state]),
             font_size,
             font_name, text)
@@ -507,6 +508,7 @@ ugui_ext.apply_nineslice = function(style)
         return
     end
     ugui_ext.free()
+
     ugui.standard_styler.draw_raised_frame = function(control, visual_state)
         local key = ugui_ext.internal.params_to_key('raised_frame', control.rectangle, visual_state)
 
@@ -517,8 +519,9 @@ ugui_ext.apply_nineslice = function(style)
                 style.path, BreitbandGraphics.colors.white, 'nearest')
         end)
     end
+
     ugui.standard_styler.draw_edit_frame = function(control, rectangle,
-        visual_state)
+                                                    visual_state)
         local key = ugui_ext.internal.params_to_key('edit_frame', rectangle, visual_state)
 
         ugui_ext.internal.cached_draw(key, rectangle, function(eff_rectangle)
@@ -528,6 +531,7 @@ ugui_ext.apply_nineslice = function(style)
                 style.path, BreitbandGraphics.colors.white, 'nearest')
         end)
     end
+
     ugui.standard_styler.draw_list_frame = function(rectangle, visual_state)
         local key = ugui_ext.internal.params_to_key('list_frame', rectangle, visual_state)
 
@@ -538,6 +542,7 @@ ugui_ext.apply_nineslice = function(style)
                 style.path, BreitbandGraphics.colors.white, 'nearest')
         end)
     end
+
     ugui.standard_styler.draw_list_item = function(item, rectangle, visual_state)
         if not item then
             return
@@ -555,12 +560,13 @@ ugui_ext.apply_nineslice = function(style)
                 y = rectangle.y,
                 width = rectangle.width,
                 height = rectangle.height,
-            }, 'start', 'center', {clip = true, aliased = not ugui.standard_styler.params.cleartype},
-            ugui.standard_styler.list_text_colors[visual_state],
+            }, 'start', 'center', { clip = true, aliased = not ugui.standard_styler.params.cleartype },
+            ugui.standard_styler.params.listbox_item.text[visual_state],
             ugui.standard_styler.params.font_size,
             ugui.standard_styler.params.font_name,
             item)
     end
+
     ugui.standard_styler.draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
         BreitbandGraphics.draw_image(container_rectangle,
             style.scrollbar_rail,
@@ -578,21 +584,4 @@ ugui_ext.apply_nineslice = function(style)
                     style.path, BreitbandGraphics.colors.white, 'nearest')
             end)
     end
-    -- TODO: Refactor this into property override mask!!!
-    ugui.standard_styler.params.button.text = style.button.text_colors
-    ugui.standard_styler.params.textbox.text = style.textbox.text_colors
-    ugui.standard_styler.params.font_name = style.font_name
-    ugui.standard_styler.params.font_size = style.font_size
-    ugui.standard_styler.item_height = style.item_height
-    ugui.standard_styler.list_text_colors = style.listbox.text_colors
-    ugui.standard_styler.params.scrollbar.thickness = style.scrollbar_rail.width
-    ugui.standard_styler.params.cleartype = not style.pixelated_text
-    ugui.standard_styler.params.joystick.tip_size = style.joystick_tip_size
-    ugui.standard_styler.joystick_back_colors = style.joystick.back_colors
-    ugui.standard_styler.joystick_outline_colors = style.joystick.outline_colors
-    ugui.standard_styler.joystick_inner_mag_colors = style.joystick.inner_mag_colors
-    ugui.standard_styler.joystick_outer_mag_colors = style.joystick.outer_mag_colors
-    ugui.standard_styler.joystick_mag_thicknesses = style.joystick.mag_thicknesses
-    ugui.standard_styler.joystick_line_colors = style.joystick.line_colors
-    ugui.standard_styler.joystick_tip_colors = style.joystick.tip_colors
 end
