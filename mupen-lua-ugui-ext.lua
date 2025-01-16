@@ -29,54 +29,22 @@ ugui_ext = {
         local max = math.pow(10, length)
         return (new_value + max) % max
     end,
-    
+
     internal = {
         drawings = {},
-        -- 1.1.5 - 1.1.6
-        rt_lut = {},
         rectangle_to_key = function(rectangle)
             return rectangle.x .. rectangle.y .. rectangle.width .. rectangle.height
         end,
         params_to_key = function(type, rectangle, visual_state)
             return type .. visual_state .. ugui_ext.internal.rectangle_to_key(rectangle)
         end,
-        cached_draw = function(key, rectangle, draw_callback)
-            if not ugui_ext.internal.rt_lut[key] then
-                local render_target = d2d.create_render_target(rectangle.width, rectangle.height)
-                d2d.begin_render_target(render_target)
-                draw_callback({
-                    x = 0,
-                    y = 0,
-                    width = rectangle.width,
-                    height = rectangle.height,
-                })
-                d2d.end_render_target(render_target)
-
-                ugui_ext.internal.rt_lut[key] = render_target
-            end
-            -- bitmap has same key as render_target
-            d2d.draw_image(rectangle.x, rectangle.y,
-                rectangle.x + rectangle.width,
-                rectangle.y + rectangle.height,
-                0, 0, rectangle.width,
-                rectangle.height, ugui_ext.internal.rt_lut[key], 1, 0)
-        end,
 
     },
-    free = function()
-        if d2d and d2d.destroy_render_target then
-            for i = 1, #ugui_ext.internal.rt_lut, 1 do
-                d2d.destroy_render_target(ugui_ext.internal.rt_lut[i])
-            end
-        end
-        ugui_ext.internal.rt_lut = {}
-        print('Purged render target cache')
-    end,
 }
 
 
 if d2d.draw_to_image then
-    print('Using 1.1.7 cached drawing')
+    print('mupen-lua-ugui-ext: Using high-performance cached drawing for mupen64-rr-lua 1.1.7+')
 
     ugui_ext.internal.cached_draw = function(key, rectangle, draw_callback)
         if not ugui_ext.internal.drawings[key] then
