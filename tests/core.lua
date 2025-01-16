@@ -109,5 +109,55 @@ group.tests[#group.tests + 1] = {
     end,
 }
 
+group.tests[#group.tests + 1] = {
+    name = 'unbalanced_frame_boundaries_causes_error',
+    params = {
+        {
+            funcs = {
+                ugui.begin_frame,
+                ugui.begin_frame,
+            },
+            valid = false,
+        },
+        {
+            funcs = {
+                ugui.begin_frame,
+                ugui.end_frame,
+                ugui.end_frame,
+            },
+            valid = false,
+        },
+        {
+            funcs = {
+                ugui.end_frame,
+            },
+            valid = false,
+        },
+        {
+            funcs = {
+                ugui.begin_frame,
+                ugui.end_frame,
+            },
+            valid = true,
+        },
+        {
+            funcs = {
+                ugui.begin_frame,
+                ugui.end_frame,
+                ugui.begin_frame,
+                ugui.end_frame,
+            },
+            valid = true,
+        },
+    },
+    func = function(ctx)
+        local success, _ = pcall(function()
+            for _, func in pairs(ctx.data.funcs) do
+                func({})
+            end
+        end)
+        ctx.assert_eq(ctx.data.valid, success)
+    end,
+}
 
 return group

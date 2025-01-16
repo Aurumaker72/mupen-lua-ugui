@@ -1,11 +1,5 @@
 local group = {
     name = 'spinner',
-    setup = function()
-        local print2 = print
-        print = function() end
-        dofile(folder('tests\\spinner.lua') .. 'mupen-lua-ugui-ext.lua')
-        print = print2
-    end,
     tests = {},
 }
 

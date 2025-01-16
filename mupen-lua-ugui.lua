@@ -125,6 +125,9 @@ ugui = {
         -- Map of uids used in an active section (between begin_frame and end_frame). Used to prevent uid collisions.
         used_uids = {},
 
+        ---Whether a frame is currently in progress.
+        frame_in_progress = false,
+
         ---Validates the structure of a control. Must be called in every control function.
         ---@param control Control A control which may or may not abide by the mupen-lua-ugui control contract
         validate_control = function(control)
@@ -1326,6 +1329,12 @@ ugui = {
     ---Begins a new frame.
     ---@param environment Environment The environment for the current frame.
     begin_frame = function(environment)
+        if ugui.internal.frame_in_progress  then
+            error("Tried to call begin_frame() while a frame is already in progress. End the previous frame with end_frame() before starting a new one.")
+        end
+
+        ugui.internal.frame_in_progress = true
+
         if not ugui.internal.environment then
             ugui.internal.environment = environment
         end
@@ -1344,7 +1353,10 @@ ugui = {
 
     --- Ends the current frame.
     end_frame = function()
-        -- FIXME: end_frame & begin_frame should throw an error when unbalanced (begin_frame(), begin_frame())
+        if not ugui.internal.frame_in_progress  then
+            error("Tried to call end_frame() while a frame wasn't already in progress. Start a frame with begin_frame() before ending an in-progress one.")
+        end
+        
         for i = 1, #ugui.internal.late_callbacks, 1 do
             ugui.internal.late_callbacks[i]()
         end
@@ -1356,6 +1368,8 @@ ugui = {
         if not ugui.internal.environment.is_primary_down and ugui.internal.clear_active_control_after_mouse_up then
             ugui.internal.active_control = nil
         end
+
+        ugui.internal.frame_in_progress = false
     end,
 
     ---Places a Button.

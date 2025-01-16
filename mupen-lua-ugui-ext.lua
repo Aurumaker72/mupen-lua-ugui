@@ -43,7 +43,9 @@ ugui_ext = {
 }
 
 if d2d.draw_to_image then
-    print('mupen-lua-ugui-ext: Using high-performance cached drawing for mupen64-rr-lua 1.1.7+')
+    if not UGUI_QUIET then
+        print('mupen-lua-ugui-ext: Using high-performance cached drawing for mupen64-rr-lua 1.1.7+')
+    end
 
     ugui_ext.internal.cached_draw = function(key, rectangle, draw_callback)
         if not ugui_ext.internal.drawings[key] then
@@ -411,7 +413,7 @@ ugui.numberbox = function(control)
     local text = string.format('%0' .. tostring(control.places) .. 'd', control.value)
 
     BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-        { aliased = not ugui.standard_styler.params.cleartype },
+        {aliased = not ugui.standard_styler.params.cleartype},
         ugui.standard_styler.params.textbox.text[visual_state],
         font_size,
         font_name, text)
@@ -487,7 +489,7 @@ ugui.numberbox = function(control)
         BreitbandGraphics.fill_rectangle(selected_char_rect, BreitbandGraphics.hex_to_color('#0078D7'))
         BreitbandGraphics.push_clip(selected_char_rect)
         BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
-            { aliased = not ugui.standard_styler.params.cleartype },
+            {aliased = not ugui.standard_styler.params.cleartype},
             BreitbandGraphics.invert_color(ugui.standard_styler.params.textbox.text[visual_state]),
             font_size,
             font_name, text)
@@ -521,7 +523,7 @@ ugui_ext.apply_nineslice = function(style)
     end
 
     ugui.standard_styler.draw_edit_frame = function(control, rectangle,
-                                                    visual_state)
+        visual_state)
         local key = ugui_ext.internal.params_to_key('edit_frame', rectangle, visual_state)
 
         ugui_ext.internal.cached_draw(key, rectangle, function(eff_rectangle)
@@ -560,7 +562,7 @@ ugui_ext.apply_nineslice = function(style)
                 y = rectangle.y,
                 width = rectangle.width,
                 height = rectangle.height,
-            }, 'start', 'center', { clip = true, aliased = not ugui.standard_styler.params.cleartype },
+            }, 'start', 'center', {clip = true, aliased = not ugui.standard_styler.params.cleartype},
             ugui.standard_styler.params.listbox_item.text[visual_state],
             ugui.standard_styler.params.font_size,
             ugui.standard_styler.params.font_name,

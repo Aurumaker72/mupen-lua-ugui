@@ -1,11 +1,5 @@
 local group = {
     name = 'numberbox',
-    setup = function()
-        local print2 = print
-        print = function() end
-        dofile(folder('tests\\numberbox.lua') .. 'mupen-lua-ugui-ext.lua')
-        print = print2
-    end,
     tests = {},
 }
 

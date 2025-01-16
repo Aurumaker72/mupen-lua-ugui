@@ -7,6 +7,14 @@ function folder(file)
     return s:gsub(p, '')
 end
 
+local function reset_ugui_state()
+    UGUI_QUIET = true
+    dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
+    dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui-ext.lua')
+end
+
+reset_ugui_state()
+
 local groups = {
     dofile(folder('runner.lua') .. 'core.lua'),
     dofile(folder('runner.lua') .. 'breitbandgraphics.lua'),
@@ -34,7 +42,7 @@ for key, group in pairs(groups) do
     print(string.format('Setting up %s...', group.name or ('test ' .. key)))
 
     -- Reset the ugui state completely between groups
-    dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
+    reset_ugui_state()
 
     if group.setup then
         group.setup()
@@ -44,9 +52,8 @@ for key, group in pairs(groups) do
         local test_params = test.params and test.params or {0}
 
         for test_param_index, test_param in pairs(test_params) do
-            -- Optionally reset the state between individual tests too
-            if group.keep_state_between_tests then
-                dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
+            if not group.keep_state_between_tests then
+                reset_ugui_state()
             end
 
             local assertion_count = 0
@@ -127,4 +134,3 @@ print(string.format('  Failed: %d', tests_failed))
 print(string.format('  Empty: %d', tests_empty))
 print(string.format('  Total: %d', tests_total))
 print(string.format('  (%d/%d)', tests_passed, tests_total))
-

@@ -1,5 +1,6 @@
 local group = {
     name = 'textbox',
+    keep_state_between_tests = true,
     tests = {},
 }
 
