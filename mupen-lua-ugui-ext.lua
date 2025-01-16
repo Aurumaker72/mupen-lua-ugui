@@ -42,7 +42,6 @@ ugui_ext = {
     },
 }
 
-
 if d2d.draw_to_image then
     print('mupen-lua-ugui-ext: Using high-performance cached drawing for mupen64-rr-lua 1.1.7+')
 
@@ -82,6 +81,21 @@ if not d2d.create_render_target and not d2d.draw_to_image then
     end
 end
 
+ugui.standard_styler.params.spinner = {
+    button_size = 15,
+}
+
+ugui.standard_styler.params.tabcontrol = {
+    rail_size = 17,
+    draw_frame = true,
+    gap_x = 0,
+    gap_y = 0,
+}
+
+ugui.standard_styler.params.numberbox = {
+    font_scale = 1.5,
+}
+
 ---Places a Spinner, or NumericUpDown control
 ---
 ---Additional fields in the `control` table:
@@ -95,17 +109,29 @@ end
 ugui.spinner = function(control)
     ugui.internal.validate_control(control)
 
-    if not ugui.standard_styler.spinner_button_thickness then
-        ugui.standard_styler.spinner_button_thickness = 15
-    end
     local increment = control.increment or 1
+    local value = control.value or 0
 
-    local value = control.value
+    local function clamp_value(value)
+        if control.minimum_value and control.maximum_value then
+            return ugui.internal.clamp(value, control.minimum_value, control.maximum_value)
+        end
+
+        if control.minimum_value then
+            return math.max(value, control.minimum_value)
+        end
+
+        if control.maximum_value then
+            return math.min(value, control.maximum_value)
+        end
+
+        return value
+    end 
 
     local textbox_rect = {
         x = control.rectangle.x,
         y = control.rectangle.y,
-        width = control.rectangle.width - ugui.standard_styler.spinner_button_thickness * 2,
+        width = control.rectangle.width - ugui.standard_styler.params.spinner.button_size * 2,
         height = control.rectangle.height,
     }
 
@@ -115,26 +141,24 @@ ugui.spinner = function(control)
         text = tostring(value),
     })
 
-    if tonumber(new_text) then
-        value = tonumber(new_text)
-    end
-
     local ignored = BreitbandGraphics.is_point_inside_any_rectangle(
         ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects)
+
+    if tonumber(new_text) then
+        value = clamp_value(tonumber(new_text))
+    end
 
     if control.is_enabled ~= false
         and not ignored
         and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, textbox_rect) or ugui.internal.active_control == control.uid)
     then
         if ugui.internal.is_mouse_wheel_up() then
-            value = value + increment
+            value = clamp_value(value + increment)
         end
         if ugui.internal.is_mouse_wheel_down() then
-            value = value - increment
+            value = clamp_value(value - increment)
         end
     end
-
-    value = ugui.internal.clamp(value, control.minimum_value, control.maximum_value)
 
     if control.is_horizontal then
         if (ugui.button({
@@ -142,15 +166,15 @@ ugui.spinner = function(control)
                 is_enabled = not (value == control.minimum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width -
-                        ugui.standard_styler.spinner_button_thickness * 2,
+                        ugui.standard_styler.params.spinner.button_size * 2,
                     y = control.rectangle.y,
-                    width = ugui.standard_styler.spinner_button_thickness,
+                    width = ugui.standard_styler.params.spinner.button_size,
                     height = control.rectangle.height,
                 },
                 text = '-',
             }))
         then
-            value = value - increment
+            value = clamp_value(value - increment)
         end
 
         if (ugui.button({
@@ -158,15 +182,15 @@ ugui.spinner = function(control)
                 is_enabled = not (value == control.maximum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width -
-                        ugui.standard_styler.spinner_button_thickness,
+                        ugui.standard_styler.params.spinner.button_size,
                     y = control.rectangle.y,
-                    width = ugui.standard_styler.spinner_button_thickness,
+                    width = ugui.standard_styler.params.spinner.button_size,
                     height = control.rectangle.height,
                 },
                 text = '+',
             }))
         then
-            value = value + increment
+            value = clamp_value(value + increment)
         end
     else
         if (ugui.button({
@@ -174,15 +198,15 @@ ugui.spinner = function(control)
                 is_enabled = not (value == control.maximum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width -
-                        ugui.standard_styler.spinner_button_thickness * 2,
+                        ugui.standard_styler.params.spinner.button_size * 2,
                     y = control.rectangle.y,
-                    width = ugui.standard_styler.spinner_button_thickness * 2,
+                    width = ugui.standard_styler.params.spinner.button_size * 2,
                     height = control.rectangle.height / 2,
                 },
                 text = '+',
             }))
         then
-            value = value + increment
+            value = clamp_value(value + increment)
         end
 
         if (ugui.button({
@@ -190,21 +214,19 @@ ugui.spinner = function(control)
                 is_enabled = not (value == control.minimum_value),
                 rectangle = {
                     x = control.rectangle.x + control.rectangle.width -
-                        ugui.standard_styler.spinner_button_thickness * 2,
+                        ugui.standard_styler.params.spinner.button_size * 2,
                     y = control.rectangle.y + control.rectangle.height / 2,
-                    width = ugui.standard_styler.spinner_button_thickness * 2,
+                    width = ugui.standard_styler.params.spinner.button_size * 2,
                     height = control.rectangle.height / 2,
                 },
                 text = '-',
             }))
         then
-            value = value - increment
+            value = clamp_value(value - increment)
         end
     end
 
-    value = ugui.internal.clamp(value, control.minimum_value, control.maximum_value)
-
-    return value
+    return clamp_value(value)
 end
 
 ---Places a tab control for navigation
@@ -218,24 +240,11 @@ end
 ugui.tabcontrol = function(control)
     ugui.internal.validate_and_register_control(control)
 
-    if not ugui.standard_styler.tab_control_rail_thickness then
-        ugui.standard_styler.tab_control_rail_thickness = 17
-    end
-    if ugui.standard_styler.tab_control_draw_frame == nil then
-        ugui.standard_styler.tab_control_draw_frame = true
-    end
-    if ugui.standard_styler.tab_control_gap_x == nil then
-        ugui.standard_styler.tab_control_gap_x = 0
-    end
-    if ugui.standard_styler.tab_control_gap_y == nil then
-        ugui.standard_styler.tab_control_gap_y = 0
-    end
-
     ugui.internal.control_data[control.uid] = {
         y_translation = 0,
     }
 
-    if ugui.standard_styler.tab_control_draw_frame then
+    if ugui.standard_styler.params.tabcontrol.draw_frame then
         local clone = ugui.internal.deep_clone(control)
         clone.items = {}
         ugui.standard_styler.draw_list(clone, clone.rectangle)
@@ -245,7 +254,8 @@ ugui.tabcontrol = function(control)
     local y = 0
     local selected_index = control.selected_index
 
-    for i = 1, #control.items, 1 do
+    local num_items = control.items and #control.items or 0
+    for i = 1, num_items, 1 do
         local item = control.items[i]
 
         local width = BreitbandGraphics.get_text_size(item, ugui.standard_styler.params.font_size,
@@ -254,7 +264,7 @@ ugui.tabcontrol = function(control)
         -- if it would overflow, we wrap onto a new line
         if x + width > control.rectangle.width then
             x = 0
-            y = y + ugui.standard_styler.tab_control_rail_thickness + ugui.standard_styler.tab_control_gap_y
+            y = y + ugui.standard_styler.params.tabcontrol.rail_size + ugui.standard_styler.params.tabcontrol.gap_y
         end
 
         local previous = selected_index == i
@@ -265,7 +275,7 @@ ugui.tabcontrol = function(control)
                 x = control.rectangle.x + x,
                 y = control.rectangle.y + y,
                 width = width,
-                height = ugui.standard_styler.tab_control_rail_thickness,
+                height = ugui.standard_styler.params.tabcontrol.rail_size,
             },
             text = control.items[i],
             is_checked = selected_index == i,
@@ -275,16 +285,16 @@ ugui.tabcontrol = function(control)
             selected_index = i
         end
 
-        x = x + width + ugui.standard_styler.tab_control_gap_x
+        x = x + width + ugui.standard_styler.params.tabcontrol.gap_x
     end
 
     return {
         selected_index = selected_index,
         rectangle = {
             x = control.rectangle.x,
-            y = control.rectangle.y + ugui.standard_styler.tab_control_rail_thickness + y,
+            y = control.rectangle.y + ugui.standard_styler.params.tabcontrol.rail_size + y,
             width = control.rectangle.width,
-            height = control.rectangle.height - y - ugui.standard_styler.tab_control_rail_thickness,
+            height = control.rectangle.height - y - ugui.standard_styler.params.tabcontrol.rail_size,
         },
     }
 end
@@ -357,8 +367,8 @@ ugui.numberbox = function(control)
         end
     end
 
-    local font_size = control.font_size and control.font_size or ugui.standard_styler.params.font_size * 1.5
-    local font_name = control.font_name and control.font_name or 'Consolas'
+    local font_size = ugui.standard_styler.params.font_size * ugui.standard_styler.params.numberbox.font_scale
+    local font_name = ugui.standard_styler.params.monospace_font_name
 
     local function get_caret_index_at_relative_x(text, x)
         -- award for most painful basic geometry
@@ -497,8 +507,6 @@ ugui.numberbox = function(control)
         BreitbandGraphics.pop_clip()
     end
 
-
-
     ugui.internal.control_data[control.uid].caret_index = ugui.internal.clamp(
         ugui.internal.control_data[control.uid].caret_index, 1,
         control.places)
@@ -601,107 +609,4 @@ ugui_ext.apply_nineslice = function(style)
     ugui.standard_styler.joystick_mag_thicknesses = style.joystick.mag_thicknesses
     ugui.standard_styler.joystick_line_colors = style.joystick.line_colors
     ugui.standard_styler.joystick_tip_colors = style.joystick.tip_colors
-end
-
-
-local function flatten(tree, depth, index, result)
-    for i = 1, #tree, 1 do
-        local item = tree[i]
-
-        result[#result + 1] = {
-            -- we need a reference!
-            item = item,
-            depth = depth,
-            index = index,
-        }
-        index = index + 1
-
-        if item.open then
-            index = flatten(item.children, depth + 1, index, result)
-        end
-    end
-    return index
-end
-
----Places a treeview
----
----Additional fields in the `control` table:
----
---- `items` — `table` A nested table of items
----@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
----@return _ number The new value
-ugui.treeview = function(control)
-    ugui.internal.validate_and_register_control(control)
-
-    -- TODO: scrolling
-    if not ugui.internal.control_data[control.uid] then
-        ugui.internal.control_data[control.uid] = {
-            selected_uid = nil,
-        }
-    end
-
-    local visual_state = ugui.get_visual_state(control)
-    ugui.standard_styler.draw_list_frame(control.rectangle, visual_state)
-
-    local flattened = {}
-    flatten(control.items, 0, 0, flattened)
-
-    local margin_left = 0
-    local per_depth_margin = ugui.standard_styler.item_height * 2
-
-    for i = 1, #flattened, 1 do
-        local item = flattened[i].item
-        local meta = flattened[i]
-
-        local item_rectangle = {
-            x = control.rectangle.x + (meta.depth * per_depth_margin) + margin_left,
-            y = control.rectangle.y + (meta.index * ugui.standard_styler.item_height),
-            width = control.rectangle.width - ((meta.depth * per_depth_margin) + margin_left),
-            height = ugui.standard_styler.item_height,
-        }
-        local button_rectangle = {
-            x = item_rectangle.x,
-            y = item_rectangle.y,
-            width = ugui.standard_styler.item_height,
-            height = ugui.standard_styler.item_height,
-        }
-        local text_rectangle = {
-            x = button_rectangle.x + button_rectangle.width + margin_left,
-            y = item_rectangle.y,
-            width = item_rectangle.width - button_rectangle.width,
-            height = ugui.standard_styler.item_height,
-        }
-
-        -- we dont need buttons for childless nodes
-        if #item.children ~= 0 then
-            item.open = ugui.toggle_button({
-                uid = control.uid + i,
-                is_enabled = true,
-                is_checked = item.open,
-                text = item.open and '-' or '+',
-                rectangle = button_rectangle,
-            })
-        end
-
-        local effective_rectangle = #item.children ~= 0 and text_rectangle or item_rectangle
-
-        if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, effective_rectangle) and ugui.internal.is_mouse_just_down() then
-            ugui.internal.control_data[control.uid].selected_uid = item.uid
-        end
-
-
-        ugui.standard_styler.draw_list_item(item.content,
-            effective_rectangle,
-            ugui.internal.control_data[control.uid].selected_uid == item.uid and
-            ugui.visual_states.active or
-            ugui.visual_states.normal)
-    end
-
-    -- return ref to selected item
-    for _, value in pairs(flattened) do
-        if value.item.uid == ugui.internal.control_data[control.uid].selected_uid then
-            return value.item
-        end
-    end
-    return nil
 end
