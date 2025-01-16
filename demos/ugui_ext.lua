@@ -66,6 +66,18 @@ emu.atdrawd2d(function()
         selected_index = selected_index,
     })
 
+    value = ugui.numberbox({
+        uid = 10,
+        rectangle = {
+            x = initial_size.width + 5,
+            y = 250,
+            width = 190,
+            height = 25,
+        },
+        value = value,
+        places = 10,
+    })
+
     selected_index = result.selected_index
 
     ugui.end_frame()

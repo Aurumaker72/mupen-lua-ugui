@@ -126,7 +126,7 @@ ugui.spinner = function(control)
         end
 
         return value
-    end 
+    end
 
     local textbox_rect = {
         x = control.rectangle.x,
@@ -416,35 +416,21 @@ ugui.numberbox = function(control)
         font_name, text)
 
 
-    -- compute the selected char's rect
-    local width
-    if ugui.internal.control_data[control.uid].caret_index == control.places then
-        width = BreitbandGraphics.get_text_size(
-                text:sub(1, ugui.internal.control_data[control.uid].caret_index),
-                font_size,
-                font_name).width -
-            BreitbandGraphics.get_text_size(
-                text:sub(1, ugui.internal.control_data[control.uid].caret_index - 1),
-                font_size,
-                font_name).width
-    else
-        width = BreitbandGraphics.get_text_size(
-                text:sub(1, ugui.internal.control_data[control.uid].caret_index + 1),
-                font_size,
-                font_name).width -
-            BreitbandGraphics.get_text_size(text:sub(1, ugui.internal.control_data[control.uid].caret_index),
-                font_size,
-                font_name).width
-    end
+    local text_width_up_to_caret = BreitbandGraphics.get_text_size(
+        text:sub(1, ugui.internal.control_data[control.uid].caret_index - 1),
+        font_size,
+        font_name).width
 
     local full_width = BreitbandGraphics.get_text_size(text,
         font_size,
         font_name).width
+
     local left = control.rectangle.width / 2 - full_width / 2
+
     local selected_char_rect = {
-        x = (control.rectangle.x + left) + width * (ugui.internal.control_data[control.uid].caret_index - 1),
+        x = control.rectangle.x + left + text_width_up_to_caret,
         y = control.rectangle.y,
-        width = width,
+        width = font_size / 2,
         height = control.rectangle.height,
     }
 
