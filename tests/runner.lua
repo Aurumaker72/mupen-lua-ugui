@@ -20,6 +20,8 @@ local groups = {
     dofile(folder('runner.lua') .. 'trackbar.lua'),
     dofile(folder('runner.lua') .. 'scrollbar.lua'),
     dofile(folder('runner.lua') .. 'menu.lua'),
+    dofile(folder('runner.lua') .. 'spinner.lua'),
+    dofile(folder('runner.lua') .. 'tabcontrol.lua'),
 }
 
 local verbose = false
