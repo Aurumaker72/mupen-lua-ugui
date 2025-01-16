@@ -949,7 +949,7 @@ ugui = {
                     width = 9999999,
                     height = rectangle.height,
                 }, 'start', 'center', {aliased = not ugui.standard_styler.params.cleartype},
-                ugui.standard_styler.params.menu_item.height[visual_state],
+                ugui.standard_styler.params.menu_item.text[visual_state],
                 ugui.standard_styler.params.font_size,
                 ugui.standard_styler.params.font_name,
                 item.text)
@@ -982,7 +982,7 @@ ugui = {
                 end
                 ugui.standard_styler.draw_menu_item(item, rectangle, visual_state)
 
-                y = y + ugui.standard_styler.menu_item_height
+                y = y + ugui.standard_styler.params.menu_item.height
             end
         end,
 
@@ -1902,7 +1902,7 @@ ugui = {
         end
 
         control.rectangle.width = max_text_width + ugui.standard_styler.params.menu_item.left_padding + ugui.standard_styler.params.menu_item.right_padding
-        control.rectangle.height = #control.items * ugui.standard_styler.menu_item_height
+        control.rectangle.height = #control.items * ugui.standard_styler.params.menu_item.height
 
         -- Overflow avoidance: shift the X/Y position to avoid going out of bounds
         if control.rectangle.x + control.rectangle.width > ugui.internal.environment.window_size.x then
@@ -1934,7 +1934,7 @@ ugui = {
             end
 
             if mouse_inside_control then
-                local i = math.floor((ugui.internal.environment.mouse_position.y - control.rectangle.y) / ugui.standard_styler.menu_item_height) + 1
+                local i = math.floor((ugui.internal.environment.mouse_position.y - control.rectangle.y) / ugui.standard_styler.params.menu_item.height) + 1
                 local item = control.items[i]
 
                 ugui.internal.control_data[control.uid].hovered_index = i
@@ -1963,7 +1963,7 @@ ugui = {
                         uid = submenu_uid,
                         rectangle = {
                             x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.menu_overlap_size,
-                            y = control.rectangle.y + ((i - 1) * ugui.standard_styler.menu_item_height),
+                            y = control.rectangle.y + ((i - 1) * ugui.standard_styler.params.menu_item.height),
                             width = nil,
                             height = nil,
                         },
