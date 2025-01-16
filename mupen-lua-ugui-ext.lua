@@ -2,33 +2,34 @@
 -- https://github.com/Aurumaker72/mupen-lua-ugui
 
 if not ugui then
-    error("ugui must be present in the global scope prior to executing ugui-ext", 0)
+    error('ugui must be present in the global scope prior to executing ugui-ext', 0)
     return
 end
 
 ugui_ext = {
-    spread = function(template)
-        local result = {}
-        for key, value in pairs(template) do
-            result[key] = value
-        end
 
-        return function(table)
-            for key, value in pairs(table) do
-                result[key] = value
-            end
-            return result
-        end
-    end,
+    ---Gets the digit at a specific index in a number with a specific padded length.
+    ---@param value integer The number.
+    ---@param length integer The number's padded length (number of digits).
+    ---@param index integer The index to get digit from.
+    ---@return integer # The digit at the specified index.
     get_digit = function(value, length, index)
         return math.floor(value / math.pow(10, length - index)) % 10
     end,
+
+    ---Sets the digit at a specific index in a number with a specific padded length.
+    ---@param value integer The number.
+    ---@param length integer The number's padded length (number of digits).
+    ---@param digit_value integer The new digit value.
+    ---@param index integer The index to get digit from.
+    ---@return integer # The new number.
     set_digit = function(value, length, digit_value, index)
         local old_digit_value = ugui_ext.get_digit(value, length, index)
         local new_value = value + (digit_value - old_digit_value) * math.pow(10, length - index)
         local max = math.pow(10, length)
         return (new_value + max) % max
     end,
+    
     internal = {
         drawings = {},
         -- 1.1.5 - 1.1.6
@@ -69,13 +70,13 @@ ugui_ext = {
             end
         end
         ugui_ext.internal.rt_lut = {}
-        print("Purged render target cache")
+        print('Purged render target cache')
     end,
 }
 
 
 if d2d.draw_to_image then
-    print("Using 1.1.7 cached drawing")
+    print('Using 1.1.7 cached drawing')
 
     ugui_ext.internal.cached_draw = function(key, rectangle, draw_callback)
         if not ugui_ext.internal.drawings[key] then
@@ -107,8 +108,7 @@ if d2d.draw_to_image then
 end
 
 if not d2d.create_render_target and not d2d.draw_to_image then
-    print(
-        "Falling back to uncached nineslice rendering, this will severely degrade performance. Please update to mupen64-rr-lua 1.1.5")
+    print('mupen-lua-ugui-ext: No supported cached rendering method found, falling back to uncached drawing. Performance will be affected. Please update to the latest version of mupen64-rr-lua.')
     ugui_ext.internal.cached_draw = function(key, rectangle, draw_callback)
         draw_callback(rectangle)
     end
@@ -156,8 +156,8 @@ ugui.spinner = function(control)
 
     if control.is_enabled ~= false
         and not ignored
-        and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, textbox_rect) or ugui.internal.active_control == control.uid) 
-        then
+        and (BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, textbox_rect) or ugui.internal.active_control == control.uid)
+    then
         if ugui.internal.is_mouse_wheel_up() then
             value = value + increment
         end
@@ -179,7 +179,7 @@ ugui.spinner = function(control)
                     width = ugui.standard_styler.spinner_button_thickness,
                     height = control.rectangle.height,
                 },
-                text = "-",
+                text = '-',
             }))
         then
             value = value - increment
@@ -195,7 +195,7 @@ ugui.spinner = function(control)
                     width = ugui.standard_styler.spinner_button_thickness,
                     height = control.rectangle.height,
                 },
-                text = "+",
+                text = '+',
             }))
         then
             value = value + increment
@@ -211,7 +211,7 @@ ugui.spinner = function(control)
                     width = ugui.standard_styler.spinner_button_thickness * 2,
                     height = control.rectangle.height / 2,
                 },
-                text = "+",
+                text = '+',
             }))
         then
             value = value + increment
@@ -227,7 +227,7 @@ ugui.spinner = function(control)
                     width = ugui.standard_styler.spinner_button_thickness * 2,
                     height = control.rectangle.height / 2,
                 },
-                text = "-",
+                text = '-',
             }))
         then
             value = value - increment
@@ -264,7 +264,7 @@ ugui.tabcontrol = function(control)
     end
 
     ugui.internal.control_data[control.uid] = {
-        y_translation = 0
+        y_translation = 0,
     }
 
     if ugui.standard_styler.tab_control_draw_frame then
@@ -300,7 +300,7 @@ ugui.tabcontrol = function(control)
                 height = ugui.standard_styler.tab_control_rail_thickness,
             },
             text = control.items[i],
-            is_checked = selected_index == i
+            is_checked = selected_index == i,
         })
 
         if not previous == new then
@@ -316,8 +316,8 @@ ugui.tabcontrol = function(control)
             x = control.rectangle.x,
             y = control.rectangle.y + ugui.standard_styler.tab_control_rail_thickness + y,
             width = control.rectangle.width,
-            height = control.rectangle.height - y - ugui.standard_styler.tab_control_rail_thickness
-        }
+            height = control.rectangle.height - y - ugui.standard_styler.tab_control_rail_thickness,
+        },
     }
 end
 
@@ -350,7 +350,7 @@ ugui.numberbox = function(control)
             x = control.rectangle.x + negative_button_size,
             y = control.rectangle.y,
             width = control.rectangle.width - negative_button_size,
-            height = control.rectangle.height
+            height = control.rectangle.height,
         }
         if ugui.button({
                 uid = control.uid + 1,
@@ -361,7 +361,7 @@ ugui.numberbox = function(control)
                     width = negative_button_size,
                     height = control.rectangle.height,
                 },
-                text = is_positive and "+" or "-"
+                text = is_positive and '+' or '-',
             }) then
             control.value = -control.value
             is_positive = not is_positive
@@ -390,7 +390,7 @@ ugui.numberbox = function(control)
     end
 
     local font_size = control.font_size and control.font_size or ugui.standard_styler.params.font_size * 1.5
-    local font_name = control.font_name and control.font_name or "Consolas"
+    local font_name = control.font_name and control.font_name or 'Consolas'
 
     local function get_caret_index_at_relative_x(text, x)
         -- award for most painful basic geometry
@@ -429,10 +429,10 @@ ugui.numberbox = function(control)
     end
     ugui.standard_styler.draw_edit_frame(control, control.rectangle, visual_state)
 
-    local text = string.format("%0" .. tostring(control.places) .. "d", control.value)
+    local text = string.format('%0' .. tostring(control.places) .. 'd', control.value)
 
-    BreitbandGraphics.draw_text(control.rectangle, "center", "center",
-        { aliased = not ugui.standard_styler.params.cleartype },
+    BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
+        {aliased = not ugui.standard_styler.params.cleartype},
         ugui.standard_styler.params.textbox.text[visual_state],
         font_size,
         font_name, text)
@@ -467,7 +467,7 @@ ugui.numberbox = function(control)
         x = (control.rectangle.x + left) + width * (ugui.internal.control_data[control.uid].caret_index - 1),
         y = control.rectangle.y,
         width = width,
-        height = control.rectangle.height
+        height = control.rectangle.height,
     }
 
     if ugui.internal.active_control == control.uid then
@@ -494,20 +494,20 @@ ugui.numberbox = function(control)
                     .caret_index + 1
             end
 
-            if key == "left" then
+            if key == 'left' then
                 ugui.internal.control_data[control.uid].caret_index = ugui.internal.control_data
                     [control.uid]
                     .caret_index - 1
             end
-            if key == "right" then
+            if key == 'right' then
                 ugui.internal.control_data[control.uid].caret_index = ugui.internal.control_data
                     [control.uid]
                     .caret_index + 1
             end
-            if key == "up" then
+            if key == 'up' then
                 increment_digit(ugui.internal.control_data[control.uid].caret_index, 1)
             end
-            if key == "down" then
+            if key == 'down' then
                 increment_digit(ugui.internal.control_data[control.uid].caret_index, -1)
             end
         end
@@ -521,8 +521,8 @@ ugui.numberbox = function(control)
         -- draw the char at caret index in inverted color
         BreitbandGraphics.fill_rectangle(selected_char_rect, BreitbandGraphics.hex_to_color('#0078D7'))
         BreitbandGraphics.push_clip(selected_char_rect)
-        BreitbandGraphics.draw_text(control.rectangle, "center", "center",
-            { aliased = not ugui.standard_styler.params.cleartype },
+        BreitbandGraphics.draw_text(control.rectangle, 'center', 'center',
+            {aliased = not ugui.standard_styler.params.cleartype},
             BreitbandGraphics.invert_color(ugui.standard_styler.params.textbox.text[visual_state]),
             font_size,
             font_name, text)
@@ -541,39 +541,39 @@ end
 
 ugui_ext.apply_nineslice = function(style)
     if not d2d then
-        print("No D2D available, falling back to unchanged standard styler to avoid performance issues")
+        print('No D2D available, falling back to unchanged standard styler to avoid performance issues')
         return
     end
     ugui_ext.free()
     ugui.standard_styler.draw_raised_frame = function(control, visual_state)
-        local key = ugui_ext.internal.params_to_key("raised_frame", control.rectangle, visual_state)
+        local key = ugui_ext.internal.params_to_key('raised_frame', control.rectangle, visual_state)
 
         ugui_ext.internal.cached_draw(key, control.rectangle, function(eff_rectangle)
             BreitbandGraphics.draw_image_nineslice(eff_rectangle,
                 style.button.states[visual_state].source,
                 style.button.states[visual_state].center,
-                style.path, BreitbandGraphics.colors.white, "nearest")
+                style.path, BreitbandGraphics.colors.white, 'nearest')
         end)
     end
     ugui.standard_styler.draw_edit_frame = function(control, rectangle,
-                                                    visual_state)
-        local key = ugui_ext.internal.params_to_key("edit_frame", rectangle, visual_state)
+        visual_state)
+        local key = ugui_ext.internal.params_to_key('edit_frame', rectangle, visual_state)
 
         ugui_ext.internal.cached_draw(key, rectangle, function(eff_rectangle)
             BreitbandGraphics.draw_image_nineslice(eff_rectangle,
                 style.textbox.states[visual_state].source,
                 style.textbox.states[visual_state].center,
-                style.path, BreitbandGraphics.colors.white, "nearest")
+                style.path, BreitbandGraphics.colors.white, 'nearest')
         end)
     end
     ugui.standard_styler.draw_list_frame = function(rectangle, visual_state)
-        local key = ugui_ext.internal.params_to_key("list_frame", rectangle, visual_state)
+        local key = ugui_ext.internal.params_to_key('list_frame', rectangle, visual_state)
 
         ugui_ext.internal.cached_draw(key, rectangle, function(eff_rectangle)
             BreitbandGraphics.draw_image_nineslice(eff_rectangle,
                 style.listbox.states[visual_state].source,
                 style.listbox.states[visual_state].center,
-                style.path, BreitbandGraphics.colors.white, "nearest")
+                style.path, BreitbandGraphics.colors.white, 'nearest')
         end)
     end
     ugui.standard_styler.draw_list_item = function(item, rectangle, visual_state)
@@ -587,13 +587,13 @@ ugui_ext.apply_nineslice = function(style)
         BreitbandGraphics.draw_image_nineslice(rect,
             style.listbox_item.states[visual_state].source,
             style.listbox_item.states[visual_state].center,
-            style.path, BreitbandGraphics.colors.white, "nearest")
+            style.path, BreitbandGraphics.colors.white, 'nearest')
         BreitbandGraphics.draw_text({
                 x = rectangle.x + 2,
                 y = rectangle.y,
                 width = rectangle.width,
                 height = rectangle.height,
-            }, 'start', 'center', { clip = true, aliased = not ugui.standard_styler.params.cleartype },
+            }, 'start', 'center', {clip = true, aliased = not ugui.standard_styler.params.cleartype},
             ugui.standard_styler.list_text_colors[visual_state],
             ugui.standard_styler.params.font_size,
             ugui.standard_styler.params.font_name,
@@ -602,9 +602,9 @@ ugui_ext.apply_nineslice = function(style)
     ugui.standard_styler.draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
         BreitbandGraphics.draw_image(container_rectangle,
             style.scrollbar_rail,
-            style.path, BreitbandGraphics.colors.white, "nearest")
+            style.path, BreitbandGraphics.colors.white, 'nearest')
 
-        local key = ugui_ext.internal.params_to_key("scrollbar_thumb", thumb_rectangle, visual_state)
+        local key = ugui_ext.internal.params_to_key('scrollbar_thumb', thumb_rectangle, visual_state)
 
         ugui_ext.internal.cached_draw(
             key,
@@ -613,7 +613,7 @@ ugui_ext.apply_nineslice = function(style)
                 BreitbandGraphics.draw_image_nineslice(eff_rectangle,
                     style.scrollbar_thumb.states[visual_state].source,
                     style.scrollbar_thumb.states[visual_state].center,
-                    style.path, BreitbandGraphics.colors.white, "nearest")
+                    style.path, BreitbandGraphics.colors.white, 'nearest')
             end)
     end
     -- TODO: Refactor this into property override mask!!!
@@ -644,7 +644,7 @@ local function flatten(tree, depth, index, result)
             -- we need a reference!
             item = item,
             depth = depth,
-            index = index
+            index = index,
         }
         index = index + 1
 
@@ -710,8 +710,8 @@ ugui.treeview = function(control)
                 uid = control.uid + i,
                 is_enabled = true,
                 is_checked = item.open,
-                text = item.open and "-" or "+",
-                rectangle = button_rectangle
+                text = item.open and '-' or '+',
+                rectangle = button_rectangle,
             })
         end
 
