@@ -79,7 +79,6 @@ mupen-lua-ugui-ext  —  Extensions and advanced features
 - Spinner
 - TabControl
 - NumberBox
-- TreeView
 - Performance
   - Graphics caching extension
 - Stylers
