@@ -9,18 +9,102 @@ end
 
 dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 
+---@alias UID number
+---Unique identifier for a control. Must be unique within a frame.
+
+---@class Environment
+---@field public mouse_position { x: number, y: number }
+---@field public wheel number The mouse wheel delta.
+---@field public is_primary_down boolean Whether the primary mouse button is being pressed.
+---@field public held_keys table<string, boolean> A map of held key identifiers to booleans. A key not being present or its value being 'false' means it is not held.
+---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
+
+---@class Color
+---@field public r number The red channel in the range 0-255.
+---@field public g number The green channel in the range 0-255.
+---@field public b number The blue channel in the range 0-255.
+---@field public a number? The alpha channel in the range 0-255. If nil, 255 is assumed.
+
+---@class Vector2
+---@field public x number
+---@field public y number
+
+---@class Rectangle
+---@field public x number
+---@field public y number
+---@field public width number
+---@field public height number
+
+---@class Control
+---@field public uid UID The unique identifier of the control.
+---@field public rectangle Rectangle The rectangle in which the control is drawn.
+---@field public is_enabled boolean? Whether the control is enabled. If nil or true, the control is enabled.
+---The base class for all controls.
+
+---@class Button : Control
+---@field public text string The text displayed on the button.
+---A button which can be clicked.
+
+---@class ToggleButton : Button
+---@field public is_checked boolean Whether the button is checked.
+---A button which can be toggled on and off.
+
+---@class CarrouselButton : Control
+---@field public items string[] The items contained in the carrousel button.
+---A button which can be toggled on and off.
+---TODO: Make wraparound optional
+
+---@class TextBox : Control
+---@field public text string The text contained in the textbox.
+---A textbox which can be edited.
+
+---@class Joystick : Control
+---@field public position Vector2 The joystick's position with the range 0-128 on both axes.
+---@field public mag number? The joystick's magnitude circle radius with the range `0-128`. If nil, no magnitude circle will be drawn.
+---A joystick which can be interacted with.
+
+---@class Trackbar : Control
+---@field public value number The current value in the range 0-1.
+---A trackbar which can have its value adjusted.
+
+---@class ComboBox : Control
+---@field public items string[] The items contained in the control.
+---@field public selected_index integer The index of the currently selected item into the items array.
+---A combobox which allows the user to choose from a list of items.
+
+---@class ListBox : Control
+---@field public items string[] The items contained in the control.
+---@field public selected_index integer The index of the currently selected item into the items array.
+---@field public horizontal_scroll boolean? Whether horizontal scrolling will be enabled when items go beyond the width of the control. Will impact performance greatly, use with care.
+---A listbox which allows the user to choose from a list of items.
+---If the items don't fit in the control's bounds vertically, vertical scrolling will be enabled.
+---If the items don't fit in the control's bounds horizontally, horizontal scrolling will be enabled if horizontal_scroll is true.
+
+---@class ScrollBar : Control
+---@field public value number The scroll proportion in the range 0-1.
+---@field public ratio number The overflow ratio, which is calculated by dividing the desired content dimensions by the relevant attached control's (e.g.: a listbox's) dimensions.
+---@field public selected_index integer The index of the currently selected item into the items array.
+---A scrollbar which allows scrolling horizontally or vertically, depending on the control's dimensions.
+
+---@class MenuItem
+---@field public enabled boolean? Whether the item is enabled. If nil or true, the item is enabled.
+---@field public checked boolean? Whether the item is checked. If true, the item is checked.
+---@field public text string The item's text.
+---Represents an item inside of a Menu.
+
+---@class MenuResult
+---@field public item MenuItem? The item that was clicked, or nil if none was.
+---@field public dismissed boolean Whether the menu was dismissed by clicking outside of it.
+
+---@class Menu : Control
+---@field public items MenuItem[] The items contained in the menu.
+---A menu, which allows the user to choose from a list of items.
+
 ugui = {
 
     internal = {
-
-        ---@class Environment
-        ---@field public mouse_position { x: number, y: number }
-        ---@field public wheel number The mouse wheel delta.
-        ---@field public is_primary_down boolean Whether the primary mouse button is being pressed.
-        ---@field public held_keys table<string, boolean> A map of held key identifiers to booleans. A key not being present or its value being 'false' means it is not held.
-        ---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
-
-        -- per-uid library-side data, such as scroll position
+        ---@type table<UID, any>
+        ---Map of control UIDs to their data.
         control_data = {},
 
         ---@type Environment
@@ -31,26 +115,32 @@ ugui = {
         ---The environment for the previous frame.
         previous_environment = nil,
 
-        -- the position of the mouse at the last click
+        ---@type Vector2
+        -- The position of the mouse the last time the primary button was pressed.
         mouse_down_position = {x = 0, y = 0},
 
-        -- uid of the currently active control
+        ---@type UID|nil
+        -- UID of the currently active control.
         active_control = nil,
 
-        -- whether the active control will be cleared after the mouse is released
+        ---@type boolean
+        -- Whether the active control will be reset to nil after the mouse is released.
         clear_active_control_after_mouse_up = true,
 
-        -- rectangles which are excluded from hittesting (e.g.: the popped up list of a combobox)
+        ---@type Rectangle[]
+        -- Rectangles which are excluded from hittesting (e.g.: the popped up list of a combobox)
         hittest_free_rects = {},
 
-        -- array of functions which will be called at the end of the frame
+        ---@type function[]
+        -- Functions which will be called at the end of the frame. This array is reset when a new frame begins.
         late_callbacks = {},
 
-        -- Map of uids used in an active section (between begin_frame and end_frame)
+        ---@type { [UID]: boolean }
+        -- Map of uids used in an active section (between begin_frame and end_frame). Used to prevent uid collisions.
         used_uids = {},
 
         ---Validates the structure of a control. Must be called in every control function.
-        ---@param control table A control which may or may not abide by the mupen-lua-ugui control contract
+        ---@param control Control A control which may or may not abide by the mupen-lua-ugui control contract
         validate_control = function(control)
             if not control.uid
                 or not control.rectangle
@@ -64,15 +154,19 @@ ugui = {
         end,
 
         ---Validates the structure of a control and registers its uid. Must be called in every control function.
-        ---@param control table A control which may or may not abide by the mupen-lua-ugui control contract
+        ---@param control Control A control which may or may not abide by the mupen-lua-ugui control contract
         validate_and_register_control = function(control)
             ugui.internal.validate_control(control)
             if ugui.internal.used_uids[control.uid] then
                 error(string.format('Attempted to show a control with uid %d, which is already in use! Note that some controls reserve more than one uid slot after them.', control.uid))
             end
-            ugui.internal.used_uids[control.uid] = control.uid
+            ugui.internal.used_uids[control.uid] = true
         end,
 
+        ---Deeply clones a table.
+        ---@param obj table The table to clone.
+        ---@param seen table? Internal. Pass nil as a caller.
+        ---@return table A cloned instance of the table.
         deep_clone = function(obj, seen)
             if type(obj) ~= 'table' then return obj end
             if seen and seen[obj] then return seen[obj] end
@@ -85,44 +179,86 @@ ugui = {
             end
             return res
         end,
+
+        ---Removes a range of characters from a string.
+        ---@param string string The string to remove characters from.
+        ---@param start_index integer The index of the first character to remove.
+        ---@param end_index integer The index of the last character to remove.
+        ---@return string # A new string with the characters removed.
         remove_range = function(string, start_index, end_index)
             if start_index > end_index then
                 start_index, end_index = end_index, start_index
             end
             return string.sub(string, 1, start_index - 1) .. string.sub(string, end_index)
         end,
+
+        ---@return boolean # Whether LMB was just pressed.
         is_mouse_just_down = function()
             return ugui.internal.environment.is_primary_down and
                 not ugui.internal.previous_environment.is_primary_down
         end,
+
+        ---@return boolean # Whether LMB was just released.
         is_mouse_just_up = function()
             return not ugui.internal.environment.is_primary_down and
                 ugui.internal.previous_environment.is_primary_down
         end,
+
+        ---@return boolean # Whether the mouse wheel was just moved up.
         is_mouse_wheel_up = function()
             return ugui.internal.environment.wheel == 1
         end,
+
+        ---@return boolean # Whether the mouse wheel was just moved down.
         is_mouse_wheel_down = function()
             return ugui.internal.environment.wheel == -1
         end,
+
+        ---Removes the character at the specified index from a string.
+        ---@param string string The string to remove the character from.
+        ---@param index integer The index of the character to remove.
+        ---@return string # A new string with the character removed.
         remove_at = function(string, index)
             if index == 0 then
                 return string
             end
             return string:sub(1, index - 1) .. string:sub(index + 1, string:len())
         end,
+
+        ---Inserts a string into another string at the specified index.
+        ---@param string string The original string to insert the other string into.
+        ---@param string2 string The other string.
+        ---@param index integer The index into the first string to begin inserting the second string at.
+        ---@return string # A new string with the other string inserted.
         insert_at = function(string, string2, index)
             return string:sub(1, index) .. string2 .. string:sub(index + string2:len(), string:len())
         end,
+
+        ---Remaps a value from one range to another.
+        ---@param value number The value.
+        ---@param from1 number The lower bound of the first range.
+        ---@param to1 number The upper bound of the first range.
+        ---@param from2 number The lower bound of the second range.
+        ---@param to2 number The upper bound of the second range.
+        ---@return number # The new remapped value.
         remap = function(value, from1, to1, from2, to2)
             return (value - from1) / (to1 - from1) * (to2 - from2) + from2
         end,
+
+        ---Limits a value to a range.
+        ---@param value number The value.
+        ---@param min number The lower bound.
+        ---@param max number The upper bound.
+        ---@return number # The new limited value.
         clamp = function(value, min, max)
             if value == nil then
                 return value
             end
             return math.max(math.min(value, max), min)
         end,
+
+        ---Gets all the keys that are newly pressed since the last frame.
+        ---@return table<string, boolean> # The newly pressed keys.
         get_just_pressed_keys = function()
             local keys = {}
             for key, _ in pairs(ugui.internal.environment.held_keys) do
@@ -132,6 +268,10 @@ ugui = {
             end
             return keys
         end,
+
+        ---Processes clicking on a control.
+        ---@param control Control A control.
+        ---@return boolean # Whether the control was clicked.
         process_push = function(control)
             if control.is_enabled == false then
                 return false
@@ -151,6 +291,13 @@ ugui = {
             end
             return false
         end,
+
+        ---Gets the character index for the specified relative x position in a textbox.
+        ---Considers font_size and font_name, as provided by the styler.
+        ---@param text string The textbox's text.
+        ---@param relative_x number The relative x position.
+        ---@return integer The character index.
+        ---FIXME: This should be moved to BreitbandGraphics!!!
         get_caret_index = function(text, relative_x)
             local positions = {}
             for i = 1, #text, 1 do
@@ -169,6 +316,22 @@ ugui = {
 
             return 1
         end,
+
+        ---@class TextBoxNavigationKeyProcessingResult
+        ---@field public handled boolean Whether the key press was handled.
+        ---@field public text string? The new textbox text.
+        ---@field public selection_start integer? The new textbox selection start index.
+        ---@field public selection_end integer? The new textbox selection end index.
+        ---@field public caret_index integer? The new textbox caret index.
+
+        ---Handles navigation key presses in a textbox.
+        ---@param key string The pressed key identifier.
+        ---@param has_selection boolean Whether the textbox has a selection.
+        ---@param text string The textbox's text.
+        ---@param selection_start integer The textbox selection start index.
+        ---@param selection_end integer The textbox selection end index.
+        ---@param caret_index integer The textbox caret index.
+        ---@return TextBoxNavigationKeyProcessingResult # The result of the navigation key press processing.
         handle_special_key = function(key, has_selection, text, selection_start, selection_end, caret_index)
             local sel_lo = math.min(selection_start, selection_end)
             local sel_hi = math.max(selection_start, selection_end)
@@ -233,20 +396,23 @@ ugui = {
             }
         end,
     },
-    -- The possible states of a control, which are used by the styler
+
+    ---@enum VisualState
+    -- The possible states of a control, which are used by the styler for drawing.
     visual_states = {
-        --- The control doesn't accept user interactions
+        --- The control doesn't accept user interactions.
         disabled = 0,
-        --- The control isn't being interacted with
+        --- The control isn't being interacted with.
         normal = 1,
-        --- The mouse is over the control
+        --- The mouse is over the control.
         hovered = 2,
-        --- The primary mouse button is pushed on the control or the control is currently capturing inputs
+        --- The control is currently capturing inputs.
         active = 3,
     },
-    ---Gets the basic visual state of a control
-    ---@param control table The control
-    ---@return _ integer The visual state
+
+    ---Gets the basic visual state of a control.
+    ---@param control Control The control.
+    ---@return VisualState # The control's visual state.
     get_visual_state = function(control)
         if control.is_enabled == false then
             return ugui.visual_states.disabled
@@ -284,7 +450,7 @@ ugui = {
         return ugui.visual_states.normal
     end,
 
-    --- A collection of stylers, which are responsible for drawing the UI
+    --- The standard style implementation, which is responsible for drawing controls.
     standard_styler = {
         textbox_padding = 2,
         track_thickness = 2,
@@ -458,9 +624,13 @@ ugui = {
             [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
         },
 
-        ---Draws an icon with the specified parameters
+        ---Draws an icon with the specified parameters.
         ---The draw_icon implementation may choose to use either the color or visual_state parameter to determine the icon's appearance.
         ---Therefore, the caller must provide either a color or a visual state, or both.
+        ---@param rectangle Rectangle The icon's bounds.
+        ---@param color Color? The icon's fill color.
+        ---@param visual_state VisualState? The icon's visual state.
+        ---@param key string The icon's identifier.
         draw_icon = function(rectangle, color, visual_state, key)
             if not color and visual_state then
                 BreitbandGraphics.fill_rectangle(rectangle, BreitbandGraphics.colors.red)
@@ -513,24 +683,40 @@ ugui = {
             end
         end,
 
+        ---Draws a raised frame with the specified parameters.
+        ---@param control Control The control table.
+        ---@param visual_state VisualState The control's visual state.
         draw_raised_frame = function(control, visual_state)
             BreitbandGraphics.fill_rectangle(control.rectangle,
                 ugui.standard_styler.raised_frame_border_colors[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                 ugui.standard_styler.raised_frame_back_colors[visual_state])
         end,
+
+        ---Draws an edit frame with the specified parameters.
+        ---@param control Control The control table.
+        ---@param visual_state VisualState The control's visual state.
         draw_edit_frame = function(control, rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(control.rectangle,
                 ugui.standard_styler.edit_frame_border_colors[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(control.rectangle, -1),
                 ugui.standard_styler.edit_frame_back_colors[visual_state])
         end,
+
+        ---Draws a list frame with the specified parameters.
+        ---@param rectangle Rectangle The control bounds.
+        ---@param visual_state VisualState The control's visual state.
         draw_list_frame = function(rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(rectangle,
                 ugui.standard_styler.list_frame_border_colors[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
                 ugui.standard_styler.list_frame_back_colors[visual_state])
         end,
+
+        ---Draws a joystick's inner part with the specified parameters.
+        ---@param rectangle Rectangle The control bounds.
+        ---@param visual_state VisualState The control's visual state.
+        ---@param position Vector2 The joystick's position.
         draw_joystick_inner = function(rectangle, visual_state, position)
             local back_color = ugui.standard_styler.joystick_back_colors[visual_state]
             local outline_color = ugui.standard_styler.joystick_outline_colors[visual_state]
@@ -594,12 +780,22 @@ ugui = {
                 height = ugui.standard_styler.joystick_tip_size,
             }, tip_color)
         end,
+
+        ---Draws a scrollbar with the specified parameters.
+        ---@param container_rectangle Rectangle The scrollbar container's bounds.
+        ---@param thumb_rectangle Rectangle The scrollbar thumb's bounds.
+        ---@param visual_state VisualState The control's visual state.
         draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(container_rectangle,
                 ugui.standard_styler.scrollbar_back_colors[visual_state])
             BreitbandGraphics.fill_rectangle(thumb_rectangle,
                 ugui.standard_styler.scrollbar_thumb_colors[visual_state])
         end,
+
+        ---Draws a list item with the specified parameters.
+        ---@param item string The list item's text.
+        ---@param rectangle Rectangle The list item's bounds.
+        ---@param visual_state VisualState The control's visual state.
         draw_list_item = function(item, rectangle, visual_state)
             if not item then
                 return
@@ -620,6 +816,10 @@ ugui = {
                 ugui.standard_styler.font_name,
                 item)
         end,
+
+        ---Draws a list with the specified parameters.
+        ---@param control Control The control table.
+        ---@param rectangle Rectangle The list item's bounds.
         draw_list = function(control, rectangle)
             local visual_state = ugui.get_visual_state(control)
             ugui.standard_styler.draw_list_frame(rectangle, visual_state)
@@ -670,12 +870,21 @@ ugui = {
 
             BreitbandGraphics.pop_clip()
         end,
+
+        ---Draws a menu frame with the specified parameters.
+        ---@param rectangle Rectangle The control's bounds.
+        ---@param visual_state VisualState The control's visual state.
         draw_menu_frame = function(rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(rectangle,
                 ugui.standard_styler.menu_frame_border_colors[visual_state])
             BreitbandGraphics.fill_rectangle(BreitbandGraphics.inflate_rectangle(rectangle, -1),
                 ugui.standard_styler.menu_frame_back_colors[visual_state])
         end,
+
+        ---Draws a menu item with the specified parameters.
+        ---@param item MenuItem The menu item.
+        ---@param rectangle Rectangle The control's bounds.
+        ---@param visual_state VisualState The control's visual state.
         draw_menu_item = function(item, rectangle, visual_state)
             BreitbandGraphics.fill_rectangle(rectangle,
                 ugui.standard_styler.menu_item_back_colors[visual_state])
@@ -718,6 +927,10 @@ ugui = {
                 item.text)
             BreitbandGraphics.pop_clip()
         end,
+
+        ---Draws a menu with the specified parameters.
+        ---@param control Menu The menu control.
+        ---@param rectangle Rectangle The control's bounds.
         draw_menu = function(control, rectangle)
             local visual_state = ugui.get_visual_state(control)
             ugui.standard_styler.draw_menu_frame(rectangle, visual_state)
@@ -744,10 +957,14 @@ ugui = {
                 y = y + ugui.standard_styler.menu_item_height
             end
         end,
+
+        ---Draws a Button with the specified parameters.
+        ---@param control Button The control table.
         draw_button = function(control)
             local visual_state = ugui.get_visual_state(control)
 
-            -- override for toggle_button
+            -- NOTE: Avoids duplicating code for ToggleButton in this implementation by putting it here
+            ---@diagnostic disable-next-line: undefined-field
             if control.is_checked and control.is_enabled ~= false then
                 visual_state = ugui.visual_states.active
             end
@@ -760,9 +977,15 @@ ugui = {
                 ugui.standard_styler.font_size,
                 ugui.standard_styler.font_name, control.text)
         end,
+
+        ---Draws a ToggleButton with the specified parameters.
+        ---@param control ToggleButton The control table.
         draw_togglebutton = function(control)
             ugui.standard_styler.draw_button(control)
         end,
+
+        ---Draws a CarrouselButton with the specified parameters.
+        ---@param control CarrouselButton The control table.
         draw_carrousel_button = function(control)
             -- add a "fake" text field
             local copy = ugui.internal.deep_clone(control)
@@ -786,6 +1009,9 @@ ugui = {
                 height = control.rectangle.height,
             }, ugui.standard_styler.raised_frame_text_colors[visual_state], visual_state, 'arrow_right')
         end,
+
+        ---Draws a TextBox with the specified parameters.
+        ---@param control TextBox The control table.
         draw_textbox = function(control)
             local visual_state = ugui.get_visual_state(control)
             local text = control.text or ''
@@ -906,6 +1132,9 @@ ugui = {
                 }, 1)
             end
         end,
+
+        ---Draws a Joystick with the specified parameters.
+        ---@param control Joystick The control table.
         draw_joystick = function(control)
             local visual_state = ugui.get_visual_state(control)
             local x = control.position and control.position.x or 0
@@ -952,6 +1181,12 @@ ugui = {
             BreitbandGraphics.fill_rectangle(track_rectangle,
                 ugui.standard_styler.trackbar_back_colors[visual_state])
         end,
+
+        ---Draws a Trackbar's thumb with the specified parameters.
+        ---@param control Trackbar The control table.
+        ---@param visual_state VisualState The control's visual state.
+        ---@param is_horizontal boolean Whether the trackbar is horizontal.
+        ---@param value number The trackbar's value.
         draw_thumb = function(control, visual_state, is_horizontal, value)
             local head_rectangle = {}
             local effective_bar_height = math.min(
@@ -979,6 +1214,9 @@ ugui = {
             BreitbandGraphics.fill_rectangle(head_rectangle,
                 ugui.standard_styler.trackbar_thumb_colors[visual_state])
         end,
+
+        ---Draws a Trackbar with the specified parameters.
+        ---@param control Trackbar The control table.
         draw_trackbar = function(control)
             local visual_state = ugui.get_visual_state(control)
 
@@ -992,6 +1230,9 @@ ugui = {
             ugui.standard_styler.draw_thumb(control, visual_state, is_horizontal, control
                 .value)
         end,
+
+        ---Draws a ComboBox with the specified parameters.
+        ---@param control ComboBox The control table.
         draw_combobox = function(control)
             local visual_state = ugui.get_visual_state(control)
             local selected_item = control.items and (control.selected_index and control.items[control.selected_index] or '') or ''
@@ -1022,6 +1263,8 @@ ugui = {
             }, text_color, visual_state, 'arrow_down')
         end,
 
+        ---Draws a ListBox with the specified parameters.
+        ---@param control ListBox The control table.
         draw_listbox = function(control)
             ugui.standard_styler.draw_list(control, control.rectangle)
         end,
@@ -1073,7 +1316,7 @@ ugui = {
 
     --- Ends the current frame.
     end_frame = function()
-        -- FIXME: end_frame & begin_frame should throw an error when unbalanced (begin_frame(), begin_frame()) 
+        -- FIXME: end_frame & begin_frame should throw an error when unbalanced (begin_frame(), begin_frame())
         for i = 1, #ugui.internal.late_callbacks, 1 do
             ugui.internal.late_callbacks[i]()
         end
@@ -1087,13 +1330,9 @@ ugui = {
         end
     end,
 
-    ---Places a Button
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `text` — `string` The button's text
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ boolean Whether the button has been pressed this frame
+    ---Places a Button.
+    ---@param control Button The control table.
+    ---@return boolean # Whether the button has been pressed.
     button = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1102,14 +1341,10 @@ ugui = {
 
         return pushed
     end,
-    ---Places a toggleable Button, which acts like a CheckBox
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `text` — `string` The button's text
-    --- `is_checked` — `boolean` Whether the button is checked
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ boolean Whether the button is checked
+
+    ---Places a ToggleButton.
+    ---@param control ToggleButton The control table.
+    ---@return boolean # The new check state.
     toggle_button = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1122,14 +1357,10 @@ ugui = {
 
         return control.is_checked
     end,
-    ---Places a Carrousel Button
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `items` — `string[]` The items
-    --- `selected_index` — `number` The selected index into `items`
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ number The new selected index
+
+    ---Places a CarrouselButton.
+    ---@param control CarrouselButton The control table.
+    ---@return integer # The new selected index.
     carrousel_button = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1155,13 +1386,10 @@ ugui = {
 
         return control.items and ugui.internal.clamp(selected_index, 1, #control.items) or nil
     end,
-    ---Places a TextBox
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `text` — `string` The textbox's text
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ string The textbox's text
+
+    ---Places a TextBox.
+    ---@param control TextBox The control table.
+    ---@return string # The new text.
     textbox = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1273,14 +1501,9 @@ ugui = {
         return text
     end,
 
-    ---Places a Joystick
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `position` — `table` The joystick's position as `{x, y}` with the range `0-128`
-    --- `mag` - `number?` The joystick's magnitude with the range `0-128`
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ `table` The joystick's new position as `{x, y}` with the range `0-128`
+    ---Places a Joystick.
+    ---@param control Joystick The control table.
+    ---@return Vector2 # The joystick's new position.
     joystick = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1305,13 +1528,9 @@ ugui = {
         return position
     end,
 
-    ---Places a Trackbar/Slider
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `values` — `number` The trackbar's value with the range `0-1`
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ number The trackbar's value
+    ---Places a Trackbar.
+    ---@param control Trackbar The control table.
+    ---@return number # The trackbar's new value.
     trackbar = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1343,14 +1562,9 @@ ugui = {
         return value
     end,
 
-    ---Places a ComboBox/DropDownMenu
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `items` — `string[]` The items contained in the dropdown
-    --- `selected_index` — `number` The selected index in the `items` array
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ number The selected index in the `items` array
+    ---Places a ComboBox.
+    ---@param control ComboBox The control table.
+    ---@return integer # The new selected index.
     combobox = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1409,14 +1623,10 @@ ugui = {
 
         return selected_index
     end,
-    ---Places a ListBox
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `items` — `string[]` The items contained in the dropdown
-    --- `selected_index` — `number` The selected index in the `items` array
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ number The selected index in the `items` array
+
+    ---Places a ListBox.
+    ---@param control ListBox The control table.
+    ---@return integer # The new selected index.
     listbox = function(_control)
         ugui.internal.validate_and_register_control(_control)
 
@@ -1560,14 +1770,10 @@ ugui = {
 
         return control.selected_index
     end,
-    ---Places a ScrollBar
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `value` — `number` The items contained in the dropdown
-    --- `ratio` — `number` The overscroll ratio
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ number The new value
+
+    ---Places a ScrollBar.
+    ---@param control ScrollBar The control table.
+    ---@return number # The new value.
     scrollbar = function(control)
         ugui.internal.validate_and_register_control(control)
 
@@ -1636,13 +1842,9 @@ ugui = {
         return control.value
     end,
 
-    ---Places a Menu
-    ---
-    ---Additional fields in the `control` table:
-    ---
-    --- `items` — `table[]` The items contained in the dropdown as (`{ enabled: boolean | nil, checked: boolean | nil, text: string }`)
-    ---@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
-    ---@return _ table The interaction result as (`{ item: table | nil, dismissed: boolean }`). The `item` field is nil if no item was clicked.
+    ---Places a Menu.
+    ---@param control Menu The control table.
+    ---@return MenuResult # The menu result.
     menu = function(control)
         -- Avoid tripping the control validation... it's going to be overwritten anyway
         if control.rectangle and not control.rectangle.width then
