@@ -3,6 +3,40 @@ if emu.set_renderer then
     emu.set_renderer(2)
 end
 
+---@class Color
+---@field public r number The red channel in the range 0 - 255.
+---@field public g number The green channel in the range 0 - 255.
+---@field public b number The blue channel in the range 0 - 255.
+---@field public a number? The alpha channel in the range 0 - 255. If nil, 255 is assumed.
+
+---@class FloatColor
+---@field public r number The red channel in the range 0.0 - 1.0.
+---@field public g number The green channel in the range 0.0 - 1.0.
+---@field public b number The blue channel in the range 0.0 - 1.0.
+---@field public a number? The alpha channel in the range 0.0 - 1.0. If nil, 1.0 is assumed.
+
+---@class Vector2
+---@field public x number The X component.
+---@field public y number The Y component.
+
+---@class Size
+---@field public width number The width.
+---@field public height number The height.
+
+---@class Rectangle
+---@field public x number The X coordinate.
+---@field public y number The Y coordinate.
+---@field public width number The width.
+---@field public height number The height.
+
+---@class TextStyle
+---@field public is_bold boolean? Whether the text is bold. If nil, false is assumed.
+---@field public is_italic boolean? Whether the text is italic. If nil, false is assumed.
+---@field public clip boolean? Whether the text should be clipped to the bounding rectangle. If nil, false is assumed.
+---@field public grayscale boolean? Whether the text should be drawn in grayscale. If nil, false is assumed.
+---@field public aliased boolean? Whether the text should be drawn with no text filtering. If nil, false is assumed.
+---@field public fit boolean? Whether the text should be resized to fit the bounding rectangle. If nil, false is assumed.
+
 BreitbandGraphics = {
     internal = {
         brushes = {},
@@ -24,16 +58,17 @@ BreitbandGraphics = {
         end,
     },
 
-    --- Converts a color value to its corresponding hexadecimal representation
-    --- @param color table The color value to convert
-    --- @return _ string The hexadecimal representation of the color
+    --- Converts a color value to its corresponding hexadecimal representation.
+    --- @param color Color The color value to convert.
+    --- @returns string # The hexadecimal representation of the color.
     color_to_hex = function(color)
         return string.format('#%06X',
             (color.r * 0x10000) + (color.g * 0x100) + color.b)
     end,
-    --- Converts a color's hexadecimal representation into a color table
-    --- @param hex string The hexadecimal color to convert
-    --- @return _ table The color
+
+    --- Converts a color's hexadecimal representation into a color table.
+    --- @param hex string The hexadecimal color to convert.
+    --- @return Color # The color.
     hex_to_color = function(hex)
         if #hex > 7 then
             return
@@ -51,9 +86,10 @@ BreitbandGraphics = {
             b = tonumber(hex:sub(6, 7), 16),
         }
     end,
-    --- Creates a color with the red, green and blue channels assigned to the specified value
-    --- @param value number The value to be used for the red, green and blue channels
-    --- @return _ table The color with the red, green and blue channels set to the specified value
+
+    --- Creates a color with the red, green and blue channels assigned to the specified value.
+    --- @param value number The value to be used for the red, green and blue channels.
+    --- @return Color # The color with the red, green and blue channels set to the specified value.
     repeated_to_color = function(value)
         return
         {
@@ -62,9 +98,10 @@ BreitbandGraphics = {
             b = value,
         }
     end,
-    ---Inverts a color
-    ---@param value table The color value to invert, with byte-range channels (0-255)
-    ---@return _ table The inverted color
+
+    ---Inverts a color.
+    ---@param value Color The color value to invert.
+    ---@return Color # The new inverted color.
     invert_color = function(value)
         return {
             r = 255 - value.r,
@@ -73,43 +110,60 @@ BreitbandGraphics = {
             a = value.a,
         }
     end,
-    --- A collection of common colors as tables with red, green and blue channels channels ranging from `0` to `255`
+
+    ---@enum StandardColors
+    --- A table of standard colors.
     colors = {
+        --- The color white.
         white = {
             r = 255,
             g = 255,
             b = 255,
         },
+
+        --- The color black.
         black = {
             r = 0,
             g = 0,
             b = 0,
         },
+
+        --- The color red.
         red = {
             r = 255,
             g = 0,
             b = 0,
         },
+
+        --- The color green.
         green = {
             r = 0,
             g = 255,
             b = 0,
         },
+
+        --- The color blue.
         blue = {
             r = 0,
             g = 0,
             b = 255,
         },
+
+        --- The color yellow.
         yellow = {
             r = 255,
             g = 255,
             b = 0,
         },
+
+        --- The color orange.
         orange = {
             r = 255,
             g = 128,
             b = 0,
         },
+
+        --- The color magenta.
         magenta = {
             r = 255,
             g = 0,
@@ -117,9 +171,10 @@ BreitbandGraphics = {
         },
     },
 
-    ---Whether a point is inside a rectangle
-    ---@param point table `{x, y}`
-    ---@param rectangle table `{x, y, width, height}`
+    ---Checks whether a point is inside a rectangle.
+    ---@param point Vector2 The point.
+    ---@param rectangle Rectangle The rectangle.
+    ---@return boolean # Whether the point is inside the rectangle.
     is_point_inside_rectangle = function(point, rectangle)
         return point.x > rectangle.x and
             point.y > rectangle.y and
@@ -127,9 +182,10 @@ BreitbandGraphics = {
             point.y < rectangle.y + rectangle.height
     end,
 
-    ---Whether a point is inside any of the rectangles
-    ---@param point table `{x, y}`
-    ---@param rectangles table[] `{{x, y, width, height}}`
+    ---Checks whether a point is inside any of the rectangles.
+    ---@param point Vector2 The point.
+    ---@param rectangles Rectangle[] The rectangles.
+    ---@return boolean # Whether the point is inside any of the rectangles.
     is_point_inside_any_rectangle = function(point, rectangles)
         for i = 1, #rectangles, 1 do
             if BreitbandGraphics.is_point_inside_rectangle(point, rectangles[i]) then
@@ -139,10 +195,10 @@ BreitbandGraphics = {
         return false
     end,
 
-    --- Creates a rectangle inflated around its center by the specified amount
-    --- @param rectangle table The rectangle to be inflated
-    --- @param amount number The amount to inflate the rectangle by
-    --- @return _ table The inflated rectangle
+    --- Creates a rectangle inflated around its center by the specified amount.
+    --- @param rectangle Rectangle The rectangle to be inflated.
+    --- @param amount number The amount to inflate the rectangle by.
+    --- @return Rectangle # The inflated rectangle.
     inflate_rectangle = function(rectangle, amount)
         return {
             x = rectangle.x - amount,
@@ -152,9 +208,10 @@ BreitbandGraphics = {
         }
     end,
 
-    --- Maps a color's byte-range channels `0-255` to `0-1`
-    --- @param color table The color to be converted
-    --- @return _ table The color with remapped channels
+    --- Creates a FloatColor from a Color.
+    --- Channels with nil values will be converted to `0.0`, unless they are the alpha channel, in which case it will be converted to `1.0`.
+    --- @param color Color The color to be converted.
+    --- @return FloatColor # The color with remapped channels.
     color_to_float = function(color)
         return {
             r = (color.r and (color.r / 255.0) or 0.0),
@@ -164,18 +221,19 @@ BreitbandGraphics = {
         }
     end,
 
-    ---Measures the size of a string
-    ---@param text string The string to be measured
-    ---@param font_size number The font size
-    ---@param font_name string The font name
-    ---@return _ table The text's bounding box as `{width, height}`
+    ---Computes the bounding box of a text string given a font size and font name.
+    ---@param text string The string to be measured.
+    ---@param font_size number The font size.
+    ---@param font_name string The font name.
+    ---@return Size # The text's bounding box.
     get_text_size = function(text, font_size, font_name)
         return d2d.get_text_size(text, font_name, font_size, 99999999, 99999999)
     end,
-    ---Draws a rectangle's outline
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param thickness number The outline's thickness
+
+    ---Draws a rectangle's outline.
+    ---@param rectangle Rectangle The shape's bounding rectangle.
+    ---@param color Color The outline's color.
+    ---@param thickness number The outline's thickness.
     draw_rectangle = function(rectangle, color, thickness)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
         d2d.draw_rectangle(
@@ -186,9 +244,10 @@ BreitbandGraphics = {
             thickness,
             brush)
     end,
-    ---Draws a rectangle
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
+
+    ---Draws a filled-in rectangle.
+    ---@param rectangle Rectangle The shape's bounding rectangle.
+    ---@param color Color The fill color.
     fill_rectangle = function(rectangle, color)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
         d2d.fill_rectangle(
@@ -198,11 +257,12 @@ BreitbandGraphics = {
             rectangle.y + rectangle.height,
             brush)
     end,
-    ---Draws a rounded rectangle's outline
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param radii table The corner radii as `{x, y}`
-    ---@param thickness number The outline's thickness
+
+    ---Draws a rounded rectangle's outline.
+    ---@param rectangle Rectangle The shape's bounding rectangle.
+    ---@param color Color The outline's color.
+    ---@param radii Vector2 The corner radii.
+    ---@param thickness number The outline's thickness.
     draw_rounded_rectangle = function(rectangle, color, radii, thickness)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
         d2d.draw_rounded_rectangle(
@@ -215,10 +275,11 @@ BreitbandGraphics = {
             thickness,
             brush)
     end,
-    ---Fills a rounded rectangle
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param radii table The corner radii as `{x, y}`
+
+    ---Draws a filled-in rounded rectangle.
+    ---@param rectangle Rectangle The shape's bounding rectangle.
+    ---@param color Color The fill color.
+    ---@param radii Vector2 The corner radii.
     fill_rounded_rectangle = function(rectangle, color, radii)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
         d2d.fill_rounded_rectangle(
@@ -230,10 +291,11 @@ BreitbandGraphics = {
             radii.y,
             brush)
     end,
-    ---Draws an ellipse's outline
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param thickness number The outline's thickness
+
+    ---Draws an ellipse's outline.
+    ---@param rectangle Rectangle The shape's bounding rectangle.
+    ---@param color Color The outline's color.
+    ---@param thickness number The outline's thickness.
     draw_ellipse = function(rectangle, color, thickness)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
         d2d.draw_ellipse(
@@ -244,9 +306,10 @@ BreitbandGraphics = {
             thickness,
             brush)
     end,
-    ---Draws an ellipse
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
+
+    ---Draws a filled-in ellipse.
+    ---@param rectangle Rectangle The shape's bounding rectangle.
+    ---@param color Color The fill color.
     fill_ellipse = function(rectangle, color)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
         d2d.fill_ellipse(
@@ -256,15 +319,17 @@ BreitbandGraphics = {
             rectangle.height / 2,
             brush)
     end,
-    ---Draws text
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param horizontal_alignment string The text's horizontal alignment inside the bounding rectangle. `center` | `start` | `end` | `stretch`
-    ---@param vertical_alignment string The text's vertical alignment inside the bounding rectangle. `center` | `start` | `end` | `stretch`
-    ---@param style table The miscellaneous text styling as `{is_bold, is_italic, clip, grayscale, aliased, fit}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param font_size number The font size
-    ---@param font_name string The font name
-    ---@param text string The text
+
+    ---Draws text with the specified parameters.
+    ---@param rectangle Rectangle The text's bounding rectangle.
+    ---@param horizontal_alignment "center"|"start"|"end"|"stretch" The text's horizontal alignment inside the bounding rectangle.
+    ---@param vertical_alignment "center"|"start"|"end"|"stretch" The text's vertical alignment inside the bounding rectangle.
+    ---@param style TextStyle The text style options.
+    ---@param color Color The text color.
+    ---@param font_size number The font size.
+    ---@param font_name string The font name.
+    ---@param text string The text.
+    ---TODO: Creates draw_text2, which takes in a big configuration table and uses a table enum for the alignments! 
     draw_text = function(rectangle, horizontal_alignment, vertical_alignment, style, color, font_size, font_name,
         text)
         if text == nil then
@@ -372,11 +437,12 @@ BreitbandGraphics = {
             d_options,
             brush)
     end,
-    ---Draws a line
-    ---@param from table The start point as `{x, y}`
-    ---@param to table The end point as `{x, y}`
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param thickness number The line's thickness
+
+    ---Draws a line between two points.
+    ---@param from Vector2 The start point.
+    ---@param to Vector2 The end point.
+    ---@param color Color The line's color.
+    ---@param thickness number The line's thickness.
     draw_line = function(from, to, color, thickness)
         local brush = BreitbandGraphics.internal.brush_from_color(color)
 
@@ -388,22 +454,27 @@ BreitbandGraphics = {
             thickness,
             brush)
     end,
-    ---Pushes a clip layer to the clip stack
-    ---@param rectangle table The bounding rectangle as `{x, y, width, height}`
+
+    ---Pushes a clip layer to the clip stack.
+    ---@param rectangle Rectangle The clip bounds.
     push_clip = function(rectangle)
         d2d.push_clip(rectangle.x, rectangle.y, rectangle.x + rectangle.width,
             rectangle.y + rectangle.height)
     end,
-    --- Removes the topmost clip layer from the clip stack
+
+    --- Removes the topmost clip layer from the clip stack.
     pop_clip = function()
         d2d.pop_clip()
     end,
-    ---Draws an image
-    ---@param destination_rectangle table The bounding rectangle as `{x, y, width, height}`
-    ---@param source_rectangle table The rectangle from the source image as `{x, y, width, height}`
-    ---@param path string The image's absolute path on disk
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param filter string The texture filter to be used while drawing the image. `nearest` | `linear`
+
+    ---Draws an image with the specified parameters.
+    ---@param destination_rectangle Rectangle The destination rectangle on the screen.
+    ---@param source_rectangle Rectangle The source rectangle from the image.
+    ---@param path string The image's absolute path on disk.
+    ---@param color Color The color filter applied to the image. If white, the image is drawn as-is.
+    ---@param filter "nearest" | "linear" The texture filter applied to the image.
+    ---TODO: Make source_rectangle optional and default to the whole image.
+    ---TODO: Make color optional and default to white.
     draw_image = function(destination_rectangle, source_rectangle, path, color, filter)
         if not filter then
             filter = 'nearest'
@@ -425,13 +496,14 @@ BreitbandGraphics = {
             interpolation,
             image)
     end,
-    ---Draws a nineslice-scalable image
-    ---@param destination_rectangle table The destination rectangle as `{x, y, width, height}`
-    ---@param source_rectangle table The source rectangle as `{x, y, width, height}`
-    ---@param source_rectangle_center table The source rectangle's center part as `{x, y, width, height}`
-    ---@param path string The image's absolute path on disk
-    ---@param color table The color as `{r, g, b, [optional] a}` with a channel range of `0-255`
-    ---@param filter string The texture filter to be used while drawing the image. `nearest` | `linear`
+
+    ---Draws a nineslice-scalable image with the specified parameters.
+    ---@param destination_rectangle Rectangle The destination rectangle on the screen.
+    ---@param source_rectangle Rectangle The source rectangle from the image.
+    ---@param source_rectangle_center Rectangle The source rectangle for the center of the image.
+    ---@param path string The image's absolute path on disk.
+    ---@param color Color The color filter applied to the image. If white, the image is drawn as-is.
+    ---@param filter "nearest" | "linear" The texture filter applied to the image.
     draw_image_nineslice = function(destination_rectangle, source_rectangle, source_rectangle_center, path,
         color, filter)
         destination_rectangle = {
@@ -556,14 +628,17 @@ BreitbandGraphics = {
             height = bottom.height,
         }, bottom, path, color, filter)
     end,
-    ---Gets an image's metadata
-    ---@param path string The image's absolute path on disk
+
+    ---Gets an image's metadata.
+    ---@param path string The image's absolute path on disk.
+    ---FIXME: Undefined API surface, what is this?!!!!
     get_image_info = function(path)
         local image = BreitbandGraphics.internal.image_from_path(path)
         return d2d.get_image_info(image)
     end,
-    ---Releases allocated resources
-    ---Must be called before stopping script
+
+    ---Releases allocated resources.
+    ---Must be called before stopping the Lua environment.
     free = function()
         for key, value in pairs(BreitbandGraphics.internal.brushes) do
             d2d.free_brush(value)

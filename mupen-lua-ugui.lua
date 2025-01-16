@@ -13,27 +13,11 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---Unique identifier for a control. Must be unique within a frame.
 
 ---@class Environment
----@field public mouse_position { x: number, y: number }
+---@field public mouse_position { x: number, y: number } The mouse position.
 ---@field public wheel number The mouse wheel delta.
 ---@field public is_primary_down boolean Whether the primary mouse button is being pressed.
 ---@field public held_keys table<string, boolean> A map of held key identifiers to booleans. A key not being present or its value being 'false' means it is not held.
 ---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
-
----@class Color
----@field public r number The red channel in the range 0-255.
----@field public g number The green channel in the range 0-255.
----@field public b number The blue channel in the range 0-255.
----@field public a number? The alpha channel in the range 0-255. If nil, 255 is assumed.
-
----@class Vector2
----@field public x number
----@field public y number
-
----@class Rectangle
----@field public x number
----@field public y number
----@field public width number
----@field public height number
 
 ---@class Control
 ---@field public uid UID The unique identifier of the control.
