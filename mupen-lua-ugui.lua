@@ -970,6 +970,7 @@ ugui = {
                 text = item.text,
                 rectangle = text_rect,
                 color = ugui.standard_styler.params.menu_item.text[visual_state],
+                align_x = BreitbandGraphics.alignment.start,
                 font_name = ugui.standard_styler.params.font_name,
                 font_size = ugui.standard_styler.params.font_size,
                 aliased = not ugui.standard_styler.params.cleartype,
