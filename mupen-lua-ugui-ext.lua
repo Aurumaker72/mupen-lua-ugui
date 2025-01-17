@@ -574,6 +574,7 @@ ugui_ext.apply_nineslice = function(style)
             text = item,
             rectangle = text_rect,
             color = ugui.standard_styler.params.listbox_item.text[visual_state],
+            align_x = BreitbandGraphics.alignment.start,
             font_name = ugui.standard_styler.params.font_name,
             font_size = ugui.standard_styler.params.font_size,
             clip = true,
