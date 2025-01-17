@@ -41,9 +41,36 @@ emu.atdrawd2d(function()
     })
 
     BreitbandGraphics.draw_rectangle(rectangle, BreitbandGraphics.colors.red, 1)
-    BreitbandGraphics.draw_text(rectangle, 'start', 'start', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(start, start)')
-    BreitbandGraphics.draw_text(rectangle, 'center', 'center', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(center, center)')
-    BreitbandGraphics.draw_text(rectangle, 'end', 'end', {fit = true}, BreitbandGraphics.colors.black, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name, '(end, end)')
+    BreitbandGraphics.draw_text2({
+        text = '(start, start)',
+        rectangle = rectangle,
+        align_x = BreitbandGraphics.alignment.start,
+        align_y = BreitbandGraphics.alignment.start,
+        color = BreitbandGraphics.colors.black,
+        font_name = ugui.standard_styler.params.font_name,
+        font_size = ugui.standard_styler.params.font_size,
+        fit = true,
+    })
+    BreitbandGraphics.draw_text2({
+        text = '(center, center)',
+        rectangle = rectangle,
+        align_x = BreitbandGraphics.alignment.center,
+        align_y = BreitbandGraphics.alignment.center,
+        color = BreitbandGraphics.colors.black,
+        font_name = ugui.standard_styler.params.font_name,
+        font_size = ugui.standard_styler.params.font_size,
+        fit = true,
+    })
+    BreitbandGraphics.draw_text2({
+        text = '(end, end)',
+        rectangle = rectangle,
+        align_x = BreitbandGraphics.alignment['end'],
+        align_y = BreitbandGraphics.alignment['end'],
+        color = BreitbandGraphics.colors.black,
+        font_name = ugui.standard_styler.params.font_name,
+        font_size = ugui.standard_styler.params.font_size,
+        fit = true,
+    })
 
     if keys.leftclick then
         rectangle.width = math.max(1, keys.xmouse)
