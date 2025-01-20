@@ -1,4 +1,4 @@
--- mupen-lua-ugui-ext 1.3.0
+-- mupen-lua-ugui-ext 2.0.0
 -- https://github.com/Aurumaker72/mupen-lua-ugui
 
 if not ugui then
