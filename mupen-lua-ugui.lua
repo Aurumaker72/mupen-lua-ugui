@@ -12,12 +12,26 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@alias UID number
 ---Unique identifier for a control. Must be unique within a frame.
 
+---@alias ControlRectangleComputationDelegate fun(layout: LayoutSection, index: integer, control: Control): Rectangle
+---A function which computes the rectangle for a control using the specified layout section.
+
 ---@class Environment
 ---@field public mouse_position { x: number, y: number } The mouse position.
 ---@field public wheel number The mouse wheel delta.
 ---@field public is_primary_down boolean? Whether the primary mouse button is being pressed.
 ---@field public held_keys table<string, boolean> A map of held key identifiers to booleans. A key not being present or its value being 'false' means it is not held.
 ---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
+
+---@class LayoutSection
+---@field public rectangle { x: number?, y: number?, width: number?, height: number? }? The rectangle region of the layout section. Depending on the section type, some components might be ignored. If nil or any contained field is nil, the field or the entire rectangle will be replaced with the corresponding value from the current state of the layout operation. 
+---@field package compute_control_rectangle ControlRectangleComputationDelegate? The layout section's bounds internal computation function. Doesn't need to be provided by external callers utilizing the layout section API via push_xyz().
+---@field package data any? The layout section's internal data. Doesn't need to be provided by external callers utilizing the layout section API via push_xyz().
+---The base class for all layout sections.
+
+---@class StackPanel : LayoutSection
+---@field public horizontal boolean? Whether the layout flow is horizontal. If nil, false is assumed.
+---@field public gap number? The gap between elements. If nil, 0 is assumed.
+---A StackPanel layout section, which orders its elements sequentially on the specified axis, adding gaps inbetween if specified.
 
 ---@class Control
 ---@field public uid UID The unique identifier of the control.
@@ -125,6 +139,14 @@ ugui = {
         -- Map of uids used in an active section (between begin_frame and end_frame). Used to prevent uid collisions.
         used_uids = {},
 
+        ---@type LayoutSection[]
+        ---The current layout stack.
+        layout_stack = {},
+
+        ---@type Rectangle
+        ---The rectangle of the most recently shown control. Reset on frame end.
+        last_control_rectangle = nil,
+
         ---Whether a frame is currently in progress.
         frame_in_progress = false,
 
@@ -150,6 +172,7 @@ ugui = {
                 error(string.format('Attempted to show a control with uid %d, which is already in use! Note that some controls reserve more than one uid slot after them.', control.uid))
             end
             ugui.internal.used_uids[control.uid] = true
+            ugui.internal.last_control_rectangle = control.rectangle
         end,
 
         ---Deeply clones a table.
@@ -384,6 +407,59 @@ ugui = {
                 selection_end = selection_end,
                 caret_index = caret_index,
             }
+        end,
+
+        ---Performs the required layout operations on the specified control.
+        ---@param control Control The control table. Its contents may be mutated.
+        do_layout = function (control)
+            for i = 1, #ugui.internal.layout_stack, 1 do
+                local section = ugui.internal.layout_stack[i]
+                control.rectangle = section:compute_control_rectangle(i, control)
+            end
+        end,
+    },
+
+    ---@type table<string, ControlRectangleComputationDelegate>
+    ---Map of layout section names to their control rectangle computation delegates.
+    layout_computation_functions = {
+        ['StackPanel'] = function(layout, index, control)
+            ---@cast layout StackPanel
+
+            if index ~= #ugui.internal.layout_stack then
+                return control.rectangle
+            end
+
+            if not layout.data then
+                layout.data = {x = layout.rectangle.x, y = layout.rectangle.y, i = 1}
+            end
+
+            local rectangle = ugui.internal.deep_clone(control.rectangle)
+            local gap = layout.gap or 0
+
+            local function add_accumulators()
+                if layout.horizontal then
+                    layout.data.x = layout.data.x + rectangle.width + gap
+                else
+                    layout.data.y = layout.data.y + rectangle.height + gap 
+                end
+            end
+
+            if (layout.horizontal and layout.rectangle.width ~= 0) 
+            or (not layout.horizontal and layout.rectangle.height ~= 0)  then
+                add_accumulators()
+            end
+
+            rectangle.x = layout.data.x
+            rectangle.y = layout.data.y
+            layout.data.i = layout.data.i + 1
+
+            if (layout.horizontal and layout.rectangle.width == 0) 
+            or (not layout.horizontal and layout.rectangle.height == 0)  then
+                add_accumulators()
+            end
+
+            
+            return rectangle
         end,
     },
 
@@ -1415,6 +1491,7 @@ ugui = {
         ugui.internal.late_callbacks = {}
         ugui.internal.hittest_free_rects = {}
         ugui.internal.used_uids = {}
+        ugui.internal.last_control_rectangle = nil
 
         if not ugui.internal.environment.is_primary_down and ugui.internal.clear_active_control_after_mouse_up then
             ugui.internal.active_control = nil
@@ -1423,10 +1500,43 @@ ugui = {
         ugui.internal.frame_in_progress = false
     end,
 
+    ---Pushes a layout section to the layout stack.
+    ---@param layout LayoutSection The layout section.
+    push = function(layout)
+        if not layout.rectangle then
+            layout.rectangle = ugui.internal.last_control_rectangle
+        else
+            local rect = ugui.internal.last_control_rectangle or {x = 0, y = 0, width = 0, height = 0}
+            layout.rectangle.x = layout.rectangle.x ~= nil and layout.rectangle.x or rect.x
+            layout.rectangle.y = layout.rectangle.y ~= nil and layout.rectangle.y or rect.y
+            layout.rectangle.width = layout.rectangle.width ~= nil and layout.rectangle.width or rect.width
+            layout.rectangle.height = layout.rectangle.height ~= nil and layout.rectangle.height or rect.height
+        end
+
+        ugui.internal.layout_stack[#ugui.internal.layout_stack + 1] = layout
+    end,
+
+    ---Pushes a StackPanel layout section to the layout stack.
+    ---@param layout StackPanel The layout section.
+    push_stackpanel = function(layout)
+        layout.compute_control_rectangle = ugui.layout_computation_functions['StackPanel']
+
+        ugui.push(layout)
+    end,
+
+    ---Pops the most recent layout section off the layout stack.
+    pop = function()
+        if #ugui.internal.layout_stack == 0 then
+            error('Tried to pop() from an empty layout stack. Note that every layout section pushed to the layout stack needs to be popped off the stack before the end of the frame.')
+        end
+        table.remove(ugui.internal.layout_stack, #ugui.internal.layout_stack)
+    end,
+
     ---Places a Button.
     ---@param control Button The control table.
     ---@return boolean # Whether the button has been pressed.
     button = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         local pushed = ugui.internal.process_push(control)
@@ -1439,6 +1549,7 @@ ugui = {
     ---@param control ToggleButton The control table.
     ---@return boolean # The new check state.
     toggle_button = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         local pushed = ugui.internal.process_push(control)
@@ -1455,6 +1566,7 @@ ugui = {
     ---@param control CarrouselButton The control table.
     ---@return integer # The new selected index.
     carrousel_button = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         local pushed = ugui.internal.process_push(control)
@@ -1484,6 +1596,7 @@ ugui = {
     ---@param control TextBox The control table.
     ---@return string # The new text.
     textbox = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         if not ugui.internal.control_data[control.uid] then
@@ -1598,6 +1711,7 @@ ugui = {
     ---@param control Joystick The control table.
     ---@return Vector2 # The joystick's new position.
     joystick = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         ugui.standard_styler.draw_joystick(control)
@@ -1625,6 +1739,7 @@ ugui = {
     ---@param control Trackbar The control table.
     ---@return number # The trackbar's new value.
     trackbar = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         if not ugui.internal.control_data[control.uid] then
@@ -1659,6 +1774,7 @@ ugui = {
     ---@param control ComboBox The control table.
     ---@return integer # The new selected index.
     combobox = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         if not ugui.internal.control_data[control.uid] then
@@ -1721,6 +1837,7 @@ ugui = {
     ---@param control ListBox The control table.
     ---@return integer # The new selected index.
     listbox = function(_control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(_control)
 
         if not ugui.internal.control_data[_control.uid] then
@@ -1868,6 +1985,7 @@ ugui = {
     ---@param control ScrollBar The control table.
     ---@return number # The new value.
     scrollbar = function(control)
+        ugui.internal.do_layout(control)
         ugui.internal.validate_and_register_control(control)
 
         local pushed = ugui.internal.process_push(control)
@@ -1947,6 +2065,7 @@ ugui = {
             control.rectangle.height = 0
         end
 
+        -- NOTE: Menus are exempt from the layout engine.
         ugui.internal.validate_and_register_control(control)
 
         if not ugui.internal.control_data[control.uid] then
