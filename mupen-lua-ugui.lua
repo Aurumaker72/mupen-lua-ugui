@@ -23,7 +23,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@field public window_size { x: number, y: number }? The rendering bounds. If nil, no rendering bounds are considered and certain controls, such as menus, might overflow off-screen.
 
 ---@class LayoutSection
----@field public rectangle { x: number?, y: number?, width: number?, height: number? }? The rectangle region of the layout section. Depending on the section type, some components might be ignored. If nil or any contained field is nil, the field or the entire rectangle will be replaced with the corresponding value from the current state of the layout operation. 
+---@field public rectangle { x: number?, y: number?, width: number?, height: number? }? The rectangle region of the layout section. Depending on the section type, some components might be ignored. If nil or any contained field is nil, the field or the entire rectangle will be replaced with the corresponding value from the current state of the layout operation.
 ---@field package compute_control_rectangle ControlRectangleComputationDelegate? The layout section's bounds internal computation function. Doesn't need to be provided by external callers utilizing the layout section API via push_xyz().
 ---@field package data any? The layout section's internal data. Doesn't need to be provided by external callers utilizing the layout section API via push_xyz().
 ---The base class for all layout sections.
@@ -37,6 +37,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@field public uid UID The unique identifier of the control.
 ---@field public rectangle Rectangle The rectangle in which the control is drawn.
 ---@field public is_enabled boolean? Whether the control is enabled. If nil or true, the control is enabled.
+---@field public tooltip string? The control's tooltip. If nil, no tooltip will be shown.
 ---@field package topmost boolean? Whether the control is drawn at the end of the frame, after all other controls.
 ---The base class for all controls.
 
@@ -99,6 +100,10 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@class Menu : Control
 ---@field public items MenuItem[] The items contained in the menu.
 ---A menu, which allows the user to choose from a list of items.
+
+---@class ToolTip
+---@field public text string The tooltip's text.
+---A tooltip, which can be used to show additional information about a control.
 
 ugui = {
 
@@ -411,10 +416,46 @@ ugui = {
 
         ---Performs the required layout operations on the specified control.
         ---@param control Control The control table. Its contents may be mutated.
-        do_layout = function (control)
+        do_layout = function(control)
             for i = 1, #ugui.internal.layout_stack, 1 do
                 local section = ugui.internal.layout_stack[i]
                 control.rectangle = section:compute_control_rectangle(i, control)
+            end
+        end,
+
+        ---Does tooltip processing for the specified control.
+        ---@param control Control The control table.
+        handle_tooltip = function(control)
+            ugui.internal.control_data[control.uid] = ugui.internal.control_data[control.uid] or {}
+
+            local prev_tooltip_visible = ugui.internal.control_data[control.uid].tooltip_visible
+
+            ugui.internal.control_data[control.uid].tooltip_visible = false
+
+            if not control.tooltip then
+                return
+            end
+            if control.is_enabled == false then
+                return
+            end
+            if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
+                return
+            end
+            if BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) then
+                return
+            end
+
+            ugui.internal.control_data[control.uid].tooltip_visible = true
+
+            if ugui.internal.control_data[control.uid].tooltip_visible and not prev_tooltip_visible then
+                ugui.internal.control_data[control.uid].tooltip_hover_start = os.clock()
+            end
+
+            ugui.internal.late_callbacks[#ugui.internal.late_callbacks + 1] = function()                
+                ugui.standard_styler.draw_tooltip(control.tooltip, {
+                    x = ugui.internal.environment.mouse_position.x,
+                    y = ugui.internal.environment.mouse_position.y,
+                }, ugui.internal.control_data[control.uid].tooltip_hover_start)
             end
         end,
     },
@@ -440,12 +481,12 @@ ugui = {
                 if layout.horizontal then
                     layout.data.x = layout.data.x + rectangle.width + gap
                 else
-                    layout.data.y = layout.data.y + rectangle.height + gap 
+                    layout.data.y = layout.data.y + rectangle.height + gap
                 end
             end
 
-            if (layout.horizontal and layout.rectangle.width ~= 0) 
-            or (not layout.horizontal and layout.rectangle.height ~= 0)  then
+            if (layout.horizontal and layout.rectangle.width ~= 0)
+                or (not layout.horizontal and layout.rectangle.height ~= 0) then
                 add_accumulators()
             end
 
@@ -453,12 +494,12 @@ ugui = {
             rectangle.y = layout.data.y
             layout.data.i = layout.data.i + 1
 
-            if (layout.horizontal and layout.rectangle.width == 0) 
-            or (not layout.horizontal and layout.rectangle.height == 0)  then
+            if (layout.horizontal and layout.rectangle.width == 0)
+                or (not layout.horizontal and layout.rectangle.height == 0) then
                 add_accumulators()
             end
 
-            
+
             return rectangle
         end,
     },
@@ -727,6 +768,10 @@ ugui = {
                     [3] = BreitbandGraphics.hex_to_color('#CCCCCC'),
                     [0] = BreitbandGraphics.hex_to_color('#CCCCCC'),
                 },
+            },
+            tooltip = {
+                delay = 0.2,
+                padding = 4,
             },
         },
 
@@ -1083,6 +1128,73 @@ ugui = {
 
                 y = y + ugui.standard_styler.params.menu_item.height
             end
+        end,
+
+        ---Draws a tooltip with the specified parameters.
+        ---@param text string The tooltip's content.
+        ---@param position Vector2 The tooltip's position.
+        ---@param time number The time the user began hovering over the control associated with the tooltip, as returned by os.clock().
+        draw_tooltip = function(text, position, time)
+            if not time then
+                return
+            end
+            if os.clock() - time < ugui.standard_styler.params.tooltip.delay then
+                return
+            end
+            local rectangle = {x = position.x, y = position.y, width = 0, height = 0}
+            local size = BreitbandGraphics.get_text_size(text, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
+
+            rectangle.width = size.width
+            rectangle.height = math.max(size.height, ugui.standard_styler.params.menu_item.height)
+            rectangle.y = rectangle.y + rectangle.height
+
+            if rectangle.x + rectangle.width > ugui.internal.environment.window_size.x then
+                rectangle.x = rectangle.x - (rectangle.x + rectangle.width - ugui.internal.environment.window_size.x)
+            end
+            if rectangle.y + rectangle.height > ugui.internal.environment.window_size.y then
+                rectangle.y = rectangle.y - (rectangle.y + rectangle.height - ugui.internal.environment.window_size.y)
+            end
+
+            rectangle.x = math.max(rectangle.x, 0)
+            rectangle.y = math.max(rectangle.y, 0)
+
+            local fit = false
+
+            if rectangle.width >= ugui.internal.environment.window_size.x then
+                fit = true
+                rectangle.x = 0
+                rectangle.width = ugui.internal.environment.window_size.x
+            end
+
+            if rectangle.height >= ugui.internal.environment.window_size.y then
+                fit = true
+                rectangle.y = 0
+                rectangle.height = ugui.internal.environment.window_size.y
+            end
+
+            local menu_frame_rect = fit and rectangle or {
+                x = rectangle.x - ugui.standard_styler.params.tooltip.padding,
+                y = rectangle.y,
+                width = rectangle.width + ugui.standard_styler.params.tooltip.padding * 2,
+                height = rectangle.height,
+            }
+            ugui.standard_styler.draw_menu_frame(menu_frame_rect, ugui.visual_states.normal)
+
+            if not fit then
+                rectangle.width = 99999
+            end
+
+            BreitbandGraphics.draw_text2({
+                text = text,
+                rectangle = rectangle,
+                color = ugui.standard_styler.params.menu_item.text[ugui.visual_states.normal],
+                align_x = BreitbandGraphics.alignment.start,
+                align_y = BreitbandGraphics.alignment.center,
+                font_name = ugui.standard_styler.params.font_name,
+                font_size = ugui.standard_styler.params.font_size,
+                fit = fit,
+                aliased = not ugui.standard_styler.params.cleartype,
+            })
         end,
 
         ---Draws a Button with the specified parameters.
@@ -1542,6 +1654,7 @@ ugui = {
         local pushed = ugui.internal.process_push(control)
         ugui.standard_styler.draw_button(control)
 
+        ugui.internal.handle_tooltip(control)
         return pushed
     end,
 
@@ -1559,6 +1672,7 @@ ugui = {
             return not control.is_checked
         end
 
+        ugui.internal.handle_tooltip(control)
         return control.is_checked
     end,
 
@@ -1589,6 +1703,7 @@ ugui = {
 
         ugui.standard_styler.draw_carrousel_button(control)
 
+        ugui.internal.handle_tooltip(control)
         return control.items and ugui.internal.clamp(selected_index, 1, #control.items) or nil
     end,
 
@@ -1704,6 +1819,7 @@ ugui = {
             ugui.internal.control_data[control.uid].caret_index, 1, #text + 1)
 
         ugui.standard_styler.draw_textbox(control)
+        ugui.internal.handle_tooltip(control)
         return text
     end,
 
@@ -1732,6 +1848,7 @@ ugui = {
                     control.rectangle.height, -128, 128), -128, 128)
         end
 
+        ugui.internal.handle_tooltip(control)
         return position
     end,
 
@@ -1767,6 +1884,7 @@ ugui = {
 
         ugui.standard_styler.draw_trackbar(control)
 
+        ugui.internal.handle_tooltip(control)
         return value
     end,
 
@@ -1830,6 +1948,7 @@ ugui = {
 
         ugui.standard_styler.draw_combobox(control)
 
+        ugui.internal.handle_tooltip(control)
         return selected_index
     end,
 
@@ -1977,7 +2096,7 @@ ugui = {
             ugui.standard_styler.draw_listbox(control)
         end
 
-
+        ugui.internal.handle_tooltip(control)
         return control.selected_index
     end,
 
@@ -2050,6 +2169,7 @@ ugui = {
         end
         ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
 
+        ugui.internal.handle_tooltip(control)
         return control.value
     end,
 

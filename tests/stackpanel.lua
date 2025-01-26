@@ -134,7 +134,7 @@ group.tests[#group.tests + 1] = {
                 return
             end
 
-            print(rectangle)
+            ctx.log(rectangle)
             local expected_rect = ctx.data.expected_rects[i]
             ctx.assert_eq(expected_rect.x, rectangle.x)
             ctx.assert_eq(expected_rect.y, rectangle.y)

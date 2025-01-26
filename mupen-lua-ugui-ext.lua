@@ -229,6 +229,7 @@ ugui.spinner = function(control)
         end
     end
 
+    ugui.internal.handle_tooltip(control)
     return clamp_value(value)
 end
 
@@ -292,6 +293,7 @@ ugui.tabcontrol = function(control)
         x = x + width + ugui.standard_styler.params.tabcontrol.gap_x
     end
 
+    ugui.internal.handle_tooltip(control)
     return {
         selected_index = selected_index,
         rectangle = {
@@ -507,6 +509,7 @@ ugui.numberbox = function(control)
         ugui.internal.control_data[control.uid].caret_index, 1,
         control.places)
 
+    ugui.internal.handle_tooltip(control)
     return math.floor(control.value) * (is_positive and 1 or -1)
 end
 
