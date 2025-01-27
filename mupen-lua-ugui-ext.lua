@@ -316,12 +316,12 @@ ugui.numberbox = function(control)
     ugui.internal.do_layout(control)
     ugui.internal.validate_and_register_control(control)
 
-    if not ugui.internal.control_data[control.uid] then
-        ugui.internal.control_data[control.uid] = {
-            caret_index = 1,
-        }
+    if ugui.internal.control_data[control.uid] == nil then
+        ugui.internal.control_data[control.uid] = {}
     end
-
+    if ugui.internal.control_data[control.uid].caret_index == nil then
+        ugui.internal.control_data[control.uid].caret_index = 1
+    end
 
     local is_positive = control.value >= 0
 
