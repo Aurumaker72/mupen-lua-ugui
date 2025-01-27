@@ -1,6 +1,8 @@
 --- mupen-lua-ugui test runner
 --- https://github.com/Aurumaker72/mupen-lua-ugui
 
+-- FIXME: Strong typing for the test runner!!!
+
 function folder(file)
     local s = debug.getinfo(2, 'S').source:sub(2)
     local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
@@ -15,9 +17,11 @@ end
 
 reset_ugui_state()
 
+
 local groups = {
     dofile(folder('runner.lua') .. 'core.lua'),
     dofile(folder('runner.lua') .. 'layout.lua'),
+    dofile(folder('runner.lua') .. 'richtext.lua'),
     dofile(folder('runner.lua') .. 'stackpanel.lua'),
     dofile(folder('runner.lua') .. 'tooltip.lua'),
     dofile(folder('runner.lua') .. 'breitbandgraphics.lua'),

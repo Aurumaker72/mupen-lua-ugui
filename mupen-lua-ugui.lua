@@ -15,6 +15,18 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@alias ControlRectangleComputationDelegate fun(layout: LayoutSection, index: integer, control: Control): Rectangle
 ---A function which computes the rectangle for a control using the specified layout section.
 
+---@alias RichText string
+---Text which can contain other inline elements, such as icons.
+---
+---Examples:
+---
+---    [icon:arrow_left] Go Back
+---    Move up [icon:arrow_up]
+---    Hello World!
+
+---@alias RichTextSegment { type: ["text"|"icon"], value: string }
+---Represents a computed segment from a rich text string.
+
 ---@class Environment
 ---@field public mouse_position { x: number, y: number } The mouse position.
 ---@field public wheel number The mouse wheel delta.
@@ -38,11 +50,12 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@field public rectangle Rectangle The rectangle in which the control is drawn.
 ---@field public is_enabled boolean? Whether the control is enabled. If nil or true, the control is enabled.
 ---@field public tooltip string? The control's tooltip. If nil, no tooltip will be shown.
+---@field package plaintext boolean? Whether the control's text content is drawn as plain text without rich rendering.
 ---@field package topmost boolean? Whether the control is drawn at the end of the frame, after all other controls.
 ---The base class for all controls.
 
 ---@class Button : Control
----@field public text string The text displayed on the button.
+---@field public text RichText The text displayed on the button.
 ---A button which can be clicked.
 
 ---@class ToggleButton : Button
@@ -69,12 +82,12 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---A trackbar which can have its value adjusted.
 
 ---@class ComboBox : Control
----@field public items string[] The items contained in the control.
+---@field public items RichText[] The items contained in the control.
 ---@field public selected_index integer The index of the currently selected item into the items array.
 ---A combobox which allows the user to choose from a list of items.
 
 ---@class ListBox : Control
----@field public items string[] The items contained in the control.
+---@field public items RichText[] The items contained in the control.
 ---@field public selected_index integer The index of the currently selected item into the items array.
 ---@field public horizontal_scroll boolean? Whether horizontal scrolling will be enabled when items go beyond the width of the control. Will impact performance greatly, use with care.
 ---A listbox which allows the user to choose from a list of items.
@@ -90,7 +103,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---@field public items MenuItem[]? The item's child items. If nil or empty, the item has no child items and is clickable.
 ---@field public enabled boolean? Whether the item is enabled. If nil or true, the item is enabled.
 ---@field public checked boolean? Whether the item is checked. If true, the item is checked.
----@field public text string The item's text.
+---@field public text RichText The item's text.
 ---Represents an item inside of a Menu.
 
 ---@class MenuResult
@@ -102,7 +115,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---A menu, which allows the user to choose from a list of items.
 
 ---@class ToolTip
----@field public text string The tooltip's text.
+---@field public text RichText The tooltip's text.
 ---A tooltip, which can be used to show additional information about a control.
 
 ugui = {
@@ -451,12 +464,38 @@ ugui = {
                 ugui.internal.control_data[control.uid].tooltip_hover_start = os.clock()
             end
 
-            ugui.internal.late_callbacks[#ugui.internal.late_callbacks + 1] = function()                
-                ugui.standard_styler.draw_tooltip(control.tooltip, {
+            ugui.internal.late_callbacks[#ugui.internal.late_callbacks + 1] = function()
+                ugui.standard_styler.draw_tooltip(control, {
                     x = ugui.internal.environment.mouse_position.x,
                     y = ugui.internal.environment.mouse_position.y,
                 }, ugui.internal.control_data[control.uid].tooltip_hover_start)
             end
+        end,
+
+        ---Parses rich text into content segments.
+        ---@param text RichText The rich text to parse.
+        ---@return RichTextSegment[] # The content segments.
+        parse_rich_text = function(text)
+            local segments = {}
+            local pattern = '(.-)(%[icon:[^%]]+%])'
+
+            local last_pos = 1
+            for text, icon in text:gmatch(pattern) do
+                if text ~= '' then
+                    table.insert(segments, {type = 'text', value = text})
+                end
+                table.insert(segments, {type = 'icon', value = icon:match('%[icon:([^%]]+)%]')})
+                last_pos = last_pos + #text + #icon
+            end
+
+            if last_pos <= #text then
+                local remaining_text = text:sub(last_pos)
+                if remaining_text ~= '' then
+                    table.insert(segments, {type = 'text', value = remaining_text})
+                end
+            end
+
+            return segments
         end,
     },
 
@@ -838,6 +877,181 @@ ugui = {
             end
         end,
 
+        ---Computes the segment data of rich text.
+        ---@param text RichText The rich text.
+        ---@param plaintext boolean? Whether the text is drawn without rich formatting. If nil, false is assumed.
+        ---@return { segment_data: { segment: RichTextSegment, rectangle: Rectangle }[], size: Vector2  } # The computed rich text segment data.
+        compute_rich_text = function(text, plaintext)
+            if plaintext then
+
+                local size = BreitbandGraphics.get_text_size(text, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
+                return {
+                    segment_data = {
+                        segment = {
+                            type = "text",
+                            value = text,
+                        },
+                        rectangle = {
+                            x = 0,
+                            y = 0,
+                            width = size.width,
+                            height = size.height
+                        }
+                    },
+                    size = {
+                        x = size.width,
+                        y = size.height
+                    }
+                }
+            end
+            local segment_data = {}
+
+            local x = 0
+
+            local segments = ugui.internal.parse_rich_text(text)
+
+            -- 1. Compute untranslated (relative to {0,0}) and horizontally stacked rectangles for all segments
+            for _, segment in pairs(segments) do
+                if segment.type == 'icon' then
+                    segment_data[#segment_data + 1] = {
+                        segment = segment,
+                        rectangle = {
+                            x = x,
+                            y = 0,
+                            width = ugui.standard_styler.params.icon_size,
+                            height = ugui.standard_styler.params.icon_size,
+                        },
+                    }
+                    x = x + ugui.standard_styler.params.icon_size
+                elseif segment.type == 'text' then
+                    local size = BreitbandGraphics.get_text_size(segment.value, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
+                    segment_data[#segment_data + 1] = {
+                        segment = segment,
+                        rectangle = {
+                            x = x,
+                            y = 0,
+                            width = size.width,
+                            height = size.height,
+                        },
+                    }
+                    x = x + size.width
+                else
+                    error(string.format("Unknown segment type '%s' encountered in measure_rich_text.", segment.type))
+                end
+            end
+
+            -- 2. Find out total width and max height
+            local total_width = 0
+            local max_height = 0
+            for _, data in pairs(segment_data) do
+                total_width = total_width + data.rectangle.width
+                if data.rectangle.height > max_height then
+                    max_height = data.rectangle.height
+                end
+            end
+
+            -- 3. Normalize all segments to same max height
+            for _, data in pairs(segment_data) do
+                data.rectangle.height = max_height
+            end
+
+            return {
+                segment_data = segment_data,
+                size = {
+                    x = total_width,
+                    y = max_height
+                }
+            }
+        end,
+
+        ---Draws rich text with the specified parameters.
+        ---@param rectangle Rectangle The rich text's bounds.
+        ---@param align_x Alignment? The rich text's horizontal alignment inside the rectangle. If nil, the default is assumed.
+        ---@param align_y Alignment? The rich text's vertical alignment inside the rectangle. If nil, the default is assumed.
+        ---@param text RichText The rich text.
+        ---@param color Color The rich text's color.
+        ---@param plaintext boolean? Whether the text is drawn without rich formatting. If nil, false is assumed.
+        draw_rich_text = function(rectangle, align_x, align_y, text, color, plaintext)
+            align_x = align_x or BreitbandGraphics.alignment.center
+            align_y = align_y or BreitbandGraphics.alignment.center
+
+            if plaintext then
+                BreitbandGraphics.draw_text2({
+                    text = text,
+                    rectangle = rectangle,
+                    color = color,
+                    align_x = align_x,
+                    align_y = align_y,
+                    font_name = ugui.standard_styler.params.font_name,
+                    font_size = ugui.standard_styler.params.font_size,
+                    clip = true,
+                    aliased = not ugui.standard_styler.params.cleartype,
+                })
+                return
+            end
+
+            -- 1. Compute rich text segment data
+            local computed = ugui.standard_styler.compute_rich_text(text, plaintext)
+            local segment_data = computed.segment_data
+            local total_width = computed.size.x
+
+            -- 2. Translate all segments to match the specified alignments
+            if align_x == BreitbandGraphics.alignment.start then
+                for _, data in pairs(segment_data) do
+                    data.rectangle.x = data.rectangle.x + rectangle.x
+                end
+            elseif align_x == BreitbandGraphics.alignment.center then
+                local x_offset = rectangle.x + (rectangle.width - total_width) / 2
+                for _, data in pairs(segment_data) do
+                    data.rectangle.x = data.rectangle.x + x_offset
+                end
+            elseif align_x == BreitbandGraphics.alignment['end'] then
+                local x_offset = rectangle.x + rectangle.width - total_width
+                for _, data in pairs(segment_data) do
+                    data.rectangle.x = data.rectangle.x + x_offset
+                end
+            end
+
+            if align_y == BreitbandGraphics.alignment.start then
+                for _, data in pairs(segment_data) do
+                    data.rectangle.y = data.rectangle.y + rectangle.y
+                end
+            elseif align_y == BreitbandGraphics.alignment.center then
+                for _, data in pairs(segment_data) do
+                    data.rectangle.y = data.rectangle.y + rectangle.y + rectangle.height / 2 - data.rectangle.height / 2
+                end
+            elseif align_y == BreitbandGraphics.alignment['end'] then
+                for _, data in pairs(segment_data) do
+                    data.rectangle.y = data.rectangle.y + rectangle.y + rectangle.height - data.rectangle.height
+                end
+            end
+
+            -- 3. Draw the segments
+            for _, data in pairs(segment_data) do
+                if data.segment.type == 'icon' then
+                    ugui.standard_styler.draw_icon(data.rectangle, color, nil, data.segment.value)
+                end
+                if data.segment.type == 'text' then
+                    BreitbandGraphics.draw_text2({
+                        text = data.segment.value,
+                        rectangle = {
+                            x = data.rectangle.x,
+                            y = data.rectangle.y,
+                            width = data.rectangle.width + 1,
+                            height = data.rectangle.height,
+                        },
+                        color = color,
+                        align_x = BreitbandGraphics.alignment.start,
+                        align_y = BreitbandGraphics.alignment.start,
+                        font_name = ugui.standard_styler.params.font_name,
+                        font_size = ugui.standard_styler.params.font_size,
+                        clip = true,
+                        aliased = not ugui.standard_styler.params.cleartype,
+                    })
+                end
+            end
+        end,
+
         ---Draws a raised frame with the specified parameters.
         ---@param control Control The control table.
         ---@param visual_state VisualState The control's visual state.
@@ -948,10 +1162,11 @@ ugui = {
         end,
 
         ---Draws a list item with the specified parameters.
+        ---@param control Control The associated list control.
         ---@param item string The list item's text.
         ---@param rectangle Rectangle The list item's bounds.
         ---@param visual_state VisualState The control's visual state.
-        draw_list_item = function(item, rectangle, visual_state)
+        draw_list_item = function(control, item, rectangle, visual_state)
             if not item then
                 return
             end
@@ -967,15 +1182,7 @@ ugui = {
                 height = rectangle.height,
             }
 
-            BreitbandGraphics.draw_text2({
-                text = item,
-                rectangle = text_rect,
-                color = ugui.standard_styler.params.listbox_item.text[visual_state],
-                align_x = BreitbandGraphics.alignment.start,
-                font_name = ugui.standard_styler.params.font_name,
-                font_size = ugui.standard_styler.params.font_size,
-                aliased = not ugui.standard_styler.params.cleartype,
-            })
+            ugui.standard_styler.draw_rich_text(text_rect, BreitbandGraphics.alignment.start, nil, item, ugui.standard_styler.params.listbox_item.text[visual_state], control.plaintext)
         end,
 
         ---Draws a list with the specified parameters.
@@ -1025,7 +1232,7 @@ ugui = {
                     item_visual_state = ugui.visual_states.active
                 end
 
-                ugui.standard_styler.draw_list_item(control.items[i], {
+                ugui.standard_styler.draw_list_item(control, control.items[i], {
                     x = rectangle.x - x_offset,
                     y = rectangle.y + y_offset,
                     width = math.max(content_bounds.width, control.rectangle.width),
@@ -1131,10 +1338,14 @@ ugui = {
         end,
 
         ---Draws a tooltip with the specified parameters.
-        ---@param text string The tooltip's content.
+        ---@param control Control The tooltip's parent control.
         ---@param position Vector2 The tooltip's position.
         ---@param time number The time the user began hovering over the control associated with the tooltip, as returned by os.clock().
-        draw_tooltip = function(text, position, time)
+        draw_tooltip = function(control, position, time)
+            local text = control.tooltip
+            if not text then
+                return
+            end
             if not time then
                 return
             end
@@ -1142,10 +1353,10 @@ ugui = {
                 return
             end
             local rectangle = {x = position.x, y = position.y, width = 0, height = 0}
-            local size = BreitbandGraphics.get_text_size(text, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
+            local size = ugui.standard_styler.compute_rich_text(text, control.plaintext).size
 
-            rectangle.width = size.width
-            rectangle.height = math.max(size.height, ugui.standard_styler.params.menu_item.height)
+            rectangle.width = size.x
+            rectangle.height = math.max(size.y, ugui.standard_styler.params.menu_item.height)
             rectangle.y = rectangle.y + rectangle.height
 
             if rectangle.x + rectangle.width > ugui.internal.environment.window_size.x then
@@ -1184,17 +1395,7 @@ ugui = {
                 rectangle.width = 99999
             end
 
-            BreitbandGraphics.draw_text2({
-                text = text,
-                rectangle = rectangle,
-                color = ugui.standard_styler.params.menu_item.text[ugui.visual_states.normal],
-                align_x = BreitbandGraphics.alignment.start,
-                align_y = BreitbandGraphics.alignment.center,
-                font_name = ugui.standard_styler.params.font_name,
-                font_size = ugui.standard_styler.params.font_size,
-                fit = fit,
-                aliased = not ugui.standard_styler.params.cleartype,
-            })
+            ugui.standard_styler.draw_rich_text(rectangle, BreitbandGraphics.alignment.start, nil, text, ugui.standard_styler.params.menu_item.text[ugui.visual_states.normal], control.plaintext)
         end,
 
         ---Draws a Button with the specified parameters.
@@ -1209,16 +1410,7 @@ ugui = {
             end
 
             ugui.standard_styler.draw_raised_frame(control, visual_state)
-
-            BreitbandGraphics.draw_text2({
-                text = control.text,
-                rectangle = control.rectangle,
-                color = ugui.standard_styler.params.button.text[visual_state],
-                font_name = ugui.standard_styler.params.font_name,
-                font_size = ugui.standard_styler.params.font_size,
-                clip = true,
-                aliased = not ugui.standard_styler.params.cleartype,
-            })
+            ugui.standard_styler.draw_rich_text(control.rectangle, nil, nil, control.text, ugui.standard_styler.params.button.text[visual_state], control.plaintext)
         end,
 
         ---Draws a ToggleButton with the specified parameters.
@@ -1514,17 +1706,7 @@ ugui = {
                 height = control.rectangle.height,
             }
 
-            BreitbandGraphics.draw_text2({
-                text = selected_item,
-                rectangle = text_rect,
-                color = text_color,
-                align_x = BreitbandGraphics.alignment.start,
-                font_name = ugui.standard_styler.params.font_name,
-                font_size = ugui.standard_styler.params.font_size,
-                clip = true,
-                aliased = not ugui.standard_styler.params.cleartype,
-            })
-
+            ugui.standard_styler.draw_rich_text(text_rect, BreitbandGraphics.alignment.start, nil, selected_item, text_color, control.plaintext)
             ugui.standard_styler.draw_icon({
                 x = control.rectangle.x + control.rectangle.width - ugui.standard_styler.params.icon_size - ugui.standard_styler.params.textbox.padding.x * 2,
                 y = control.rectangle.y,
@@ -1943,6 +2125,7 @@ ugui = {
                 rectangle = list_rect,
                 items = control.items,
                 selected_index = selected_index,
+                plaintext = control.plaintext,
             })
         end
 
