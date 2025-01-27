@@ -605,7 +605,7 @@ ugui_ext.apply_nineslice = function(style)
         end)
     end
 
-    ugui.standard_styler.draw_list_item = function(item, rectangle, visual_state)
+    ugui.standard_styler.draw_list_item = function(control, item, rectangle, visual_state)
         if not item then
             return
         end
@@ -625,16 +625,7 @@ ugui_ext.apply_nineslice = function(style)
             height = rectangle.height,
         }
 
-        BreitbandGraphics.draw_text2({
-            text = item,
-            rectangle = text_rect,
-            color = ugui.standard_styler.params.listbox_item.text[visual_state],
-            align_x = BreitbandGraphics.alignment.start,
-            font_name = ugui.standard_styler.params.font_name,
-            font_size = ugui.standard_styler.params.font_size,
-            clip = true,
-            aliased = not ugui.standard_styler.params.cleartype,
-        })
+        ugui.standard_styler.draw_rich_text(text_rect, BreitbandGraphics.alignment.start, nil, item, ugui.standard_styler.params.listbox_item.text[visual_state], control.plaintext)
     end
 
     ugui.standard_styler.draw_scrollbar = function(container_rectangle, thumb_rectangle, visual_state)
