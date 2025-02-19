@@ -1798,6 +1798,11 @@ ugui = {
     ---Pushes a layout section to the layout stack.
     ---@param layout LayoutSection The layout section.
     push = function(layout)
+        if #ugui.internal.layout_stack > 0 then
+            error("Tried to push more than 1 layout section to the layout stack. This operation is not currently supported.")
+            return
+        end
+
         if not layout.rectangle then
             layout.rectangle = ugui.internal.last_control_rectangle
         else
