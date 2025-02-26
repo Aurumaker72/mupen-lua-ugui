@@ -71,6 +71,10 @@ mupen-lua-ugui  —  The base library
   - Scrolling support
   - Unlimited items with no performance degradation
 - Scrollbar
+- Single-Pass Layout System
+- StackPanel
+  - Horizontal/Vertical stacking
+  - Element gap size
 
 <img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui-ext.png?raw=true">
 
