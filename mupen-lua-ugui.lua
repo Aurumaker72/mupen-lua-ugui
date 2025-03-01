@@ -2155,7 +2155,7 @@ ugui = {
     ---@param control ListBox The control table.
     ---@return integer # The new selected index.
     listbox = function(_control)
-        ugui.internal.do_layout(control)
+        ugui.internal.do_layout(_control)
         ugui.internal.validate_and_register_control(_control)
 
         ugui.internal.control_data[_control.uid] = ugui.internal.control_data[_control.uid] or {}
