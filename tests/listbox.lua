@@ -15,18 +15,24 @@ group.tests[#group.tests + 1] = {
         {
             items = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'},
             rect = {x = 10, y = 10, width = 100, height = 200},
-            mouse_position = {x = 10, y = 10},
+            mouse_position = {x = 11, y = 11},
             expected_index = 1,
         },
         {
             items = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'},
             rect = {x = 10, y = 10, width = 100, height = 200},
-            mouse_position = {x = 10, y = 100},
-            expected_index = 1,
+            mouse_position = {x = 11, y = 60},
+            expected_index = 4,
+        },
+        {
+            items = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J'},
+            rect = {x = 10, y = 10, width = 100, height = 200},
+            mouse_position = {x = 11, y = 99},
+            expected_index = 6,
         },
     },
     func = function(ctx)
-        local selected_index = nil
+        local selected_index = 999
 
         ugui.begin_frame({
             mouse_position = ctx.data.mouse_position,
