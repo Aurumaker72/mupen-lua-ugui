@@ -4,12 +4,13 @@ local function folder(file)
     return s:gsub(p, '')
 end
 
+ugui = dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
+
 local items = {}
 for i = 1, 1000, 1 do
     items[#items + 1] = 'Item ' .. i
 end
 local mouse_wheel = 0
-dofile(folder('demos\\internal_testing.lua') .. 'mupen-lua-ugui.lua')
 local initial_size = wgui.info()
 local selected_index = 1
 local selected_index_2 = 1

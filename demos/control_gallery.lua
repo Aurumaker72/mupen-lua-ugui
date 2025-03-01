@@ -4,7 +4,7 @@ local function folder(file)
     return s:gsub(p, '')
 end
 
-dofile(folder('demos\\control_gallery.lua') .. 'mupen-lua-ugui.lua')
+ugui = dofile(folder('demos\\control_gallery.lua') .. 'mupen-lua-ugui.lua')
 
 local mouse_wheel = 0
 local initial_size = wgui.info()

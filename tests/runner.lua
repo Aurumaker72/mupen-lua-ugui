@@ -9,9 +9,11 @@ function folder(file)
     return s:gsub(p, '')
 end
 
+ugui = nil
+
 local function reset_ugui_state()
     UGUI_QUIET = true
-    dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
+    ugui = dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
     dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui-ext.lua')
 end
 

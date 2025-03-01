@@ -4,7 +4,7 @@ local function folder(file)
     return s:gsub(p, '')
 end
 
-dofile(folder('demos\\navigation.lua') .. 'mupen-lua-ugui.lua')
+ugui = dofile(folder('demos\\navigation.lua') .. 'mupen-lua-ugui.lua')
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)

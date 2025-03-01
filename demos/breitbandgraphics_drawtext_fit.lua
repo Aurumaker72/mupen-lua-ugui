@@ -4,7 +4,7 @@ local function folder(file)
     return s:gsub(p, '')
 end
 
-dofile(folder('demos\\breitbandgraphics_drawtext_fit.lua') .. 'mupen-lua-ugui.lua')
+ugui = dofile(folder('demos\\breitbandgraphics_drawtext_fit.lua') .. 'mupen-lua-ugui.lua')
 
 local rectangle = {
     x = 5,
