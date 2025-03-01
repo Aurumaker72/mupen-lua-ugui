@@ -2155,6 +2155,8 @@ ugui = {
     ---@param control ListBox The control table.
     ---@return integer # The new selected index.
     listbox = function(_control)
+        -- FIXME: Rename _control to control, and just mutate the rectangle directly instead of deep-cloning. Also document the rectangle mutation change.
+        
         ugui.internal.do_layout(_control)
         ugui.internal.validate_and_register_control(_control)
 
