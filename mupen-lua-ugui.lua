@@ -59,7 +59,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 ---A button which can be clicked.
 
 ---@class ToggleButton : Button
----@field public is_checked boolean Whether the button is checked.
+---@field public is_checked boolean? Whether the button is checked. If nil, the ToggleButton is considered unchecked. FIXME: Implement this!!!
 ---A button which can be toggled on and off.
 
 ---@class CarrouselButton : Control
@@ -83,7 +83,7 @@ dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 
 ---@class ComboBox : Control
 ---@field public items RichText[] The items contained in the control.
----@field public selected_index integer The index of the currently selected item into the items array.
+---@field public selected_index integer? The index of the currently selected item into the items array. If nil, no item is selected. FIXME: Implement this!!!
 ---A combobox which allows the user to choose from a list of items.
 
 ---@class ListBox : Control
@@ -244,6 +244,27 @@ ugui = {
             return ugui.internal.environment.wheel == -1
         end,
 
+        ---Checks whether the specified point lies inside the control's bounds, considering special cases such as the enabled state, hittest-free and offscreen regions.
+        ---@param point Vector2 A point.
+        ---@param control Control A control.
+        ---@return boolean # Whether the point lies inside the control.
+        is_point_inside_control = function(point, control)
+            if control.is_enabled == false then
+                return false
+            end
+            if not BreitbandGraphics.is_point_inside_rectangle(point, control.rectangle) then
+                return false
+            end
+            if not control.topmost and BreitbandGraphics.is_point_inside_any_rectangle(point, ugui.internal.hittest_free_rects) then
+                return false
+            end
+            if point.x < 0 or point.x > ugui.internal.environment.window_size.x
+                or point.y < 0 or point.y > ugui.internal.environment.window_size.y then
+                return false
+            end
+            return true
+        end,
+
         ---Removes the character at the specified index from a string.
         ---@param string string The string to remove the character from.
         ---@param index integer The index of the character to remove.
@@ -312,6 +333,10 @@ ugui = {
                 if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.mouse_down_position,
                         control.rectangle) then
                     if not control.topmost and BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) then
+                        return false
+                    end
+                    if ugui.internal.environment.mouse_position.x < 0 or ugui.internal.environment.mouse_position.x > ugui.internal.environment.window_size.x
+                        or ugui.internal.environment.mouse_position.y < 0 or ugui.internal.environment.mouse_position.y > ugui.internal.environment.window_size.y then
                         return false
                     end
 
@@ -448,13 +473,7 @@ ugui = {
             if not control.tooltip then
                 return
             end
-            if control.is_enabled == false then
-                return
-            end
-            if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
-                return
-            end
-            if BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.environment.mouse_position, ugui.internal.hittest_free_rects) then
+            if not ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control) then
                 return
             end
 
@@ -568,18 +587,9 @@ ugui = {
             return ugui.visual_states.active
         end
 
-        local now_inside = BreitbandGraphics.is_point_inside_rectangle(
-                ugui.internal.environment.mouse_position,
-                control.rectangle)
-            and
-            not BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.environment.mouse_position,
-                ugui.internal.hittest_free_rects)
 
-        local down_inside = BreitbandGraphics.is_point_inside_rectangle(
-                ugui.internal.mouse_down_position, control.rectangle)
-            and
-            not BreitbandGraphics.is_point_inside_any_rectangle(ugui.internal.mouse_down_position,
-                ugui.internal.hittest_free_rects)
+        local now_inside = ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control)
+        local down_inside = ugui.internal.is_point_inside_control(ugui.internal.mouse_down_position, control)
 
         if now_inside and not ugui.internal.environment.is_primary_down then
             return ugui.visual_states.hovered
@@ -883,25 +893,24 @@ ugui = {
         ---@return { segment_data: { segment: RichTextSegment, rectangle: Rectangle }[], size: Vector2  } # The computed rich text segment data.
         compute_rich_text = function(text, plaintext)
             if plaintext then
-
                 local size = BreitbandGraphics.get_text_size(text, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
                 return {
                     segment_data = {
                         segment = {
-                            type = "text",
+                            type = 'text',
                             value = text,
                         },
                         rectangle = {
                             x = 0,
                             y = 0,
                             width = size.width,
-                            height = size.height
-                        }
+                            height = size.height,
+                        },
                     },
                     size = {
                         x = size.width,
-                        y = size.height
-                    }
+                        y = size.height,
+                    },
                 }
             end
             local segment_data = {}
@@ -959,8 +968,8 @@ ugui = {
                 segment_data = segment_data,
                 size = {
                     x = total_width,
-                    y = max_height
-                }
+                    y = max_height,
+                },
             }
         end,
 
@@ -1799,7 +1808,7 @@ ugui = {
     ---@param layout LayoutSection The layout section.
     push = function(layout)
         if #ugui.internal.layout_stack > 0 then
-            error("Tried to push more than 1 layout section to the layout stack. This operation is not currently supported.")
+            error('Tried to push more than 1 layout section to the layout stack. This operation is not currently supported.')
             return
         end
 
@@ -1919,15 +1928,13 @@ ugui = {
 
         -- if active and user clicks elsewhere, deactivate
         if ugui.internal.active_control == control.uid
-            and not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
-            if ugui.internal.is_mouse_just_down() then
-                -- deactivate, then clear selection
-                ugui.internal.active_control = nil
-                ugui.internal.control_data[control.uid].selection_start = nil
-                ugui.internal.control_data[control.uid].selection_end = nil
-            end
+            and ugui.internal.is_mouse_just_down()
+            and not ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control) then
+            -- deactivate, then clear selection
+            ugui.internal.active_control = nil
+            ugui.internal.control_data[control.uid].selection_start = nil
+            ugui.internal.control_data[control.uid].selection_end = nil
         end
-
 
         local function sel_hi()
             return math.max(ugui.internal.control_data[control.uid].selection_start,
@@ -1945,13 +1952,13 @@ ugui = {
                 ugui.internal.environment.mouse_position.x - control.rectangle.x)
 
             -- start a new selection
-            if ugui.internal.is_mouse_just_down() and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
+            if ugui.internal.is_mouse_just_down() and ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control) then
                 ugui.internal.control_data[control.uid].caret_index = theoretical_caret_index
                 ugui.internal.control_data[control.uid].selection_start = theoretical_caret_index
             end
 
             -- already has selection, move end to appropriate index
-            if ugui.internal.environment.is_primary_down and BreitbandGraphics.is_point_inside_rectangle(ugui.internal.mouse_down_position, control.rectangle) then
+            if ugui.internal.environment.is_primary_down and ugui.internal.is_point_inside_control(ugui.internal.mouse_down_position, control) then
                 ugui.internal.control_data[control.uid].selection_end = theoretical_caret_index
             end
 
@@ -2095,9 +2102,8 @@ ugui = {
         end
 
         if ugui.internal.is_mouse_just_down() and control.is_enabled ~= false then
-            if BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, control.rectangle) then
-                ugui.internal.control_data[control.uid].is_open = not ugui.internal.control_data
-                    [control.uid].is_open
+            if ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control) then
+                ugui.internal.control_data[control.uid].is_open = not ugui.internal.control_data[control.uid].is_open
             else
                 local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
                 if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, {

@@ -218,6 +218,31 @@ emu.atdrawd2d(function()
         text = text,
     })
 
+    if ugui.button({
+            uid = 5010,
+            rectangle = {
+                x = initial_size.width - 90,
+                y = initial_size.height - 90,
+                width = 200,
+                height = 200,
+            },
+            text = 'offscreen click',
+        }) then
+        print(math.random())
+    end
+
+    ugui.combobox({
+        uid = 5015,
+        rectangle = {
+            x = initial_size.width - 90,
+            y = initial_size.height - 250,
+            width = 200,
+            height = 30,
+        },
+        items = {"A", "B", "C"},
+        selected_index = 1,
+    })
+
     ugui.end_frame()
 end)
 

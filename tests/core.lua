@@ -160,4 +160,134 @@ group.tests[#group.tests + 1] = {
     end,
 }
 
+group.tests[#group.tests + 1] = {
+    name = 'offscreen_hittest_is_ignored',
+    params = {
+        {
+            name = "button",
+            func = function ()
+                return ugui.button({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    text = 'Hello World!',
+                })
+            end,
+        },
+        {
+            name = "toggle_button",
+            func = function ()
+                return ugui.toggle_button({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    text = 'Hello World!',
+                    is_checked = false,
+                })
+            end,
+        },
+        {
+            name = "carrousel_button",
+            func = function ()
+                local i = ugui.carrousel_button({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    items = {"A", "B", "C"},
+                    selected_index = 1
+                })
+                return i ~= 1
+            end,
+        },
+        {
+            name = "textbox",
+            func = function ()
+                ugui.textbox({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    text = "Hi",
+                })
+                return ugui.internal.active_control == 5
+            end,
+        },
+        {
+            name = "joysitck",
+            func = function ()
+                local pos = ugui.joystick({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    position = {
+                        x = 0,
+                        y = 0,
+                    },
+                })
+                return pos.x ~= 0 or pos.y ~= 0
+            end,
+        },
+        {
+            name = "trackbar",
+            func = function ()
+                local value = ugui.trackbar({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    value = 1
+                })
+                return value ~= 1
+            end,
+        },
+        {
+            name = "combobox",
+            func = function ()
+                ugui.combobox({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    items = {"A"},
+                    selected_index = 1,
+                })
+                return ugui.internal.control_data[5].is_open == true
+            end,
+        },
+        {
+            name = "listbox",
+            func = function ()
+                local i = ugui.listbox({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    items = {"A", "B", "C"},
+                    selected_index = 3,
+                })
+                return i ~= 3
+            end,
+        },
+        {
+            name = "scrollbar",
+            func = function ()
+                local val = ugui.scrollbar({
+                    uid = 5,
+                    rectangle = {x = -10, y = -10, width = 100, height = 20},
+                    value = 1,
+                    ratio = 1
+                })
+                return val ~= 1
+            end,
+        },
+    },
+    func = function(ctx)
+        ugui.begin_frame({
+            mouse_position = {x = -5, y = -5},
+            wheel = 0,
+            is_primary_down = false,
+            held_keys = {},
+        })
+        ctx.data.func()
+        ugui.end_frame()
+        ugui.begin_frame({
+            mouse_position = {x = -5, y = -5},
+            wheel = 0,
+            is_primary_down = true,
+            held_keys = {},
+        })
+        local pressed = ctx.data.func()
+        ugui.end_frame()
+        ctx.assert(not pressed, string.format('Off-screen %s hittest succeded when it should have failed', ctx.data.name))
+    end,
+}
+
 return group
