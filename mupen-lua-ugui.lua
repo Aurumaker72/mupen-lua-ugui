@@ -892,6 +892,10 @@ ugui = {
         ---@param plaintext boolean? Whether the text is drawn without rich formatting. If nil, false is assumed.
         ---@return { segment_data: { segment: RichTextSegment, rectangle: Rectangle }[], size: Vector2  } # The computed rich text segment data.
         compute_rich_text = function(text, plaintext)
+            if not text then
+                return {segment_data = {}, size = {x = 0, y = 0}}
+            end
+
             if plaintext then
                 local size = BreitbandGraphics.get_text_size(text, ugui.standard_styler.params.font_size, ugui.standard_styler.params.font_name)
                 return {
