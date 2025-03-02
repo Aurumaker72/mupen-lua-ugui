@@ -5,13 +5,15 @@ local ugui = {
     _LICENSE = 'GPL-3',
 }
 
-local function folder(file)
-    local s = debug.getinfo(2, 'S').source:sub(2)
-    local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
-    return s:gsub(p, '')
+-- ugui depends on BreitbandGraphics, so it must be present in the global scope prior to execution.
+if not BreitbandGraphics then
+    local function folder(file)
+        local s = debug.getinfo(2, 'S').source:sub(2)
+        local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
+        return s:gsub(p, '')
+    end
+    BreitbandGraphics = dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 end
-
-dofile(folder('mupen-lua-ugui.lua') .. 'breitbandgraphics.lua')
 
 ---@alias UID number
 ---Unique identifier for a control. Must be unique within a frame.
