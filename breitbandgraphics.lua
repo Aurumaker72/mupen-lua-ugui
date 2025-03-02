@@ -183,6 +183,10 @@ local function color_source_to_float_color(source)
         return color_to_float(source)
     end
 
+    if type(source) == "table" then
+        return color_to_float({})        
+    end
+
     print('Invalid color source:')
     print(source)
     error('See above.')
