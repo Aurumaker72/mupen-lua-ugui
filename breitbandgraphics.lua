@@ -30,7 +30,10 @@ end
 ---@alias HexColor string
 ---A hexadecimal color string in the format `#RRGGBB` or `#RRGGBBAA`.
 
----@alias ColorSource Color|FloatColor|ArrayColor|ArrayFloatColor|HexColor
+---@alias RawColor integer
+---A raw color value in the format `0xRRGGBBAA`.
+
+---@alias ColorSource Color|FloatColor|ArrayColor|ArrayFloatColor|HexColor|RawColor
 ---A color-providing object that can be converted to a Color.
 
 ---@class Vector2
@@ -147,35 +150,51 @@ end
 ---@param source ColorSource The color source.
 ---@return FloatColor # The converted color.
 local function color_source_to_float_color(source)
+
+    -- Match RawColor
+    if math.type(source) == "integer" then
+        return {
+            r = (source >> 24) & 0xFF,
+            g = (source >> 16) & 0xFF,
+            b = (source >> 8) & 0xFF,
+            a = source & 0xFF,
+        }
+    end
+
     -- Match HexColor
     if type(source) == 'string' then
         return color_to_float(BreitbandGraphics.hex_to_color(source))
     end
 
     -- Match ArrayColor and ArrayFloatColor
-    if source[1] and source[2] and source[3] then
+    if source[1] or source[2] or source[3] or source[4] then
         -- Match ArrayFloatColor
         if math.type(source[1]) == 'float' or math.type(source[2]) == 'float' or math.type(source[3]) == 'float' then
             return {
-                r = source[1],
-                g = source[2],
-                b = source[3],
-                a = source[4],
+                r = source[1] or 0.0,
+                g = source[2] or 0.0,
+                b = source[3] or 0.0,
+                a = source[4] or 1.0,
             }
         end
 
         -- Match ArrayColor
         return color_to_float({
-            r = source[1],
-            g = source[2],
-            b = source[3],
-            a = source[4],
+            r = source[1] or 0,
+            g = source[2] or 0,
+            b = source[3] or 0,
+            a = source[4] or 255,
         })
     end
 
     -- Match FloatColor
     if math.type(source.r) == 'float' or math.type(source.g) == 'float' or math.type(source.b) == 'float' then
-        return source
+        return {
+            r = source.r and source.r or 0.0,
+            g = source.g and source.g or 0.0,
+            b = source.b and source.b or 0.0,
+            a = source.a and source.a or 1.0,
+        }
     end
 
     -- Match Color
