@@ -3,7 +3,7 @@
 
 -- FIXME: Strong typing for the test runner!!!
 
-local path_root = debug.getinfo(1).short_src:gsub("\\[^\\]+\\[^\\]+$", "\\")
+local path_root = debug.getinfo(1).source:sub(2):gsub("\\[^\\]+\\[^\\]+$", "\\")
 local test_root = debug.getinfo(1).short_src:gsub("(\\[^\\]+)\\[^\\]+$", "%1\\")
 
 ---@module "breitbandgraphics"

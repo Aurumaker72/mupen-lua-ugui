@@ -1,4 +1,4 @@
-local path_root = debug.getinfo(1).short_src:gsub("\\[^\\]+\\[^\\]+$", "\\")
+local path_root = debug.getinfo(1).source:sub(2):gsub("\\[^\\]+\\[^\\]+$", "\\")
 
 ---@module "breitbandgraphics"
 BreitbandGraphics = dofile(path_root .. 'breitbandgraphics.lua')
