@@ -124,85 +124,122 @@ group.tests[#group.tests + 1] = {
     end,
 }
 
-local hex_color_map = {
+local color_mega_map = {
     {
         color = {r = 0, g = 0, b = 0},
         text = '#000000',
+        array_color = {0, 0, 0},
+        arary_float_color = {0.0, 0.0, 0.0},
     },
     {
         color = {r = 255, g = 0, b = 0},
         text = '#FF0000',
+        array_color = {255, 0, 0},
+        arary_float_color = {1.0, 0.0, 0.0},
     },
     {
         color = {r = 0, g = 255, b = 0},
         text = '#00FF00',
+        array_color = {0, 255, 0},
+        arary_float_color = {0.0, 1.0, 0.0},
     },
     {
         color = {r = 0, g = 0, b = 255},
         text = '#0000FF',
+        array_color = {0, 0, 255},
+        arary_float_color = {0.0, 0.0, 1.0},
     },
     {
         color = {r = 255, g = 255, b = 0},
         text = '#FFFF00',
+        array_color = {255, 255, 0},
+        arary_float_color = {1.0, 1.0, 0.0},
     },
     {
         color = {r = 0, g = 255, b = 255},
         text = '#00FFFF',
+        array_color = {0, 255, 255},
+        arary_float_color = {0.0, 1.0, 1.0},
     },
     {
         color = {r = 255, g = 0, b = 255},
         text = '#FF00FF',
+        array_color = {255, 0, 255},
+        arary_float_color = {1.0, 0.0, 1.0},
     },
     {
         color = {r = 192, g = 192, b = 192},
         text = '#C0C0C0',
+        array_color = {192, 192, 192},
+        arary_float_color = {0.75, 0.75, 0.75},
     },
     {
         color = {r = 128, g = 128, b = 128},
         text = '#808080',
+        array_color = {128, 128, 128},
+        arary_float_color = {0.5, 0.5, 0.5},
     },
     {
         color = {r = 128, g = 0, b = 0},
         text = '#800000',
+        array_color = {128, 0, 0},
+        arary_float_color = {0.5, 0.0, 0.0},
     },
     {
         color = {r = 128, g = 128, b = 0},
         text = '#808000',
+        array_color = {128, 128, 0},
+        arary_float_color = {0.5, 0.5, 0.0},
     },
     {
         color = {r = 0, g = 128, b = 0},
         text = '#008000',
+        array_color = {0, 128, 0},
+        arary_float_color = {0.0, 0.5, 0.0},
     },
     {
         color = {r = 128, g = 0, b = 128},
         text = '#800080',
+        array_color = {128, 0, 128},
+        arary_float_color = {0.5, 0.0, 0.5},
     },
     {
         color = {r = 0, g = 128, b = 128},
         text = '#008080',
+        array_color = {0, 128, 128},
+        arary_float_color = {0.0, 0.5, 0.5},
     },
     {
         color = {r = 0, g = 0, b = 128},
         text = '#000080',
+        array_color = {0, 0, 128},
+        arary_float_color = {0.0, 0.0, 0.5},
     },
 }
 
 group.tests[#group.tests + 1] = {
     name = 'color_to_hex_works',
-    params = hex_color_map,
+    params = color_mega_map,
     func = function(ctx)
-        ctx.assert_eq(ctx.data.text, BreitbandGraphics.color_to_hex(ctx.data.color))
+        local result = BreitbandGraphics.color_to_hex(ctx.data.color)
+        ctx.assert_eq(ctx.data.text, result)
+        local roundtripped = BreitbandGraphics.hex_to_color(result)
+        ctx.assert_eq(ctx.data.color.r, roundtripped.r)
+        ctx.assert_eq(ctx.data.color.g, roundtripped.g)
+        ctx.assert_eq(ctx.data.color.b, roundtripped.b)
     end,
 }
 
 group.tests[#group.tests + 1] = {
     name = 'hex_to_color_works',
-    params = hex_color_map,
+    params = color_mega_map,
     func = function(ctx)
         local color = BreitbandGraphics.hex_to_color(ctx.data.text)
         ctx.assert_eq(ctx.data.color.r, color.r)
         ctx.assert_eq(ctx.data.color.g, color.g)
         ctx.assert_eq(ctx.data.color.b, color.b)
+        local roundtripped = BreitbandGraphics.color_to_hex(color)
+        ctx.assert_eq(ctx.data.text, roundtripped)        
     end,
 }
 
