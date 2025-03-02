@@ -3,44 +3,47 @@
 
 -- FIXME: Strong typing for the test runner!!!
 
-function folder(file)
-    local s = debug.getinfo(2, 'S').source:sub(2)
-    local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
-    return s:gsub(p, '')
-end
+local path_root = debug.getinfo(1).short_src:gsub("\\[^\\]+\\[^\\]+$", "\\")
+local test_root = debug.getinfo(1).short_src:gsub("(\\[^\\]+)\\[^\\]+$", "%1\\")
 
+---@module "breitbandgraphics"
+BreitbandGraphics = nil
+
+---@module "mupen-lua-ugui"
 ugui = nil
+
+---@module "mupen-lua-ugui-ext"
 ugui_ext = nil
 
 local function reset_ugui_state()
     UGUI_QUIET = true
-    ugui = dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
-    ugui_ext = dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui-ext.lua')
+    BreitbandGraphics = dofile(path_root .. 'breitbandgraphics.lua')
+    ugui = dofile(path_root .. 'mupen-lua-ugui.lua')
+    ugui_ext = dofile(path_root .. 'mupen-lua-ugui-ext.lua')
 end
 
 reset_ugui_state()
 
-
 local groups = {
-    dofile(folder('runner.lua') .. 'core.lua'),
-    dofile(folder('runner.lua') .. 'layout.lua'),
-    dofile(folder('runner.lua') .. 'richtext.lua'),
-    dofile(folder('runner.lua') .. 'stackpanel.lua'),
-    dofile(folder('runner.lua') .. 'tooltip.lua'),
-    dofile(folder('runner.lua') .. 'breitbandgraphics.lua'),
-    dofile(folder('runner.lua') .. 'button.lua'),
-    dofile(folder('runner.lua') .. 'toggle_button.lua'),
-    dofile(folder('runner.lua') .. 'carrousel_button.lua'),
-    dofile(folder('runner.lua') .. 'textbox.lua'),
-    dofile(folder('runner.lua') .. 'joystick.lua'),
-    dofile(folder('runner.lua') .. 'combobox.lua'),
-    dofile(folder('runner.lua') .. 'listbox.lua'),
-    dofile(folder('runner.lua') .. 'trackbar.lua'),
-    dofile(folder('runner.lua') .. 'scrollbar.lua'),
-    dofile(folder('runner.lua') .. 'menu.lua'),
-    dofile(folder('runner.lua') .. 'spinner.lua'),
-    dofile(folder('runner.lua') .. 'tabcontrol.lua'),
-    dofile(folder('runner.lua') .. 'numberbox.lua'),
+    dofile(test_root .. 'core.lua'),
+    dofile(test_root .. 'layout.lua'),
+    dofile(test_root .. 'richtext.lua'),
+    dofile(test_root .. 'stackpanel.lua'),
+    dofile(test_root .. 'tooltip.lua'),
+    dofile(test_root .. 'breitbandgraphics.lua'),
+    dofile(test_root .. 'button.lua'),
+    dofile(test_root .. 'toggle_button.lua'),
+    dofile(test_root .. 'carrousel_button.lua'),
+    dofile(test_root .. 'textbox.lua'),
+    dofile(test_root .. 'joystick.lua'),
+    dofile(test_root .. 'combobox.lua'),
+    dofile(test_root .. 'listbox.lua'),
+    dofile(test_root .. 'trackbar.lua'),
+    dofile(test_root .. 'scrollbar.lua'),
+    dofile(test_root .. 'menu.lua'),
+    dofile(test_root .. 'spinner.lua'),
+    dofile(test_root .. 'tabcontrol.lua'),
+    dofile(test_root .. 'numberbox.lua'),
 }
 
 local verbose = false

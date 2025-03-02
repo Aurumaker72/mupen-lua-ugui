@@ -1,10 +1,10 @@
-local function folder(file)
-    local s = debug.getinfo(2, 'S').source:sub(2)
-    local p = file:gsub('[%(%)%%%.%+%-%*%?%^%$]', '%%%0'):gsub('[\\/]', '[\\/]') .. '$'
-    return s:gsub(p, '')
-end
+local path_root = debug.getinfo(1).short_src:gsub("\\[^\\]+\\[^\\]+$", "\\")
 
-ugui = dofile(folder('demos\\layout_sections.lua') .. 'mupen-lua-ugui.lua')
+---@module "breitbandgraphics"
+BreitbandGraphics = dofile(path_root .. 'breitbandgraphics.lua')
+
+---@module "mupen-lua-ugui"
+ugui = dofile(path_root .. 'mupen-lua-ugui.lua')
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
