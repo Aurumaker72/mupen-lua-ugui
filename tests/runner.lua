@@ -10,11 +10,12 @@ function folder(file)
 end
 
 ugui = nil
+ugui_ext = nil
 
 local function reset_ugui_state()
     UGUI_QUIET = true
     ugui = dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui.lua')
-    dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui-ext.lua')
+    ugui_ext = dofile(folder('tests\\runner.lua') .. 'mupen-lua-ugui-ext.lua')
 end
 
 reset_ugui_state()

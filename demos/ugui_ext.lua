@@ -5,7 +5,7 @@ local function folder(file)
 end
 
 ugui = dofile(folder('demos\\ugui_ext.lua') .. 'mupen-lua-ugui.lua')
-dofile(folder('demos\\ugui_ext.lua') .. 'mupen-lua-ugui-ext.lua')
+ugui_ext = dofile(folder('demos\\ugui_ext.lua') .. 'mupen-lua-ugui-ext.lua')
 
 local initial_size = wgui.info()
 wgui.resize(initial_size.width + 200, initial_size.height)
