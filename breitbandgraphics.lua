@@ -73,6 +73,11 @@ end
 ---@field public aliased boolean? Whether the text should be drawn with no text filtering. If nil, false is assumed.
 ---@field public fit boolean? Whether the text should be resized to fit the bounding rectangle. If nil, false is assumed.
 
+---@class ImageInfo
+---@field public width number The width.
+---@field public height number The height.
+---Contains information about an image.
+
 ---@enum StandardColors
 --- A table of standard colors.
 BreitbandGraphics.colors = {
@@ -752,8 +757,7 @@ end
 ---@param path string The image's absolute path on disk.
 ---@param color ColorSource The color filter applied to the image. If white, the image is drawn as-is.
 ---@param filter "nearest" | "linear" The texture filter applied to the image.
-BreitbandGraphics.draw_image_nineslice = function(destination_rectangle, source_rectangle, source_rectangle_center, path,
-    color, filter)
+BreitbandGraphics.draw_image_nineslice = function(destination_rectangle, source_rectangle, source_rectangle_center, path, color, filter)
     destination_rectangle = {
         x = math.floor(destination_rectangle.x),
         y = math.floor(destination_rectangle.y),
@@ -877,9 +881,9 @@ BreitbandGraphics.draw_image_nineslice = function(destination_rectangle, source_
     }, bottom, path, color, filter)
 end
 
----Gets an image's metadata.
+---Gets information about an image.
 ---@param path string The image's absolute path on disk.
----FIXME: Undefined API surface, what is this?!!!!
+---@return ImageInfo # Information about the image.
 BreitbandGraphics.get_image_info = function(path)
     local image = BreitbandGraphics.internal.image_from_path(path)
     return d2d.get_image_info(image)
