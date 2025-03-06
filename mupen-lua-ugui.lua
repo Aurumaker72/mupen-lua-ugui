@@ -349,10 +349,6 @@ ugui.internal = {
     ---@param max number The upper bound.
     ---@return number # The new limited value.
     clamp = function(value, min, max)
-        -- FIXME: Remove this nil check, deal with the fallout.
-        if value == nil then
-            return value
-        end
         return math.max(math.min(value, max), min)
     end,
 
