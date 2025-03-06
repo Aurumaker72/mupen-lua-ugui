@@ -96,6 +96,7 @@ end
 ---A listbox which allows the user to choose from a list of items.
 ---If the items don't fit in the control's bounds vertically, vertical scrolling will be enabled.
 ---If the items don't fit in the control's bounds horizontally, horizontal scrolling will be enabled if horizontal_scroll is true.
+---The `rectangle` field might be mutated to accommodate the scrollbars.
 
 ---@class ScrollBar : Control
 ---@field public value number The scroll proportion in the range 0-1.
@@ -1813,6 +1814,7 @@ ugui.standard_styler = {
     ---@param control table A table abiding by the mupen-lua-ugui control contract
     ---@return _ table A rectangle specifying the desired bounds of the content as `{x = 0, y = 0, width: number, height: number}`.
     get_desired_listbox_content_bounds = function(control)
+        -- TODO: Limit this to window size!
         -- Since horizontal content bounds measuring is expensive, we only do this if explicitly enabled.
         local max_width = 0
         if control.horizontal_scroll == true then
@@ -2230,25 +2232,23 @@ end
 ---Places a ListBox.
 ---@param control ListBox The control table.
 ---@return integer # The new selected index.
-ugui.listbox = function(_control)
-    -- FIXME: Rename _control to control, and just mutate the rectangle directly instead of deep-cloning. Also document the rectangle mutation change.
+ugui.listbox = function(control)
+    ugui.internal.do_layout(control)
+    ugui.internal.validate_and_register_control(control)
 
-    ugui.internal.do_layout(_control)
-    ugui.internal.validate_and_register_control(_control)
-
-    ugui.internal.control_data[_control.uid] = ugui.internal.control_data[_control.uid] or {}
-    if ugui.internal.control_data[_control.uid].scroll_x == nil then
-        ugui.internal.control_data[_control.uid].scroll_x = 0
+    ugui.internal.control_data[control.uid] = ugui.internal.control_data[control.uid] or {}
+    if ugui.internal.control_data[control.uid].scroll_x == nil then
+        ugui.internal.control_data[control.uid].scroll_x = 0
     end
-    if ugui.internal.control_data[_control.uid].scroll_y == nil then
-        ugui.internal.control_data[_control.uid].scroll_y = 0
+    if ugui.internal.control_data[control.uid].scroll_y == nil then
+        ugui.internal.control_data[control.uid].scroll_y = 0
     end
 
-    local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(_control)
-    local x_overflow = content_bounds.width > _control.rectangle.width
-    local y_overflow = content_bounds.height > _control.rectangle.height
+    local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
+    local x_overflow = content_bounds.width > control.rectangle.width
+    local y_overflow = content_bounds.height > control.rectangle.height
 
-    local new_rectangle = ugui.internal.deep_clone(_control.rectangle)
+    local new_rectangle = ugui.internal.deep_clone(control.rectangle)
     if x_overflow then
         new_rectangle.height = new_rectangle.height - ugui.standard_styler.params.scrollbar.thickness
     end
@@ -2256,8 +2256,6 @@ ugui.listbox = function(_control)
         new_rectangle.width = new_rectangle.width - ugui.standard_styler.params.scrollbar.thickness
     end
 
-    -- we need to adjust rectangle to fit scrollbars
-    local control = ugui.internal.deep_clone(_control)
     control.rectangle = new_rectangle
 
     local pushed = ugui.internal.process_push(control)
