@@ -62,7 +62,7 @@ end
 ---A button which can be clicked.
 
 ---@class ToggleButton : Button
----@field public is_checked boolean? Whether the button is checked. If nil, the ToggleButton is considered unchecked. FIXME: Implement this!!!
+---@field public is_checked boolean? Whether the button is checked. If nil, the ToggleButton is considered unchecked.
 ---A button which can be toggled on and off.
 
 ---@class CarrouselButton : Control
@@ -1943,12 +1943,14 @@ ugui.toggle_button = function(control)
     local pushed = ugui.internal.process_push(control)
     ugui.standard_styler.draw_togglebutton(control)
 
+    local checked = control.is_checked or false
     if pushed then
-        return not control.is_checked
+        checked = not checked
     end
 
     ugui.internal.handle_tooltip(control)
-    return control.is_checked
+    
+    return checked
 end
 
 ---Places a CarrouselButton.
