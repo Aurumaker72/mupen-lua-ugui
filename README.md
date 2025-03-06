@@ -78,14 +78,14 @@ mupen-lua-ugui  —  The base library
 - StackPanel
   - Horizontal/Vertical stacking
   - Element gap size
+- Spinner
+- NumberBox
+- TabControl
 
 <img width="28" align="left" src="https://github.com/Aurumaker72/mupen-lua-ugui/blob/main/assets/ugui-ext.png?raw=true">
 
 mupen-lua-ugui-ext  —  Extensions and advanced features
 
-- Spinner
-- TabControl
-- NumberBox
 - Performance
   - Graphics caching extension
 - Stylers
