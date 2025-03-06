@@ -23,9 +23,11 @@ end
 ---
 ---    [icon:arrow_left] Go Back
 ---    Move up [icon:arrow_up]
+---    Down [icon:arrow_down:#FFFF00]
+---    [icon:arrow_right:textbox.selection] Go Forward
 ---    Hello World!
 
----@alias RichTextSegment { type: ["text"|"icon"], value: string }
+---@alias RichTextSegment { type: ["text"|"icon"], value: string, color: string? }
 ---Represents a computed segment from a rich text string.
 
 ---@class Environment
@@ -540,15 +542,29 @@ ugui.internal = {
     ---@return RichTextSegment[] # The content segments.
     parse_rich_text = function(text)
         local segments = {}
-        local pattern = '(.-)(%[icon:[^%]]+%])'
+        local pattern = '(.-)(%[icon:([^%]:]+)(:?([^%]]*))%])'
 
         local last_pos = 1
-        for text, icon in text:gmatch(pattern) do
-            if text ~= '' then
-                table.insert(segments, {type = 'text', value = text})
+        for before_text, full_icon, icon_name, _, color in text:gmatch(pattern) do
+            if before_text ~= '' then
+                table.insert(segments, {type = 'text', value = before_text})
             end
-            table.insert(segments, {type = 'icon', value = icon:match('%[icon:([^%]]+)%]')})
-            last_pos = last_pos + #text + #icon
+            if color:find('.') then
+                -- The color is a path in standard_styler.params
+                local result = ugui.standard_styler.params
+                local index = 1
+                local keys = {}
+                for segment in color:gmatch('([^%.]+)') do
+                    keys[#keys + 1] = segment
+                end
+                while index <= #keys and result do
+                    result = result[keys[index]]
+                    index = index + 1
+                end
+                color = result
+            end
+            table.insert(segments, {type = 'icon', value = icon_name, color = color ~= '' and color or nil})
+            last_pos = last_pos + #before_text + #full_icon
         end
 
         if last_pos <= #text then
@@ -711,7 +727,7 @@ ugui.standard_styler = {
                 [3] = BreitbandGraphics.hex_to_color('#000000'),
                 [0] = BreitbandGraphics.hex_to_color('#A0A0A0'),
             },
-            selection = BreitbandGraphics.hex_to_color("#0078D7"),
+            selection = BreitbandGraphics.hex_to_color('#0078D7'),
         },
         listbox = {
             back = {
@@ -878,15 +894,15 @@ ugui.standard_styler = {
         },
         numberbox = {
             font_scale = 1.5,
-            selection = BreitbandGraphics.hex_to_color("#0078D7"),
-        }
+            selection = BreitbandGraphics.hex_to_color('#0078D7'),
+        },
     },
 
     ---Draws an icon with the specified parameters.
     ---The draw_icon implementation may choose to use either the color or visual_state parameter to determine the icon's appearance.
     ---Therefore, the caller must provide either a color or a visual state, or both.
     ---@param rectangle Rectangle The icon's bounds.
-    ---@param color Color? The icon's fill color.
+    ---@param color ColorSource? The icon's fill color.
     ---@param visual_state VisualState? The icon's visual state.
     ---@param key string The icon's identifier.
     draw_icon = function(rectangle, color, visual_state, key)
@@ -1040,7 +1056,7 @@ ugui.standard_styler = {
     ---@param align_x Alignment? The rich text's horizontal alignment inside the rectangle. If nil, the default is assumed.
     ---@param align_y Alignment? The rich text's vertical alignment inside the rectangle. If nil, the default is assumed.
     ---@param text RichText The rich text.
-    ---@param color Color The colors for rich text.
+    ---@param color Color The rich text's color. If a rich text segment contains a color, it is used instead.
     ---@param visual_state VisualState The visual state for rich icons.
     ---@param plaintext boolean? Whether the text is drawn without rich formatting. If nil, false is assumed.
     draw_rich_text = function(rectangle, align_x, align_y, text, color, visual_state, plaintext)
@@ -1101,7 +1117,7 @@ ugui.standard_styler = {
         -- 3. Draw the segments
         for _, data in pairs(segment_data) do
             if data.segment.type == 'icon' then
-                ugui.standard_styler.draw_icon(data.rectangle, nil, visual_state, data.segment.value)
+                ugui.standard_styler.draw_icon(data.rectangle, data.segment.color or color, visual_state, data.segment.value)
             end
             if data.segment.type == 'text' then
                 BreitbandGraphics.draw_text2({
@@ -2845,7 +2861,7 @@ ugui.numberbox = function(control)
 
     local function increment_digit(index, value)
         control.value = ugui.internal.set_digit(control.value, control.places,
-        ugui.internal.get_digit(control.value, control.places,
+            ugui.internal.get_digit(control.value, control.places,
                 index) + value,
             index)
     end

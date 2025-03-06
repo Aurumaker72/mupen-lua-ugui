@@ -102,7 +102,7 @@ emu.atdrawd2d(function()
     }
 
     BreitbandGraphics.draw_rectangle(rect, BreitbandGraphics.colors.red, 2)
-    ugui.standard_styler.draw_rich_text(rect, align_x, align_y, '[icon:arrow_up]Up up up!![icon:arrow_up]', BreitbandGraphics.colors.black, ugui.visual_states.normal, plaintext)
+    ugui.standard_styler.draw_rich_text(rect, align_x, align_y, '[icon:arrow_up:#FF00FF]party time[icon:arrow_up:textbox.selection]', BreitbandGraphics.colors.black, ugui.visual_states.normal, plaintext)
 
     ugui.end_frame()
 end)
