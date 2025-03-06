@@ -244,6 +244,18 @@ emu.atdrawd2d(function()
         selected_index = 1,
     })
 
+    ugui.combobox({
+        uid = 10000,
+        rectangle = {
+            x = 300,
+            y = 10,
+            width = 200,
+            height = 30,
+        },
+        items = {"A", "B", "C"},
+        selected_index = nil,
+    })
+
     ugui.end_frame()
 end)
 

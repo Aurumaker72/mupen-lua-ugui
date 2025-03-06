@@ -86,7 +86,7 @@ end
 
 ---@class ComboBox : Control
 ---@field public items RichText[] The items contained in the control.
----@field public selected_index integer? The index of the currently selected item into the items array. If nil, no item is selected. FIXME: Implement this!!!
+---@field public selected_index integer? The index of the currently selected item into the items array. If nil, no item is selected.
 ---A combobox which allows the user to choose from a list of items.
 
 ---@class ListBox : Control
