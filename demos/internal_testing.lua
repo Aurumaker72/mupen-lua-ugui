@@ -232,6 +232,18 @@ emu.atdrawd2d(function()
         print(math.random())
     end
 
+    selected_index = ugui.combobox({
+        uid = 110123,
+        rectangle = {
+            x = 720,
+            y = 10,
+            width = 140,
+            height = 20,
+        },
+        items = items,
+        selected_index = selected_index,
+    })
+    
     ugui.combobox({
         uid = 5015,
         rectangle = {
@@ -255,6 +267,8 @@ emu.atdrawd2d(function()
         items = {"A", "B", "C"},
         selected_index = nil,
     })
+
+    
 
     ugui.end_frame()
 end)

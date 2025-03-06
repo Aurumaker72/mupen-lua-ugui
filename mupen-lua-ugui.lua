@@ -1814,7 +1814,6 @@ ugui.standard_styler = {
     ---@param control table A table abiding by the mupen-lua-ugui control contract
     ---@return _ table A rectangle specifying the desired bounds of the content as `{x = 0, y = 0, width: number, height: number}`.
     get_desired_listbox_content_bounds = function(control)
-        -- TODO: Limit this to window size!
         -- Since horizontal content bounds measuring is expensive, we only do this if explicitly enabled.
         local max_width = 0
         if control.horizontal_scroll == true then
@@ -1871,6 +1870,10 @@ ugui.end_frame = function()
     for i = 1, #ugui.internal.late_callbacks, 1 do
         ugui.internal.late_callbacks[i]()
     end
+
+    -- for _, rect in pairs(ugui.internal.hittest_free_rects) do
+    --     BreitbandGraphics.fill_rectangle(rect, "#FF000044")
+    -- end
 
     ugui.internal.late_callbacks = {}
     ugui.internal.hittest_free_rects = {}
@@ -1951,7 +1954,7 @@ ugui.toggle_button = function(control)
     end
 
     ugui.internal.handle_tooltip(control)
-    
+
     return checked
 end
 
@@ -2183,20 +2186,26 @@ ugui.combobox = function(control)
         ugui.internal.control_data[control.uid].is_open = false
     end
 
-    if ugui.internal.is_mouse_just_down() and control.is_enabled ~= false then
-        if ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control) then
-            ugui.internal.control_data[control.uid].is_open = not ugui.internal.control_data[control.uid].is_open
-        else
-            local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
-            if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, {
-                    x = control.rectangle.x,
-                    y = control.rectangle.y + control.rectangle.height,
-                    width = control.rectangle.width,
-                    height = content_bounds.height,
-                }) then
-                ugui.internal.control_data[control.uid].is_open = false
-            end
+    local pushed = ugui.internal.process_push(control)
+
+    if control.is_enabled ~= false
+        and ugui.internal.control_data[control.uid].is_open
+        and ugui.internal.is_mouse_just_down()
+        and not ugui.internal.is_point_inside_control(ugui.internal.environment.mouse_position, control) then
+
+        local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
+        if not BreitbandGraphics.is_point_inside_rectangle(ugui.internal.environment.mouse_position, {
+                x = control.rectangle.x,
+                y = control.rectangle.y + control.rectangle.height,
+                width = control.rectangle.width,
+                height = content_bounds.height,
+            }) then
+            ugui.internal.control_data[control.uid].is_open = false
         end
+    end
+
+    if pushed then
+        ugui.internal.control_data[control.uid].is_open = not ugui.internal.control_data[control.uid].is_open
     end
 
     local selected_index = control.selected_index
@@ -2204,17 +2213,26 @@ ugui.combobox = function(control)
     if ugui.internal.control_data[control.uid].is_open and control.is_enabled ~= false then
         local content_bounds = ugui.standard_styler.get_desired_listbox_content_bounds(control)
 
+        local width = control.rectangle.width
+        if control.rectangle.x + width > ugui.internal.environment.window_size.x then
+            width = ugui.internal.environment.window_size.x - control.rectangle.x
+        end
+
+        local height = content_bounds.height
+        if control.rectangle.y + height > ugui.internal.environment.window_size.y then
+            height = ugui.internal.environment.window_size.y - control.rectangle.y - ugui.standard_styler.params.listbox_item.height * 2
+        end
+
         local list_rect = {
             x = control.rectangle.x,
             y = control.rectangle.y + control.rectangle.height,
-            width = control.rectangle.width,
-            height = content_bounds.height,
+            width = width,
+            height = height,
         }
         ugui.internal.hittest_free_rects[#ugui.internal.hittest_free_rects + 1] = list_rect
 
         selected_index = ugui.listbox({
             uid = control.uid + 1,
-            -- we tell the listbox to paint itself at the end of the frame, because we need it on top of all other controls
             topmost = true,
             rectangle = list_rect,
             items = control.items,
@@ -2340,6 +2358,7 @@ ugui.listbox = function(control)
             },
             value = ugui.internal.control_data[control.uid].scroll_x,
             ratio = 1 / (content_bounds.width / control.rectangle.width),
+            topmost = control.topmost,
         })
     end
 
@@ -2355,6 +2374,7 @@ ugui.listbox = function(control)
             },
             value = ugui.internal.control_data[control.uid].scroll_y,
             ratio = 1 / (content_bounds.height / control.rectangle.height),
+            topmost = control.topmost,
         })
     end
 
@@ -2437,7 +2457,15 @@ ugui.scrollbar = function(control)
     if ugui.internal.active_control == control.uid and control.is_enabled ~= false and ugui.internal.environment.is_primary_down then
         visual_state = ugui.visual_states.active
     end
-    ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
+
+    if control.topmost then
+        ugui.internal.late_callbacks[#ugui.internal.late_callbacks + 1] = function()
+            ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
+        end
+    else
+        ugui.standard_styler.draw_scrollbar(control.rectangle, thumb_rectangle, visual_state)
+    end
+
 
     ugui.internal.handle_tooltip(control)
     return control.value
