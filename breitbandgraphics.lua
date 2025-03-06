@@ -722,19 +722,32 @@ end
 
 ---Draws an image with the specified parameters.
 ---@param destination_rectangle Rectangle The destination rectangle on the screen.
----@param source_rectangle Rectangle The source rectangle from the image.
+---@param source_rectangle Rectangle? The source rectangle from the image. If nil, the whole image is taken as the source.
 ---@param path string The image's absolute path on disk.
----@param color ColorSource The color filter applied to the image. If white, the image is drawn as-is.
+---@param color ColorSource? The color filter applied to the image. If nil or white, the image is drawn with no tint.
 ---@param filter "nearest" | "linear" The texture filter applied to the image.
----TODO: Make source_rectangle optional and default to the whole image.
----TODO: Make color optional and default to white.
 BreitbandGraphics.draw_image = function(destination_rectangle, source_rectangle, path, color, filter)
     if not filter then
         filter = 'nearest'
     end
-    local float_color = color_source_to_float_color(color)
+    local float_color
+    if color then
+        float_color = color_source_to_float_color(color)
+    else
+        float_color = BreitbandGraphics.colors.white
+    end
     local image = BreitbandGraphics.internal.image_from_path(path)
     local interpolation = filter == 'nearest' and 0 or 1
+
+    if not source_rectangle then
+        local size = BreitbandGraphics.get_image_info(path)
+        source_rectangle = {
+            x = 0,
+            y = 0,
+            width = size.width,
+            height = size.height,
+        }
+    end
 
     d2d.draw_image(
         destination_rectangle.x,
