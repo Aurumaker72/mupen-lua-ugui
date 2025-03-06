@@ -119,6 +119,28 @@ end
 ---@field public text RichText The tooltip's text.
 ---A tooltip, which can be used to show additional information about a control.
 
+---@class Spinner : Control
+---@field public value number The spinner's numerical value.
+---@field public increment number The increment applied when the + or - buttons are clicked.
+---@field public minimum_value number? The minimum value.
+---@field public maximum_value number? The maximum value.
+---@field public is_horizontal boolean? Whether the increment buttons are stacked horizontally.
+---A spinner, consisting of a textbox and buttons for incrementing or decrementing a number.
+
+---@class TabControl : Control
+---@field public items RichText[] The tab headers.
+---@field public selected_index integer The index of the currently selected tab.
+---A tab control, which allows the user to choose from a list of tabs.
+
+---@class TabControlResult
+---@field public selected_index integer The index of the selected tab.
+---@field public rectangle Rectangle The visual bounds the selected tab can place its contents in.
+
+---@class NumberBox : Control
+---@field public value integer The value.
+---@field public places integer The amount of digits the value is padded to.
+---@field public show_negative boolean? Whether a button for viewing and toggling the value's sign is shown. If nil, false is assumed.
+---A numberbox, which allows modifying a number by typing or by adjusting its individual digits.
 
 ugui.internal = {
     ---@type table<UID, any>
@@ -2537,17 +2559,9 @@ ugui.menu = function(control)
     return result
 end
 
-
----Places a Spinner, or NumericUpDown control
----
----Additional fields in the `control` table:
----
---- `value` — `number` The spinner's numerical value
---- `minimum_value` — `number` The spinner's minimum numerical value
---- `maximum_value` — `number` The spinner's maximum numerical value
---- `increment` — `number` The increment applied when the + or - buttons are clicked
----@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
----@return _ number The new value
+---Places a Spinner.
+---@param control Spinner The control table.
+---@return number # The new value.
 ugui.spinner = function(control)
     ugui.internal.validate_control(control)
 
@@ -2672,14 +2686,9 @@ ugui.spinner = function(control)
     return clamp_value(value)
 end
 
----Places a tab control for navigation
----
----Additional fields in the `control` table:
----
---- `items` — `string[]` The tab headers
---- `selected_index` — `number` The selected index into the `items` array
----@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
----@return _ table A table structured as follows: { selected_index, rectangle }
+---Places a TabControl.
+---@param control TabControl The control table.
+---@return TabControlResult # The result.
 ugui.tabcontrol = function(control)
     ugui.internal.do_layout(control)
     ugui.internal.validate_and_register_control(control)
@@ -2745,14 +2754,9 @@ ugui.tabcontrol = function(control)
     }
 end
 
----Places a number editing box
----
----Additional fields in the `control` table:
----
---- `places` — `number` The amount of places the number is padded to
---- `value` — `number` The current value
----@param control table A table abiding by the mupen-lua-ugui control contract (`{ uid, is_enabled, rectangle }`)
----@return _ number The new value
+---Places a NumberBox.
+---@param control NumberBox The control table.
+---@return integer # The new value.
 ugui.numberbox = function(control)
     ugui.internal.do_layout(control)
     ugui.internal.validate_and_register_control(control)
