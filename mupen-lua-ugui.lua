@@ -689,6 +689,7 @@ ugui.standard_styler = {
                 [3] = BreitbandGraphics.hex_to_color('#000000'),
                 [0] = BreitbandGraphics.hex_to_color('#A0A0A0'),
             },
+            selection = BreitbandGraphics.hex_to_color("#0078D7"),
         },
         listbox = {
             back = {
@@ -855,6 +856,7 @@ ugui.standard_styler = {
         },
         numberbox = {
             font_scale = 1.5,
+            selection = BreitbandGraphics.hex_to_color("#0078D7"),
         }
     },
 
@@ -1533,7 +1535,7 @@ ugui.standard_styler = {
                         .width,
                     height = control.rectangle.height,
                 },
-                BreitbandGraphics.hex_to_color('#0078D7'))
+                ugui.standard_styler.params.textbox.selection)
         end
 
         local text_rect = {
@@ -2928,7 +2930,7 @@ ugui.numberbox = function(control)
             increment_digit(ugui.internal.control_data[control.uid].caret_index, -1)
         end
         -- draw the char at caret index in inverted color
-        BreitbandGraphics.fill_rectangle(selected_char_rect, BreitbandGraphics.hex_to_color('#0078D7'))
+        BreitbandGraphics.fill_rectangle(selected_char_rect, ugui.standard_styler.params.numberbox.selection)
         BreitbandGraphics.push_clip(selected_char_rect)
         BreitbandGraphics.draw_text2({
             text = text,
