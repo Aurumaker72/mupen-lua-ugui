@@ -70,6 +70,24 @@ group.tests[#group.tests + 1] = {
                 y = 69.12,
             },
         },
+        {
+            rect = {
+                x = 0,
+                y = 0,
+                width = 128,
+                height = 128,
+            },
+            mouse_position = {
+                x = 65,
+                y = 65,
+            },
+            expected_joystick_position = {
+                x = 0,
+                y = 0,
+            },
+            x_snap = 8,
+            y_snap = 8,
+        },
     },
     func = function(ctx)
         local position = {x = 0, y = 0}
@@ -85,6 +103,8 @@ group.tests[#group.tests + 1] = {
             uid = 5,
             rectangle = ctx.data.rect,
             position = position,
+            x_snap = ctx.data.x_snap,
+            y_snap = ctx.data.y_snap,
         })
         ugui.end_frame()
 
